@@ -1,0 +1,57 @@
+id: RAW_Crowdstrike-FirewallPolicies
+layer: raw
+platform: Crowdstrike
+endpoint: |-
+  (Firewall Policies)
+  - GET /policy/combined/firewall/v1
+description: |-
+  Obtains the Firewall policies registered on the Crowdstrike platform, including the rule set and the channel version applied to each host group.
+load_type: Full
+frequency: Weekly
+volume_per_frequency: "?"
+execution_schedule: Sundays at 01:00 AM and on the 1st of the month at 01:00 AM
+extraction_notes: |-
+  The Data Science team will be responsible for running the routine that queries the described endpoint, applying the necessary filters, and storing the data in the Raw layer of the Data Lake.
+filters: |-
+  Run the query with the following conditions:
+
+  - limit: 5000
+storage_notes: |-
+  Storage will be done in the Raw layer, containing the data extracted directly from the described API endpoint, without any type of transformation, fully preserving the data.
+
+  The data is organized following the standard naming convention. Additionally, temporal segregation must be maintained by collection period, using the YYYY-MM-DD naming convention, according to the frequency defined by the business. The following pattern must be followed:
+
+  CYBER/Client/Raw/CROWDSTRIKE/YYYY-MM-DD/FirewallPolicies.json
+
+  This organization ensures temporal traceability, ingestion standardization, and ease of auditing the protected server inventory data.
+sample_output: |-
+  {
+      "id": "eeee5555ffff6666aaaa1111bbbb2222",
+      "cid": "9f8e7d6c5b4a3928170615f4e3d2c1b0",
+      "name": "TeamA",
+      "description": "",
+      "platform_name": "Windows",
+      "groups": [
+          {
+              "id": "dddd4444eeee5555ffff6666aaaa1111",
+              "group_type": "staticByID",
+              "name": "TeamA",
+              "description": "",
+              "assignment_rule": "device_id:['44445555666677778888999900001111','55556666777788889999000011112222'],hostname:[]",
+              "created_by": "user1.demo@example-company.com.br",
+              "created_timestamp": "2026-03-02T12:19:15.37916682Z",
+              "modified_by": "user1.demo@example-company.com.br",
+              "modified_timestamp": "2026-05-26T12:47:46.680391736Z"
+          }
+      ],
+      "enabled": true,
+      "created_by": "user1.demo@example-company.com.br",
+      "created_timestamp": "2026-06-18T16:29:04.3426756Z",
+      "modified_by": "user1.demo@example-company.com.br",
+      "modified_timestamp": "2026-06-19T18:37:05.03431614Z",
+      "channel_version": 121,
+      "rule_set_id": "eeee5555ffff6666aaaa1111bbbb2222"
+  }
+owner: "João V. Kienen"
+source_repo: "CYBER__HealthEDR"
+last_reviewed: '2026-08-10'

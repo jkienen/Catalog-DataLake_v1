@@ -1,0 +1,30 @@
+id: GOLD_USBControl-UsageManagement
+layer: gold
+project: USB Device Control
+sources_silver:
+- SILVER_USBControl-UsageManagement
+description: |-
+  The Gold layer consolidates the data from the Silver layer into indicators ready for analytical and executive consumption.
+
+  All indicators must be generated per client, department group, and/or department.
+
+  The generated indicators are:
+kpis:
+- title: Total number of registered USB exceptions
+  calculation: count of distinct Exception Id.
+  filters: null
+  reason: each exception allows a specific USB device to bypass the default blocking policy, expanding the exposure surface to data exfiltration via removable media. The total serves as a baseline for tracking the growth in the volume of granted exceptions between periods, signaling whether the control is being relaxed over time.
+  view: numeric count by reference month, detailed in a list with Device Name, Policy Name, Policy Platform, and USB Device Class. This distinguishes a one-off exception for a corporate laptop from one granted in bulk for an entire device class.
+
+- title: Number of USB exceptions inactive for 90 days or more
+  calculation: count of distinct Exception Id where Is Active is false and Usage History (Days) is greater than or equal to 90.
+  filters: Usage History (Days) greater than or equal to 90 days
+  reason: an exception with no recorded usage for 90 days or more granted access that no one made use of, keeping an open risk with no corresponding operational benefit. The indicator measures the size of the queue of stalled exceptions, candidates for automatic revocation, and its growth points to exceptions being granted without periodic review.
+  view: numeric count by reference month, detailed in a list with Device Name, Policy Name, Created At, and Last Seen. This distinguishes an old exception that was never used from a newly created one that hasn't had time to accumulate usage yet.
+
+- title: Distribution of USB exceptions by device class
+  calculation: count of distinct Exception Id grouped by USB Device Class.
+  filters: null
+  reason: each device class represents a different exfiltration vector — mass storage is not the same risk as a printer or an audio device. The distribution shows where the policy's permissiveness is concentrated, guiding which class to prioritize in a hardening review.
+  view: numeric count by device class, detailed in a list with Policy Name, Policy Platform, and Is Active. This distinguishes how much of each class is actively in use from what is merely a granted exception that was never used.
+last_reviewed: '2026-08-10'

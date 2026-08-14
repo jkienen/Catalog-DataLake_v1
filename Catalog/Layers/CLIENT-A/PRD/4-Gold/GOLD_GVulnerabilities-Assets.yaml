@@ -1,0 +1,54 @@
+id: GOLD_GVulnerabilities-Assets
+layer: gold
+project: Vulnerability Management
+sources_silver:
+- SILVER_GVulnerabilities-Assets
+description: |-
+  The Gold layer consolidates the data from the Silver layer into indicators ready for analytical and executive consumption.
+
+  All indicators must be generated per client, department group, and/or department.
+
+  The generated indicators are:
+kpis:
+- title: Number of monitored hosts
+  calculation: count of distinct "Server Id".
+  filters: null
+  reason: it is the denominator base for nearly all other indicators and the size metric of the fleet under management. Without it, averages and percentages have no reference.
+  view: null
+
+- title: Average number of active vulnerabilities per monitored host
+  calculation: sum of active vulnerabilities divided by the "Number of monitored hosts". Average weighted by the number of hosts.
+  filters: disregard Risk State = ACCEPTED.
+  reason: risk density per asset; it allows fair comparison of departments of different sizes.
+  view: null
+
+- title: Top 10 hosts with the most active vulnerabilities
+  calculation: hosts with the highest sum of active vulnerabilities.
+  filters: disregard Risk State = ACCEPTED.
+  reason: identifies the assets that concentrate the highest volume of exposure, natural targets for remediation campaigns.
+  view: null
+
+- title: Top 10 hosts with the most active critical vulnerabilities
+  calculation: hosts with the highest value of active "Vulns Critical".
+  filters: disregard Risk State = ACCEPTED.
+  reason: separates raw volume from severity; a host with few vulnerabilities but all critical is more urgent than one with many low vulnerabilities.
+  view: null
+
+- title: Top 10 hosts with the highest ACR
+  calculation: hosts with the highest "Score ACR".
+  filters: null
+  reason: the ACR (1-10) measures the asset's criticality to the business; it lists the assets whose compromise would have the greatest impact, regardless of how many vulnerabilities they currently have.
+  view: null
+
+- title: Top 10 hosts with the highest AES
+  calculation: hosts with the highest "Score AES".
+  filters: null
+  reason: the AES (0-1000) measures the asset's current exposure (criticality + risk of present vulnerabilities); it lists where the probability/severity of compromise is highest right now.
+  view: null
+
+- title: Top 10 — Weighted risk index by host and department
+  calculation: index = 10×Vulns Critical + 5×Vulns High + 2×Vulns Medium + 1×Vulns Low (active), by host and summed by department.
+  filters: disregard Risk State = ACCEPTED.
+  reason: counting vulnerabilities treats a critical the same as a low. The weighted index reorders the ranking by actual risk and works as the dashboard's single "main number".
+  view: null
+last_reviewed: '2026-08-07'

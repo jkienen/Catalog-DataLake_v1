@@ -1,0 +1,19 @@
+id: AUTOMATA_Reassign-Asset-Tags-in-Tenable
+layer: automation
+project: Vulnerability Management
+description: |-
+  Sector Tag Reassignment — Tenable:
+
+  Correct in Tenable the sector tag of assets whose department, as determined in the VCenter inventory, differs from what is registered on the platform.
+sources_silver:
+- SILVER_GVulnerabilities-Assets
+sources_audit: []
+target: Tenable
+frequency: Monthly
+execution_schedule: 10th of the month at 06:00 AM
+filters: |-
+  Only retrieve assets with the Department Changed column marked as true.
+pipeline: |-
+  The SOAR tool will be responsible for retrieving the processed data from the Silver layer, applying the necessary filters, and performing the automatic reassignment of the sector tag of the assets on the platform, removing the previous tag, assigning the new one, and creating the sector tag when it does not yet exist.
+source_repo: "?"
+last_reviewed: '2026-08-07'

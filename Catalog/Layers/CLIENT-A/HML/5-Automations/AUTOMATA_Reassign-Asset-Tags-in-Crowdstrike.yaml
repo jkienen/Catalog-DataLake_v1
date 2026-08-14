@@ -1,0 +1,23 @@
+id: AUTOMATA_Reassign-Asset-Tags-in-Crowdstrike
+layer: automation
+project: EDR Health Check Report
+description: |-
+  Sector Tag Reassignment — Crowdstrike:
+
+  Synchronize in Crowdstrike the sector tag of the servers with the Department determined by cross-referencing with the VCenter inventory.
+sources_silver:
+- SILVER_HealthEDR-AssetsLinux
+- SILVER_HealthEDR-AssetsMac
+- SILVER_HealthEDR-AssetsWindows
+sources_audit: []
+target: Crowdstrike
+frequency: Monthly
+execution_schedule: 10th of the month at 06:00 AM
+filters: |-
+  Only perform the action on records that meet the following conditions:
+
+  - Host Type: Server
+pipeline: |-
+  The SOAR tool will be responsible for retrieving the processed data from the Silver layer, applying the necessary filters, and performing the synchronization of the sector tag in Crowdstrike.
+source_repo: "?"
+last_reviewed: '2026-08-10'

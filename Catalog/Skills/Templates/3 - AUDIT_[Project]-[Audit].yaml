@@ -1,0 +1,141 @@
+# =============================================================================
+# TEMPLATE - Audit layer
+# Output file: AUDIT_<Project>-<Audit>.yaml -- one file per set of records the
+# pipeline sets apart.
+#
+# Placeholders used in the examples below: <Project> is the business project,
+# <Audit> is what was set apart, <Client> is the organization the data belongs
+# to. Replace all of them.
+#
+# AN AUDIT IS NOT A SEPARATE STORAGE LAYER. `layer` says audit, but the file is
+# stored inside the SILVER path, next to the structured data -- read the
+# storage_notes below and note it names the Silver layer, not an audit one. What
+# makes it an audit is intent, not location: it holds the records the pipeline
+# SEPARATED, kept so the separation survives whatever happens to them next.
+#
+# WHY IT EXISTS: an automation may later act on those records -- delete them
+# from the platform, close them, notify someone. Once it acts, the records are
+# gone from the source and nothing remains to show they ever existed. The audit
+# is that record. Example: hosts that do not match the inventory server are set
+# apart into an audit; an automation deletes them from the platform afterwards;
+# the audit stays as the history of what was removed and when.
+#
+# THIS TEMPLATE IS MUCH SMALLER than Raw and Silver, and that is deliberate:
+# no filters, no pipeline, no sample_output. The audit does not transform
+# anything -- it carries the columns of the Silver dataset it came from. The
+# only thing worth writing down is WHICH records were separated, and that goes
+# in `description`.
+#
+# STEP 0, BEFORE FILLING ANYTHING IN: how many Audit files does this project
+# need? Two sources feed the count, and both must be swept:
+#   - What the CODE already separates: every set of records written to its own
+#     file because it did not match, did not apply, or was left over.
+#   - What the USER wants to register: an audit does not have to exist in code.
+#     The user may want a separation the pipeline does not perform yet. ASK,
+#     even when the code already produces audits -- especially then.
+# Get this count confirmed before writing any file: it defines every id, and
+# every id must appear in the `generates_audits` of the Silver that feeds it.
+#
+# FORMAT CONVENTIONS (apply to every field below):
+#   - Literal block |- for every text field, even a single-line one.
+#     Never | and never |+.
+#   - "?" means "a real value exists and the user fills it on review".
+#     ALWAYS quoted: a bare `owner: ?` breaks the parser (ScannerError).
+#   - NA (unquoted, no block) means "does not exist". NA and "?" are not
+#     interchangeable.
+#   - Dates in single quotes, otherwise YAML converts them to a date object.
+#   - No blank line between keys in the generated file. The blank lines in
+#     this template exist only to separate the comment blocks.
+#   - THE VALUE ON A BUSINESS-DECISION LINE IS THE DEFAULT. Every field whose
+#     comment ends in "Example of what the user answers" is written into the
+#     generated file exactly as it stands here. "?" means nobody has answered
+#     yet: carry the "?" over and let the user fill it on review. Replace it
+#     with a real value -- `load_type: "Full"` -- and that value becomes the
+#     standing answer for every file of the project: write it in and do NOT
+#     ask the question. Editing this template is how the user answers once
+#     instead of answering per file.
+#   - Save the file with CRLF line endings.
+#   - Keep the field order below. `last_reviewed` closes every file of every
+#     layer -- it is always the last field.
+# =============================================================================
+
+# id -- AUDIT_<Project>-<Audit>. Confirm both tokens with the user.
+# <Project> is the same token used by the Silver files of the project.
+# <Audit> names WHAT WAS SET APART, not the condition that set it apart:
+# InactiveUSB, UnwatchedAssets, OrphanFindings.
+# Example:
+id: AUDIT_[Project]-[Audit]
+
+# layer -- always "audit", even though the file is stored under Silver.
+layer: audit
+
+# project -- the business project spelled out, the same value carried by the
+# Silver files. It was already answered when the Silver files were written -
+# reuse it, do not ask again.
+# Example:
+project: EDR Health Check Report
+
+# sources_silver -- YAML list of the Silver ids whose pipeline sets these
+# records apart. Each id listed must declare this audit back in its
+# `generates_audits`: the two fields are the same edge seen from both ends, and
+# a name spelled differently on one side breaks the graph.
+# Example:
+sources_silver:
+- SILVER_[Project]-[Function]
+
+# description -- three parts, in this order:
+#   1. a title line "<Project short> - <Readable audit>:"
+#   2. one paragraph with the RULE that selects the records, written with the
+#      column names of the Silver dataset, in the user's words. This is the
+#      whole substance of the file: what was separated and why it qualified.
+#   3. the "Note:" paragraph below, kept verbatim.
+# When the audit does not exist in the code yet - the user asked for it - write
+# the rule from the answer, and do not invent a threshold the user did not give.
+# Example:
+description: |-
+  Health Check - Inactive Devices (USB):
+
+  Devices with "Usage History (Days)" greater than or equal to 90 days and with the "Is Active" column marked as True.
+
+  Note: these will be stored separately for later tracking and the possibility of automatic removal.
+
+# storage_notes -- keep the text below, changing only the path line. Pattern:
+#   CYBER/<Client>/Silver/<Project>/YYYY-MM-DD/<Audit>.json
+#   <Client>    the organization. Title-case in the path
+#   <Project>   the project token, the same one used in the id
+#   <Audit>     the file name in the lake. It does NOT necessarily match the id
+#               token -- ask the user for the real name.
+# The path says Silver, and so does the opening sentence: the audit is stored
+# WITH the structured data it was separated from. Do not rewrite it to "Audit".
+# The "Note:" paragraph is optional -- keep it only when the date in the path is
+# not the date of the data it contains (a collection run over the previous
+# month, for instance).
+storage_notes: |-
+  Storage will be done in the Silver layer; the structured data will be kept ready for queries feeding the indicator calculations.
+
+  The data is organized following the standard naming convention. Additionally, temporal segregation must be maintained by collection period, using the YYYY-MM-DD naming convention, according to the frequency defined by the business. The following pattern must be followed:
+
+  CYBER/<Client>/Silver/<Project>/YYYY-MM-DD/<Audit>.json
+
+  Note: The date in the path refers to the collection run date, whose data reflects the previous calendar month.
+
+  This organization ensures temporal traceability, ingestion standardization, and ease of auditing the data.
+
+# owner -- business decision. This is who documented the dataset,
+# not a value from the data.
+# Example of what the user answers: A. Doe
+owner: "?"
+
+# source_repo -- business decision. Always the real repository of
+# origin, even when the business project carries a different name. An audit the
+# user asked for but the code does not produce yet still points at the
+# repository that will produce it.
+# Example of what the user answers: github.com/<org>/<repo>
+source_repo: "project_folder_name"
+
+# last_reviewed -- the date the catalog was written. Stays "?" while the
+# files are generated and is filled for all of them at once at the closing
+# step, with the current date. It is NOT a date read from the project.
+# Always single-quoted, otherwise YAML turns it into a date object.
+# Example of what the user answers: '2026-06-02'
+last_reviewed: "?"

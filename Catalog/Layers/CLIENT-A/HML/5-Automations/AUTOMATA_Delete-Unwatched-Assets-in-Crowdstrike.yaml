@@ -1,0 +1,23 @@
+id: AUTOMATA_Delete-Unwatched-Assets-in-Crowdstrike
+layer: automation
+project: EDR Health Check Report
+description: |-
+  Removal of Unmatched Assets — Crowdstrike:
+
+  Remove from Crowdstrike the assets that do not have a Mac Address match in the VCenter inventory and that have a Last Seen of more than 10 days.
+sources_silver: []
+sources_audit:
+- AUDIT_HealthEDR-UnwatchedLinux
+- AUDIT_HealthEDR-UnwatchedMac
+- AUDIT_HealthEDR-UnwatchedWindows
+target: Crowdstrike
+frequency: Monthly
+execution_schedule: 10th of the month at 06:00 AM
+filters: |-
+  Only perform the action on records that meet the following conditions:
+
+  - Last Seen: more than 10 days relative to the reference date
+pipeline: |-
+  The SOAR tool will be responsible for retrieving the processed data from the Audit layer, applying the necessary filters, and performing the removal of the assets in Crowdstrike.
+source_repo: "?"
+last_reviewed: '2026-08-10'

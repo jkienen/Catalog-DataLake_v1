@@ -1,0 +1,74 @@
+id: RAW_Crowdstrike-ContentUpdatePolicies
+layer: raw
+platform: Crowdstrike
+endpoint: |-
+  (Content Update Policies)
+  - GET /policy/combined/content-update/v1
+description: |-
+  Obtains the Content Update policies registered on the Crowdstrike platform, including the content distribution ring applied to each protection category (system critical, sensor operations, rapid response).
+load_type: Full
+frequency: Weekly
+volume_per_frequency: "?"
+execution_schedule: Sundays at 01:00 AM and on the 1st of the month at 01:00 AM
+extraction_notes: |-
+  The Data Science team will be responsible for running the routine that queries the described endpoint, applying the necessary filters, and storing the data in the Raw layer of the Data Lake.
+filters: |-
+  Run the query with the following conditions:
+
+  - limit: 5000
+storage_notes: |-
+  Storage will be done in the Raw layer, containing the data extracted directly from the described API endpoint, without any type of transformation, fully preserving the data.
+
+  The data is organized following the standard naming convention. Additionally, temporal segregation must be maintained by collection period, using the YYYY-MM-DD naming convention, according to the frequency defined by the business. The following pattern must be followed:
+
+  CYBER/Client/Raw/CROWDSTRIKE/YYYY-MM-DD/ContentUpdatePolicies.json
+
+  This organization ensures temporal traceability, ingestion standardization, and ease of auditing the protected server inventory data.
+sample_output: |-
+  {
+      "id": "7a8b9c0d1e2f3a4b5c6d7e8f90011223",
+      "cid": "9f8e7d6c5b4a3928170615f4e3d2c1b0",
+      "name": "platform_default",
+      "description": "Platform default policy",
+      "platform_name": "all",
+      "groups": [],
+      "enabled": true,
+      "created_by": "cs-cloud-provisioning",
+      "created_timestamp": "2024-11-25T22:15:57.515688767Z",
+      "modified_by": "cs-cloud-provisioning",
+      "modified_timestamp": "2024-11-25T22:15:57.515688767Z",
+      "settings": {
+          "ring_assignment_settings": [
+              {
+                  "id": "system_critical",
+                  "ring_assignment": "ga",
+                  "pinned_content_version": "",
+                  "delay_hours": "0",
+                  "override": {
+                      "value": "None"
+                  }
+              },
+              {
+                  "id": "sensor_operations",
+                  "ring_assignment": "ga",
+                  "pinned_content_version": "",
+                  "delay_hours": "0",
+                  "override": {
+                      "value": "None"
+                  }
+              },
+              {
+                  "id": "rapid_response_al_bl_listing",
+                  "ring_assignment": "ga",
+                  "pinned_content_version": "",
+                  "delay_hours": "0",
+                  "override": {
+                      "value": "None"
+                  }
+              }
+          ]
+      }
+  }
+owner: "João V. Kienen"
+source_repo: "CYBER__HealthEDR"
+last_reviewed: '2026-08-10'

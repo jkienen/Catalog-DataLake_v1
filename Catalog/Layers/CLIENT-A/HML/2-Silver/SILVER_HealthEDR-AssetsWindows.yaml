@@ -1,0 +1,136 @@
+id: SILVER_HealthEDR-AssetsWindows
+layer: silver
+project: EDR Health Check Report
+sources_raw:
+- RAW_Crowdstrike-Assets
+- RAW_Crowdstrike-SensorHealth
+- RAW_Crowdstrike-PreventionPolicies
+- RAW_Crowdstrike-USBPolicies
+- RAW_Crowdstrike-FirewallPolicies
+- RAW_Crowdstrike-SensorUpdatePolicies
+- RAW_Crowdstrike-ContentUpdatePolicies
+- RAW_VCenter-Assets
+sources_silver: []
+generates_audits:
+- AUDIT_HealthEDR-UnwatchedWindows
+execution_schedule: Sundays at 02:00 AM and on the 1st of the month at 02:00 AM
+filters: |-
+  Keeps only hosts with Host OS = Windows. Hosts with an operating system other than Linux, Mac and Windows are discarded at the source, regardless of the result of the cross-reference with VCenter.
+pipeline: |-
+  The Data Science team will be responsible for retrieving the raw data from the Raw layer and structuring it as shown in the next step.
+
+  Department / Server VM:
+
+  Hosts of type Workstation receive a fixed Department of "TI-SERVICEDESK" and Server VM equal to the Host Name itself. The remaining hosts are cross-referenced by Mac Address against the VCenter inventory: Department receives the Sector and Server VM receives the Asset VM of the matched record. Hosts that do not match are left without these two columns and are separated into the combined Audit for this layer.
+
+  Mac Address:
+
+  Union of the host's physical and connection addresses, deduplicated, sorted, and with the "-" separator replaced by ":".
+
+  Last Seen:
+
+  Converted from the UTC time returned by the platform to America/Sao_Paulo (UTC-3) and reformatted to YYYY-MM-DD.
+
+  Host State:
+
+  Capitalization of the host's raw status.
+
+  Uninstall Protection:
+
+  Capitalization of the uninstall protection value defined in the Sensor Update policy assigned to the host; falls back to "-" when the policy does not define the field.
+
+  RFM:
+
+  True when the host's reduced functionality mode indicator is marked as "yes"; false otherwise.
+
+  Prevention Policy / USB Device Policy / Firewall Policy / Sensor Update Policy / Content Policy:
+
+  Each one resolved by cross-referencing the policy id assigned to the host, per policy type, against the respective list of named policies (Prevention, Device Control, Firewall, Sensor Update, Content Update); falls back to "-" when the id is not found in the corresponding list.
+
+  Host Score / Item: <signal>:
+
+  Cross-referenced from the host's security posture assessment (Zero Trust Assessment), matching by host id. Host Score receives the overall sensor configuration score. An "Item: <signal name>" column is created per evaluated signal, with value "Ok" when the signal meets the criterion and "Attention" when it does not.
+structure_notes: |-
+  The data sources will be organized into the columns Department, Server VM, Last Seen, Host Id, Host Name, Mac Address, Host Type, Host OS, OS Version, Kernel Version, Host State, RFM, Uninstall Protection, Prevention Policy, USB Device Policy, Firewall Policy, Sensor Update Policy, Content Policy, Host Score, Item: Reduced Functionality Mode, Item: Additional User Mode Data, Item: Script-Based Execution Monitoring for Windows, Item: System Firmware - BIOS, Item: Cloud ML - Cloud Anti-malware - Detection for Windows, Item: Cloud ML - Cloud Anti-malware - Prevention for Windows, Item: Cloud ML - Adware & PUP - Detection for Windows, Item: Cloud ML - Adware & PUP - Prevention for Windows, Item: Sensor ML Anti-malware - Detection for Windows, Item: Sensor ML Anti-malware - Prevention for Windows, Item: Execution Blocking - Custom Blocking for Windows, Item: Execution Blocking - Intelligence-Sourced Threats for Windows, Item: Execution Blocking - Suspicious Processes for Windows, Item: Execution Blocking - Suspicious Registry Operations, Item: Execution Blocking - Suspicious Scripts and Commands, Item: Exploit Mitigation - Force ASLR, Item: Exploit Mitigation - SEH Overwrite Protection, Item: Exploit Mitigation - Heap Spray Allocation, Item: Exploit Mitigation - NULL Page Allocation, Item: Ransomware - Backup Deletion, Item: Ransomware - File System Access, Item: Ransomware - Cryptowall, Item: Ransomware - File Encryption, Item: Ransomware - Locky, Item: Exploitation Behavior - Application Exploitation Activity, Item: Exploitation Behavior - JavaScript Execution via Rundll32, Item: Exploitation Behavior - Chopper Webshell, Item: Exploitation Behavior - Drive-by Download, Item: Exploitation Behavior - Code Injection, Item: Lateral Movement & Credential Access - Windows Logon Bypass, Item: Lateral Movement & Credential Access - Credential Dumping, Item: Sensor Tampering Protection, Item: Interpreter Only, Item: Engine (Full Visibility), Item: HTTP Detections, Item: Quarantine and Security Center Registration, Item: Remediation - Advanced Remediation, Item: Suspicious Kernel Drivers, Item: Volume Shadow Copy - Protect, Item: Volume Shadow Copy - Audit, Item: Hardware-Enhanced Exploit Detection, Item: Quarantine on Write, Item: CrowdStrike - Real Time Response for Windows, Reference Month, Reference Year, Reference Date, ensuring consistency, asset traceability, and data readiness for the indicators layer.
+storage_notes: |-
+  Storage will be done in the Silver layer; the structured data will be kept ready for queries feeding the indicator calculations.
+
+  The data is organized following the standard naming convention. Additionally, temporal segregation must be maintained by collection period, using the YYYY-MM-DD naming convention, according to the frequency defined by the business. The following pattern must be followed:
+
+  CYBER/Client/Silver/HealthEDR/YYYY-MM-DD/AssetsWindows.json
+
+  This organization ensures temporal traceability, ingestion standardization, and ease of auditing the data.
+sample_output: |-
+  {
+    "Department": "TI-SERVICEDESK",
+    "Server VM": "UNI-WK-0002",
+    "Last Seen": "2026-08-10",
+    "Host Id": "c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8",
+    "Host Name": "UNI-WK-0002",
+    "Mac Address": [
+      "00:09:0f:aa:bb:01",
+      "64:1c:67:aa:bb:02"
+    ],
+    "Host Type": "Workstation",
+    "Host OS": "Windows",
+    "OS Version": "Windows 11",
+    "Kernel Version": "10.0.26200.8972",
+    "Host State": "Visible",
+    "RFM": false,
+    "Uninstall Protection": "Enabled",
+    "Prevention Policy": "platform_default",
+    "USB Device Policy": "Custom: Workstations",
+    "Firewall Policy": "Custom: Workstations",
+    "Sensor Update Policy": "Custom: Default (Windows)",
+    "Content Policy": "platform_default",
+    "Host Score": 53.0,
+    "Item: Reduced Functionality Mode": "Ok",
+    "Item: Additional User Mode Data": "Attention",
+    "Item: Script-Based Execution Monitoring for Windows": "Attention",
+    "Item: System Firmware - BIOS": "Attention",
+    "Item: Cloud ML - Cloud Anti-malware - Detection for Windows": "Ok",
+    "Item: Cloud ML - Cloud Anti-malware - Prevention for Windows": "Ok",
+    "Item: Cloud ML - Adware & PUP - Detection for Windows": "Ok",
+    "Item: Cloud ML - Adware & PUP - Prevention for Windows": "Ok",
+    "Item: Sensor ML Anti-malware - Detection for Windows": "Ok",
+    "Item: Sensor ML Anti-malware - Prevention for Windows": "Ok",
+    "Item: Execution Blocking - Custom Blocking for Windows": "Ok",
+    "Item: Execution Blocking - Intelligence-Sourced Threats for Windows": "Attention",
+    "Item: Execution Blocking - Suspicious Processes for Windows": "Ok",
+    "Item: Execution Blocking - Suspicious Registry Operations": "Attention",
+    "Item: Execution Blocking - Suspicious Scripts and Commands": "Ok",
+    "Item: Exploit Mitigation - Force ASLR": "Attention",
+    "Item: Exploit Mitigation - SEH Overwrite Protection": "Attention",
+    "Item: Exploit Mitigation - Heap Spray Allocation": "Attention",
+    "Item: Exploit Mitigation - NULL Page Allocation": "Attention",
+    "Item: Ransomware - Backup Deletion": "Ok",
+    "Item: Ransomware - File System Access": "Ok",
+    "Item: Ransomware - Cryptowall": "Ok",
+    "Item: Ransomware - File Encryption": "Ok",
+    "Item: Ransomware - Locky": "Ok",
+    "Item: Exploitation Behavior - Application Exploitation Activity": "Ok",
+    "Item: Exploitation Behavior - JavaScript Execution via Rundll32": "Attention",
+    "Item: Exploitation Behavior - Chopper Webshell": "Ok",
+    "Item: Exploitation Behavior - Drive-by Download": "Ok",
+    "Item: Exploitation Behavior - Code Injection": "Attention",
+    "Item: Lateral Movement & Credential Access - Windows Logon Bypass": "Attention",
+    "Item: Lateral Movement & Credential Access - Credential Dumping": "Attention",
+    "Item: Sensor Tampering Protection": "Attention",
+    "Item: Interpreter Only": "Ok",
+    "Item: Engine (Full Visibility)": "Attention",
+    "Item: HTTP Detections": "Attention",
+    "Item: Quarantine and Security Center Registration": "Ok",
+    "Item: Remediation - Advanced Remediation": "Attention",
+    "Item: Suspicious Kernel Drivers": "Attention",
+    "Item: Volume Shadow Copy - Protect": "Attention",
+    "Item: Volume Shadow Copy - Audit": "Attention",
+    "Item: Hardware-Enhanced Exploit Detection": "Attention",
+    "Item: Quarantine on Write": "Attention",
+    "Item: CrowdStrike - Real Time Response for Windows": "Ok",
+    "Reference Month": "08",
+    "Reference Year": "2026",
+    "Reference Date": "2026-08-10"
+  }
+owner: "João V. Kienen"
+source_repo: "CYBER__HealthEDR"
+last_reviewed: '2026-08-10'

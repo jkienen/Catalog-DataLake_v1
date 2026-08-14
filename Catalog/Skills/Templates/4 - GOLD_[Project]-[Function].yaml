@@ -1,0 +1,122 @@
+# =============================================================================
+# TEMPLATE - Gold layer
+# Output file: GOLD_<Project>-<Function>.yaml -- as a rule, one per Silver file.
+#
+# Placeholders used in the examples below: <Project> is the business project,
+# <Function> is the Silver dataset the indicators are built on. Replace both.
+#
+# GOLD IS NOT ANOTHER DATASET. The three layers before it describe data; this
+# one describes QUESTIONS ANSWERED WITH that data. Nothing here is read from the
+# code: the scripts stop at Silver. What fills this file is the Silver
+# structure_notes and its sample_output - the columns that exist decide which
+# indicators are possible.
+#
+# STEP 0, BEFORE FILLING ANYTHING IN: one Gold per Silver is the default, and
+# three KPIs per file is the starting point. Deviate only when the user says so
+# - a Silver whose columns answer nothing on their own may have no Gold, and a
+# rich one may deserve more than three.
+#
+# TWO RULES THAT DECIDE WHETHER A KPI IS VALID:
+#   - It must be COMPUTABLE from the columns of the Silver sources listed below.
+#     Open their structure_notes and sample_output and check the column exists,
+#     with the values it needs. A KPI over a column nobody produces is a
+#     promise, not an indicator.
+#   - It must carry NO INVENTED THRESHOLD. When the indicator needs a cutoff -
+#     days without being seen, a minimum score, an age band - the number comes
+#     from the user. Never from what a similar project used.
+#
+# FORMAT CONVENTIONS:
+#   - Literal block |- for `description`. The KPI fields are plain scalars, as
+#     in the example below - one line each, however long. Because they are
+#     plain, they must not contain ": " anywhere: it turns the line into a
+#     mapping and the parser breaks. Rewrite the sentence instead.
+#   - `filters: null` (lowercase, unquoted) when the KPI filters nothing. This
+#     layer uses null where the others use NA.
+#   - "?" means "a real value exists and the user fills it on review", always
+#     quoted.
+#   - No blank line between keys in the generated file. The blank lines in
+#     this template exist only to separate the comment blocks.
+#   - THE VALUE ON A BUSINESS-DECISION LINE IS THE DEFAULT. Every field whose
+#     comment ends in "Example of what the user answers" is written into the
+#     generated file exactly as it stands here. "?" means nobody has answered
+#     yet: carry the "?" over and let the user fill it on review. Replace it
+#     with a real value -- `load_type: "Full"` -- and that value becomes the
+#     standing answer for every file of the project: write it in and do NOT
+#     ask the question. Editing this template is how the user answers once
+#     instead of answering per file.
+#   - Save the file with CRLF line endings.
+#   - Keep the field order below. Gold carries no storage_notes -- it produces
+#     no file in the lake -- and no owner, but `last_reviewed` closes it just
+#     like every other layer.
+# =============================================================================
+
+# id -- GOLD_<Project>-<Function>. Confirm both tokens with the user.
+# <Function> normally repeats the token of the Silver it consumes, so the pair
+# is readable side by side in the graph.
+# Example:
+id: GOLD_[Project]-[Function]
+
+# layer -- always "gold".
+layer: gold
+
+# project -- the business project spelled out, the same value carried by the
+# Silver files. Already answered when the Silver files were written - reuse it.
+# Example:
+project: EDR Health Check Report
+
+# sources_silver -- YAML list of the Silver ids the indicators are computed
+# from. Usually one. List more only when a KPI genuinely crosses two datasets,
+# and then say so in its calculation.
+# Example:
+sources_silver:
+- SILVER_[Project]-[Function]
+
+# description -- keep the three paragraphs below verbatim. The last line is a
+# lead-in to the kpis list and must stay the last line.
+description: |-
+  The Gold layer consolidates the data from the Silver layer into indicators ready for analytical and executive consumption.
+
+  All indicators must be generated per client, department group, and/or department.
+
+  The generated indicators are:
+
+# kpis -- one entry per indicator, five fields each:
+#
+#   title        what the indicator is, in business words. Not a column name.
+#   calculation  the operation over the Silver columns, naming them exactly as
+#                structure_notes does: a count of distinct values of a column,
+#                an average of a column, a proportion of a boolean column over
+#                the total. One line, in the language of the templates.
+#   filters      the condition that restricts the population, or null. A
+#                breakdown - by severity, by department - is NOT a filter: it
+#                belongs to calculation or view.
+#   reason       WHY THE NUMBER MATTERS, not what it counts. This is the field
+#                that justifies the indicator existing: what decision it feeds,
+#                what risk it exposes, what it means when it grows. Write it as
+#                prose, several sentences, in the language of whoever reads the
+#                report. A reason that only restates the title is a KPI nobody
+#                will act on.
+#   view         how it should be displayed, and the detail behind the number:
+#                the aggregation and the period it is grouped by, followed by
+#                the columns the drill-down lists. Say what the detail lets the
+#                reader distinguish.
+#
+# SEPARATE THE ENTRIES WITH A BLANK LINE. This is the one exception to the
+# no-blank-line rule above: the keys of the file stay glued together, but each
+# KPI is a block of five fields and runs into the next one without the break.
+# The blank line goes before every `- title:` except the first.
+#
+# Example:
+kpis:
+- title: Total number of IOA exclusions
+  calculation: count of distinct Exception ID values.
+  filters: null
+  reason: each exclusion disables a behavioral detection for a specific process, creating a blind spot not in a directory, but in an attack technique. The total measures how many detections were deliberately suppressed and serves as a baseline for tracking growth across periods. It is the highest-consequence type of exclusion, because the suppressed pattern describes known attack behavior, and the justification is usually a legitimate false positive, which makes periodic review indispensable rather than optional.
+  view: numeric count by reference month, detailed in a list with Exclusion Pattern, Applied Globally, Exclusion Image and Exception Name. This shows which detection was silenced, with what scope and for which process — an IOA suppression applied globally is different from one restricted to two hosts with a specific binary path, even though both count as one.
+
+# last_reviewed -- the date the catalog was written. Stays "?" while the
+# files are generated and is filled for all of them at once at the closing
+# step, with the current date. It is NOT a date read from the project.
+# Always single-quoted, otherwise YAML turns it into a date object.
+# Example of what the user answers: '2026-06-02'
+last_reviewed: "?"

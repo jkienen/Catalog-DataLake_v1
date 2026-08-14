@@ -1,0 +1,44 @@
+id: SILVER_HealthEDR-ExclusionsIOA
+layer: silver
+project: EDR Health Check Report
+sources_raw:
+- RAW_Crowdstrike-ExclusionsIOA
+sources_silver: []
+generates_audits: NA
+execution_schedule: Sundays at 02:00 AM and on the 1st of the month at 02:00 AM
+filters: NA
+pipeline: |-
+  The Data Science team will be responsible for retrieving the raw data from the Raw layer and structuring it as shown in the next step.
+
+  Applied For:
+
+  Derived from the exception's groups. All values in quotes present in the assignment_rule of each group are collected (in the rule, only the values are quoted; the keys never are). When the exception is global (Applied Globally = true) or has no groups, Applied For receives "-".
+structure_notes: |-
+  The data sources will be organized into the columns Exception ID, Exception Name, Exception Description, Exclusion Pattern, Exclusion Image, Exclusion Commandline, Applied For, Applied Globally, Created Date, Created By, Reference Month, Reference Year, Reference Date, ensuring consistency, asset traceability, and data readiness for the indicators layer.
+storage_notes: |-
+  Storage will be done in the Silver layer; the structured data will be kept ready for queries feeding the indicator calculations.
+
+  The data is organized following the standard naming convention. Additionally, temporal segregation must be maintained by collection period, using the YYYY-MM-DD naming convention, according to the frequency defined by the business. The following pattern must be followed:
+
+  CYBER/Client/Silver/HealthEDR/YYYY-MM-DD/ExclusionsIOA.json
+
+  This organization ensures temporal traceability, ingestion standardization, and ease of auditing the data.
+sample_output: |-
+  {
+    "Exception ID": "aabbccdd11223344eeff5566778899aa",
+    "Exception Name": "SAMPLEAPP01",
+    "Exception Description": "process exclusion, apparently a false positive",
+    "Exclusion Pattern": "LinSamplePattern",
+    "Exclusion Image": "/opt/sampleapp/bin/sample-service",
+    "Exclusion Commandline": "/opt/sampleapp/bin/sample-service\\s+--nodaemonize",
+    "Applied For": "srv-app08.example-company.cloud, srv-app03.example-company.cloud",
+    "Applied Globally": false,
+    "Created Date": "2025-10-10T14:22:45.714921672Z",
+    "Created By": "user2.demo@example-company.com.br",
+    "Reference Month": "08",
+    "Reference Year": "2026",
+    "Reference Date": "2026-08-10"
+  }
+owner: "João V. Kienen"
+source_repo: "CYBER__HealthEDR"
+last_reviewed: '2026-08-10'

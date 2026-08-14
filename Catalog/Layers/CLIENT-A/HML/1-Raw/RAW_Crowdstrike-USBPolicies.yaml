@@ -1,0 +1,75 @@
+id: RAW_Crowdstrike-USBPolicies
+layer: raw
+platform: Crowdstrike
+endpoint: |-
+  (USB Device Control Policies)
+  - GET /policy/query/device-control/v1
+  - GET /policy/entities/device-control/v2
+description: |-
+  Obtains the Device Control (USB) policies from the Crowdstrike platform, including the configured device classes, the enforcement mode, and the exclusions registered by vendor id, product id, serial, or combined id.
+load_type: Full
+frequency: Weekly
+volume_per_frequency: "?"
+execution_schedule: Sundays at 01:00 AM and on the 1st of the month at 01:00 AM
+extraction_notes: |-
+  The Data Science team will be responsible for running the routine that queries the described endpoint, applying the necessary filters, and storing the data in the Raw layer of the Data Lake.
+
+  Note: the extraction happens in two calls - the first returns only the ids of the registered policies, the second queries the full detail of each policy from those ids.
+filters: NA
+storage_notes: |-
+  Storage will be done in the Raw layer, containing the data extracted directly from the described API endpoint, without any type of transformation, fully preserving the data.
+
+  The data is organized following the standard naming convention. Additionally, temporal segregation must be maintained by collection period, using the YYYY-MM-DD naming convention, according to the frequency defined by the business. The following pattern must be followed:
+
+  CYBER/Client/Raw/CROWDSTRIKE/YYYY-MM-DD/USBPolicies.json
+
+  This organization ensures temporal traceability, ingestion standardization, and ease of auditing the protected server inventory data.
+sample_output: |-
+  {
+    "id": "1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d",
+    "cid": "9f8e7d6c5b4a3928170615f4e3d2c1b0",
+    "name": "Custom: Sample Read",
+    "description": "",
+    "platform_id": "0",
+    "platform_name": "Windows",
+    "assignment_type": "Automatic",
+    "groups": [
+      "aa11bb22cc33dd44ee55ff6607182930"
+    ],
+    "precedence": 1,
+    "enabled": true,
+    "created_by": "user1.demo@example-company.com.br",
+    "created_timestamp": "2025-10-23T17:24:46.208180185Z",
+    "modified_by": "user2.demo@example-company.com.br",
+    "modified_timestamp": "2026-05-18T18:51:47.85451495Z",
+    "usb_settings": {
+      "enforcement_mode": "MONITOR_ONLY",
+      "end_user_notification": "NOTIFY_USER",
+      "custom_notifications": {
+        "blocked_notification": {
+          "use_custom": false,
+          "custom_message": "Your removable device is blocked by your organization's policy"
+        },
+        "restricted_notification": {
+          "use_custom": false,
+          "custom_message": "Functions of your removable device are restricted by your organization's policy"
+        }
+      },
+      "classes": [
+        {
+          "id": "77aa88bb99cc00dd11ee22ff33001122",
+          "class": "MASS_STORAGE",
+          "action": "FULL_ACCESS",
+          "exceptions": []
+        }
+      ],
+      "whitelist_mode": "DISABLE_VIRTUAL",
+      "enhanced_file_metadata": true,
+      "pcie_enforcement_mode": "MONITOR_ONLY"
+    },
+    "usb_channel_version": 491,
+    "settings_hash": "692551e"
+  }
+owner: "João V. Kienen"
+source_repo: "CYBER__DeviceControl"
+last_reviewed: '2026-08-10'

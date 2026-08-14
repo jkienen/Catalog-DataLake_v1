@@ -1,0 +1,24 @@
+id: GOLD_HealthEDR-ExclusionsIOA
+layer: gold
+project: EDR Health Check Report
+sources_silver:
+- SILVER_HealthEDR-ExclusionsIOA
+description: |-
+  The Gold layer consolidates the data from the Silver layer into indicators ready for analytical and executive consumption.
+
+  All indicators must be generated per client, department group, and/or department.
+
+  The generated indicators are:
+kpis:
+- title: Total number of IOA exceptions
+  calculation: count of distinct Exception ID.
+  filters: null
+  reason: each exception disables a behavioral detection for a specific process, creating a blind spot not in a directory, but in an attack technique; the total measures how many detections were deliberately suppressed and serves as a baseline for tracking growth between periods. This is the highest-consequence type of exclusion, because the suppressed pattern describes known attack behavior, and the justification is usually a legitimate false positive, which makes periodic review indispensable rather than optional.
+  view: numeric count by reference month, detailed in a list with Exclusion Pattern, Applied Globally, Exclusion Image, Exception Name.
+
+- title: Percentage of exceptions applied globally
+  calculation: ratio of records with Applied Globally true over the total number of IOA exceptions.
+  filters: null
+  reason: a global exception suppresses behavioral detection across the entire fleet at once, instead of being restricted to specific hosts; tracking this ratio shows how much of the suppression has broad reach, the type of configuration that most deserves periodic review.
+  view: percentage by reference month, detailed in a list with Exception Name, Exclusion Pattern, Created By.
+last_reviewed: '2026-08-10'

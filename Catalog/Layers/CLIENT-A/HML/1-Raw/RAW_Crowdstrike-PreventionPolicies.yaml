@@ -1,0 +1,88 @@
+id: RAW_Crowdstrike-PreventionPolicies
+layer: raw
+platform: Crowdstrike
+endpoint: |-
+  (Prevention Policies)
+  - GET /policy/combined/prevention/v1
+description: |-
+  Obtains the Prevention (sensor protection) policies registered on the Crowdstrike platform, including the machine learning, execution blocking, and visibility settings enabled for each host group.
+load_type: Full
+frequency: Weekly
+volume_per_frequency: "?"
+execution_schedule: Sundays at 01:00 AM and on the 1st of the month at 01:00 AM
+extraction_notes: |-
+  The Data Science team will be responsible for running the routine that queries the described endpoint, applying the necessary filters, and storing the data in the Raw layer of the Data Lake.
+filters: |-
+  Run the query with the following conditions:
+
+  - limit: 5000
+storage_notes: |-
+  Storage will be done in the Raw layer, containing the data extracted directly from the described API endpoint, without any type of transformation, fully preserving the data.
+
+  The data is organized following the standard naming convention. Additionally, temporal segregation must be maintained by collection period, using the YYYY-MM-DD naming convention, according to the frequency defined by the business. The following pattern must be followed:
+
+  CYBER/Client/Raw/CROWDSTRIKE/YYYY-MM-DD/PreventionPolicies.json
+
+  This organization ensures temporal traceability, ingestion standardization, and ease of auditing the protected server inventory data.
+sample_output: |-
+  {
+      "id": "aaaa1111bbbb2222cccc3333dddd4444",
+      "cid": "9f8e7d6c5b4a3928170615f4e3d2c1b0",
+      "name": "Custom: Sample Policy",
+      "description": "Group intended for hosts with suspected performance impact, so technical teams can validate whether CrowdStrike is related to the limitations. Hosts must be added to this group to prevent the agent from being removed.",
+      "platform_name": "Windows",
+      "groups": [
+          {
+              "id": "bbbb2222cccc3333dddd4444eeee5555",
+              "group_type": "staticByID",
+              "name": "Custom: Sample Policy",
+              "description": "Group intended for hosts with suspected performance impact, so technical teams can validate whether CrowdStrike is related to the limitations. Hosts must be added to this group to prevent the agent from being removed.",
+              "assignment_rule": "device_id:['11112222333344445555666677778888','22223333444455556666777788889999','33334444555566667777888899990000'],hostname:[]",
+              "created_by": "user1.demo@example-company.com.br",
+              "created_timestamp": "2026-01-22T19:40:43.603496305Z",
+              "modified_by": "user2.demo@example-company.com.br",
+              "modified_timestamp": "2026-05-15T15:51:24.588832013Z"
+          }
+      ],
+      "enabled": false,
+      "created_by": "user1.demo@example-company.com.br",
+      "created_timestamp": "2026-01-22T19:36:02.606066271Z",
+      "modified_by": "user1.demo@example-company.com.br",
+      "modified_timestamp": "2026-06-18T16:26:51.0643468Z",
+      "prevention_settings": [
+          {
+              "name": "User-Mode Capabilities",
+              "settings": [
+                  {
+                      "id": "EndUserNotifications",
+                      "name": "Notify End Users",
+                      "type": "toggle",
+                      "description": "Show a pop-up notification to the end user when the Falcon sensor blocks, kills, or quarantines. These messages also show up in the Windows Event Viewer under Applications and Service Logs.",
+                      "value": {
+                          "configured": false,
+                          "enabled": false
+                      }
+                  }
+              ]
+          },
+          {
+              "name": "Cloud Machine Learning",
+              "settings": [
+                  {
+                      "id": "CloudAntiMalware",
+                      "name": "Cloud Anti-malware",
+                      "type": "mlslider",
+                      "description": "Use cloud-based machine learning informed by global analysis of executables to detect and prevent known malware for your online hosts.",
+                      "value": {
+                          "detection": "DISABLED",
+                          "prevention": "DISABLED"
+                      }
+                  }
+              ]
+          }
+      ],
+      "ioa_rule_groups": []
+  }
+owner: "João V. Kienen"
+source_repo: "CYBER__HealthEDR"
+last_reviewed: '2026-08-10'

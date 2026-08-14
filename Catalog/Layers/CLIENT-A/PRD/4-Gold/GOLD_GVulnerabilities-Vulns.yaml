@@ -1,0 +1,86 @@
+id: GOLD_GVulnerabilities-Vulns
+layer: gold
+project: Vulnerability Management
+sources_silver:
+- SILVER_GVulnerabilities-Vulns
+description: |-
+  The Gold layer consolidates the data from the Silver layer into indicators ready for analytical and executive consumption.
+
+  All indicators must be generated per client, department group, and/or department.
+
+  Reference SLAs: Critical = 80 days | High = 100 days | Medium = 120 days | Low = 140 days.
+
+  The generated indicators are:
+kpis:
+- title: Number of active vulnerabilities by severity
+  calculation: count of records grouped by "Vuln Severity".
+  filters: disregard Risk State = ACCEPTED.
+  reason: basic snapshot of the risk backlog by severity; starting point for any prioritization.
+  view: null
+
+- title: Number of vulnerabilities with accepted risk by severity
+  calculation: count of records grouped by "Vuln Severity", showing only Risk State = ACCEPTED.
+  filters: null
+  reason: provides visibility into formally accepted risk (a conscious decision vs. silent accumulation) and allows auditing exceptions, especially at high severities.
+  view: null
+
+- title: Average age of active vulnerabilities by severity
+  calculation: '"Vuln Age-in-days" aggregated by "Vuln Severity". Display average, median, and p90/p95. The average at the client/group level is weighted by the volume of vulnerabilities in each department.'
+  filters: disregard Risk State = ACCEPTED.
+  reason: measures how long the risk has been open; high age at high severities is a direct sign of process failure.
+  view: null
+
+- title: Active vulnerabilities in CISA KEV
+  calculation: count and list of records with "On CISA KEV" = true.
+  filters: disregard Risk State = ACCEPTED.
+  reason: the KEV catalog gathers vulnerabilities with confirmed active exploitation in the wild. It is the "fix now" indicator; it is usually a minimal fraction of the total and therefore highly actionable.
+  view: null
+
+- title: Active vulnerabilities with an available exploit
+  calculation: count of records with "Exploit Available" = true, broken down by "Exploit Maturity", "Exploited By Malware", and "Exploited By Nessus".
+  filters: disregard Risk State = ACCEPTED.
+  reason: the existence and maturity of an exploit, and use by malware, drastically raise the probability of a real attack, much more discriminating than raw CVSS severity and VPR alone.
+  view: null
+
+- title: Active vulnerabilities by EPSS range
+  calculation: count of records by "EPSS Score" range (e.g., ≥ 0.5 / 0.1–0.5 / < 0.1).
+  filters: disregard Risk State = ACCEPTED.
+  reason: EPSS estimates the probability of exploitation in the next 30 days; cross-referenced with exploit availability, it filters out much of the noise from theoretical severity.
+  view: null
+
+- title: Actionable backlog with combined prioritization
+  calculation: count and list of vulnerabilities where "Vuln Severity" = {Critical, High} and ("On CISA KEV" = true or "Exploit Available" = true or "EPSS Score" high).
+  filters: disregard Risk State = ACCEPTED.
+  reason: isolates the subset that genuinely requires immediate action. It is small, real, and feasible to bring to zero, the best single number to hold a department accountable for.
+  view: null
+
+- title: Percentage of active vulnerabilities within/outside SLA by severity
+  calculation: classify each active vulnerability as within/outside SLA by comparing "Vuln Age in-days" to the SLA of its severity; calculate the percentage in each state.
+  filters: disregard Risk State = ACCEPTED.
+  reason: it is the main governance and accountability indicator, it measures deadline discipline, not just volume.
+  view: null
+
+- title: Active vulnerabilities that are overdue and exploitable
+  calculation: vulnerabilities outside SLA (8. Percentage of active vulnerabilities within/outside SLA by severity) and ("On CISA KEV" = true or "Exploit Available" = true).
+  filters: disregard Risk State = ACCEPTED.
+  reason: the worst possible combination, proven real risk and a blown deadline; it should top any action list.
+  view: null
+
+- title: Distinct vulnerabilities vs. instances
+  calculation: count of distinct vulnerabilities (by "Vuln Group" or distinct CVEs) vs. count of instances (records = vuln × host).
+  filters: disregard Risk State = ACCEPTED.
+  reason: fixing a single vulnerability can resolve hundreds of instances; showing both numbers avoids overestimating the effort and guides prioritization by reach.
+  view: null
+
+- title: Concentration by family / operating system
+  calculation: count of active vulnerabilities grouped by "Vuln Family" and by "Server System".
+  filters: disregard Risk State = ACCEPTED.
+  reason: reveals remediation patterns (e.g., many outdated Oracle Linux kernels) that enable single patch campaigns instead of item-by-item treatment.
+  view: null
+
+- title: New vulnerabilities in the month
+  calculation: count of records whose "First Seen" falls within the reference month ("Reference Month" / "Reference Year"), by severity.
+  filters: disregard Risk State = ACCEPTED.
+  reason: measures the inflow of risk.
+  view: null
+last_reviewed: '2026-08-07'

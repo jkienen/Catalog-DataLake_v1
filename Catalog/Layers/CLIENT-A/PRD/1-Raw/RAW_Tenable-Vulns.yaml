@@ -1,0 +1,190 @@
+id: RAW_Tenable-Vulns
+layer: raw
+platform: Tenable
+endpoint: |-
+  (Vulns)
+  - /vulns/export
+  - /vulns/export/{export_uuid}/chunks/{chunk_id}
+description: |-
+  Obtains the active vulnerabilities detected by Tenable, including identification of the affected asset, plugin data (name, family, synopsis, solution, and CVEs), CVSS vectors and scores, VPR and VPR v2, exploitation indicators (EPSS, CISA KEV, exploit maturity), severity, and detection dates.
+load_type: Full
+frequency: Weekly
+volume_per_frequency: "?"
+execution_schedule: Sundays at 01:00 AM and on the 1st of the month at 01:00 AM
+extraction_notes: |-
+  The Data Science team will be responsible for running the routine that queries the described endpoint, applying the necessary filters, and storing the data in the Raw layer of the Data Lake.
+
+  Note: The extraction happens in two steps. The first endpoint starts the vulnerability export and the second retrieves the result in chunks. The same endpoint serves RAW_Tenable-VulnsFixed, with different filters.
+filters: |-
+  Run the query with the following conditions:
+
+  - severity: ["low", "medium", "high", "critical"]
+  - source: ["AGENT", "NESSUS"]
+  - state: ["OPEN", "REOPENED"]
+storage_notes: |-
+  Storage will be done in the Raw layer, containing the data extracted directly from the described API endpoint, without any type of transformation, fully preserving the data.
+
+  The data is organized following the standard naming convention. Additionally, temporal segregation must be maintained by collection period, using the YYYY-MM-DD naming convention, according to the frequency defined by the business. The following pattern must be followed:
+
+  CYBER/Client/Raw/TENABLE/YYYY-MM-DD/Vulns.json
+
+  This organization ensures temporal traceability, ingestion standardization, and ease of auditing the protected server inventory data.
+sample_output: |-
+  {
+      "asset": {
+          "agent_uuid": "c8b04d7f2a95e613b7c0428de1f96a35",
+          "bios_uuid": "2c9d5b81-7e34-4a02-8f61-9b4d7c0e3a52",
+          "device_type": "general-purpose",
+          "hostname": "srv-app-worker-01",
+          "uuid": "5a1f8d03-2c74-4e91-b6d8-1f5a0c9e7b34",
+          "ipv4": "10.0.0.20",
+          "last_authenticated_results": "2026-03-13T02:02:32.988Z",
+          "mac_address": "00:50:56:aa:bb:ce",
+          "operating_system": [
+              "Oracle Linux Server 9.7"
+          ],
+          "network_id": "00000000-0000-0000-0000-000000000000",
+          "tracked": true
+      },
+      "output": "\nPackage kernel-uek-5.15.0-317.197.5.1.el9uek is installed.\nHowever, according to uname -r, the current running kernel level is 5.15.0-315.196.5.1.el9uek.\nThis system requires a reboot to begin using the patched kernel level.\n\nPackage kernel-uek-core-5.15.0-317.197.5.1.el9uek is installed.\nHowever, according to uname -r, the current running kernel level is 5.15.0-315.196.5.1.el9uek.\nThis system requires a reboot to begin using the patched kernel level.\n\nPackage kernel-uek-modules-5.15.0-317.197.5.1.el9uek is installed.\nHowever, according to uname -r, the current running kernel level is 5.15.0-315.196.5.1.el9uek.\nThis system requires a reboot to begin using the patched kernel level.\n\n",
+      "plugin": {
+          "checks_for_default_account": false,
+          "checks_for_malware": false,
+          "cpe": [
+              "p-cpe:/a:oracle:linux:kernel-uek-container",
+              "cpe:/o:oracle:linux:8",
+              "p-cpe:/a:oracle:linux:kernel-uek-doc"
+          ],
+          "cvss3_base_score": 7.8,
+          "cvss3_temporal_score": 7.0,
+          "cvss3_temporal_vector": {
+              "exploitability": "Proof-of-Concept",
+              "remediation_level": "Official Fix",
+              "report_confidence": "Confirmed",
+              "raw": "E:P/RL:O/RC:C"
+          },
+          "cvss3_vector": {
+              "access_complexity": "Low",
+              "access_vector": "Local",
+              "availability_impact": "High",
+              "confidentiality_impact": "High",
+              "integrity_impact": "High",
+              "raw": "AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
+          },
+          "cvss_base_score": 6.3,
+          "cvss_temporal_score": 4.9,
+          "cvss_temporal_vector": {
+              "exploitability": "Proof-of-Concept",
+              "remediation_level": "Official Fix",
+              "report_confidence": "Confirmed",
+              "raw": "E:POC/RL:OF/RC:C"
+          },
+          "cvss_vector": {
+              "access_complexity": "Medium",
+              "access_vector": "Network",
+              "authentication": "Single",
+              "availability_impact": "None",
+              "confidentiality_impact": "Complete",
+              "integrity_impact": "None",
+              "raw": "AV:N/AC:M/Au:S/C:C/I:N/A:N"
+          },
+          "description": "The remote Oracle Linux 8 / 9 host has packages installed .....",
+          "exploit_available": true,
+          "exploit_framework_canvas": false,
+          "exploit_framework_core": false,
+          "exploit_framework_d2_elliot": false,
+          "exploit_framework_exploithub": false,
+          "exploit_framework_metasploit": false,
+          "exploitability_ease": "Exploits are available",
+          "exploited_by_malware": false,
+          "exploited_by_nessus": false,
+          "family": "Oracle Linux Local Security Checks",
+          "family_id": 53,
+          "has_patch": true,
+          "id": 299303,
+          "in_the_news": false,
+          "name": "Oracle Linux 8 / 9 : Unbreakable Enterprise kernel (ELSA-2026-50113)",
+          "patch_publication_date": "2026-02-15T00:00:00Z",
+          "modification_date": "2026-02-17T00:00:00Z",
+          "publication_date": "2026-02-17T00:00:00Z",
+          "risk_factor": "medium",
+          "see_also": [
+              "https://linux.oracle.com/errata/ELSA-2026-50113.html"
+          ],
+          "solution": "Update the affected packages.",
+          "synopsis": "The remote Oracle Linux host is missing one or more security updates.",
+          "unsupported_by_vendor": false,
+          "version": "1.2",
+          "vuln_publication_date": "2018-06-08T00:00:00Z",
+          "xrefs": [
+              {
+                  "type": "CVE",
+                  "id": "2025-68821"
+              }
+          ],
+          "vpr": {
+              "score": 6.7,
+              "drivers": {
+                  "age_of_vuln": {
+                      "lower_bound": 61,
+                      "upper_bound": 180
+                  },
+                  "exploit_code_maturity": "UNPROVEN",
+                  "cvss_impact_score_predicted": false,
+                  "cvss3_impact_score": 5.9,
+                  "threat_intensity_last28": "VERY_LOW",
+                  "threat_sources_last28": [
+                      "No recorded events"
+                  ],
+                  "product_coverage": "LOW"
+              },
+              "updated": "2026-02-03T06:05:05Z"
+          },
+          "vpr_v2": {
+              "score": 7.6,
+              "vpr_percentile": 98.57,
+              "vpr_severity": "HIGH",
+              "exploit_probability": 0.01,
+              "cve_id": "CVE-2025-68301",
+              "exploit_code_maturity": "UNPROVEN",
+              "on_cisa_kev": false,
+              "in_the_news_intensity_last30": "VERY_LOW",
+              "in_the_news_recency": "NO_RECORDED_EVENTS",
+              "malware_observations_intensity_last30": "VERY_LOW",
+              "malware_observations_recency": "NO_RECORDED_EVENTS"
+          },
+          "has_workaround": false,
+          "cve": [
+              "CVE-2018-1000204",
+              "CVE-2024-37354",
+              "CVE-2024-47666",
+              "CVE-2025-68734",
+              "CVE-2025-68821"
+          ],
+          "epss_score": 0.171,
+          "type": "local"
+      },
+      "port": {
+          "port": 0,
+          "protocol": "TCP"
+      },
+      "scan": {
+          "schedule_uuid": "7b6d10c4-a92f-3e57-84bd-6f1c2079e3ba48d7159c02fe6b31",
+          "started_at": "2026-03-13T01:01:38.929Z",
+          "uuid": "1d84f7b3-6e29-4a05-9c73-8f2b5d61e4a7",
+          "target": "127.0.0.1"
+      },
+      "severity": "high",
+      "severity_id": 3,
+      "severity_default_id": 2,
+      "severity_modification_type": "NONE",
+      "first_found": "2026-02-24T01:50:15.247Z",
+      "last_found": "2026-03-13T02:02:32.988Z",
+      "state": "OPEN",
+      "indexed": "2026-03-13T02:04:26.409923Z",
+      "source": "AGENT",
+      "finding_id": "3d7b0a56-9f21-548c-ae74-2b8f6d1c0e93"
+  }
+owner: João V. Kienen
+source_repo: "CYBER__GVulnerabilities"
+last_reviewed: '2026-08-07'

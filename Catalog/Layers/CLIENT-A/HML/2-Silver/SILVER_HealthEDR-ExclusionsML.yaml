@@ -1,0 +1,45 @@
+id: SILVER_HealthEDR-ExclusionsML
+layer: silver
+project: EDR Health Check Report
+sources_raw:
+- RAW_Crowdstrike-ExclusionsML
+sources_silver: []
+generates_audits: NA
+execution_schedule: Sundays at 02:00 AM and on the 1st of the month at 02:00 AM
+filters: NA
+pipeline: |-
+  The Data Science team will be responsible for retrieving the raw data from the Raw layer and structuring it as shown in the next step.
+
+  Excluded From:
+
+  List of Machine Learning engines to which the exception applies, joined by comma. Receives "-" when the list comes empty.
+
+  Applied For:
+
+  Derived from the exception's groups. All values in quotes present in the assignment_rule of each group are collected (in the rule, only the values are quoted; the keys never are). When the exception is global (Applied Globally = true) or has no groups, Applied For receives "-".
+structure_notes: |-
+  The data sources will be organized into the columns Exception ID, Exception Value, Excluded From, Applied For, Applied Globally, Created Date, Created By, Reference Month, Reference Year, Reference Date, ensuring consistency, asset traceability, and data readiness for the indicators layer.
+storage_notes: |-
+  Storage will be done in the Silver layer; the structured data will be kept ready for queries feeding the indicator calculations.
+
+  The data is organized following the standard naming convention. Additionally, temporal segregation must be maintained by collection period, using the YYYY-MM-DD naming convention, according to the frequency defined by the business. The following pattern must be followed:
+
+  CYBER/Client/Silver/HealthEDR/YYYY-MM-DD/ExclusionsML.json
+
+  This organization ensures temporal traceability, ingestion standardization, and ease of auditing the data.
+sample_output: |-
+  {
+    "Exception ID": "ddeeff5566778899bbcc0011223344ee",
+    "Exception Value": "**\\Program Files*\\SampleApp*\\**",
+    "Excluded From": "blocking",
+    "Applied For": "aaaa0001aaaa0001aaaa0001aaaa0001, aaaa0002aaaa0002aaaa0002aaaa0002, aaaa0003aaaa0003aaaa0003aaaa0003, aaaa0004aaaa0004aaaa0004aaaa0004, aaaa0005aaaa0005aaaa0005aaaa0005, aaaa0006aaaa0006aaaa0006aaaa0006, aaaa0007aaaa0007aaaa0007aaaa0007, aaaa0008aaaa0008aaaa0008aaaa0008, aaaa0009aaaa0009aaaa0009aaaa0009",
+    "Applied Globally": false,
+    "Created Date": "2024-02-09T12:28:51.180515355Z",
+    "Created By": "user4.demo@example-company.com.br",
+    "Reference Month": "08",
+    "Reference Year": "2026",
+    "Reference Date": "2026-08-10"
+  }
+owner: "João V. Kienen"
+source_repo: "CYBER__HealthEDR"
+last_reviewed: '2026-08-10'

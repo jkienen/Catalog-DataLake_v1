@@ -1,0 +1,78 @@
+id: RAW_VCenter-Assets
+layer: raw
+platform: VCenter
+endpoint: |-
+  (Assets)
+  - /api/v1/list
+description: |-
+  Obtains the inventory of virtual machines from VCenter, including VM identification, network addresses, classification metadata (sector, environment, system, and owner), infrastructure location (cluster, host, and LUNs), and VM state indicators.
+load_type: Full
+frequency: Weekly
+volume_per_frequency: "?"
+execution_schedule: Sundays at 01:00 AM and on the 1st of the month at 01:00 AM
+extraction_notes: |-
+  The Data Science team will be responsible for running the routine that queries the described endpoint, applying the necessary filters, and storing the data in the Raw layer of the Data Lake.
+filters: NA
+storage_notes: |-
+  Storage will be done in the Raw layer, containing the data extracted directly from the described API endpoint, without any type of transformation, fully preserving the data.
+
+  The data is organized following the standard naming convention. Additionally, temporal segregation must be maintained by collection period, using the YYYY-MM-DD naming convention, according to the frequency defined by the business. The following pattern must be followed:
+
+  CYBER/Client/Raw/VCENTER/YYYY-MM-DD/Assets.json
+
+  This organization ensures temporal traceability, ingestion standardization, and ease of auditing the protected server inventory data.
+sample_output: |-
+  {
+      "id":"vm-10473",
+      "uuid":"4f81b23d7-c19e-8a02b6f4d5e7",
+      "tenant":"ACME_CLOUD_ORG",
+      "vdc":"ACME_CLOUD_VDC-DC-01",
+      "vmName":"ACME-APP-SERVER-01",
+      "os":"Rocky Linux (64-bit)",
+      "powerState":true,
+      "vmware_tools":true,
+      "vmware_tools_version":"13312",
+      "hostname":"ACME-APP-SERVER-01",
+      "macAddress":[
+          "00:50:56:aa:bb:c1",
+          "00:50:56:aa:bb:c0"
+      ],
+      "ipAddress":[
+          "fe80::22aa:71bb:fe09:3d17",
+          "172.16.0.1",
+          "192.168.0.20",
+          "10.0.0.40",
+          "fe80::3c15:b8e2:aa41:97db",
+          "fe80::250:56ff:feaa:bbc0"
+      ],
+      "lun":[
+          "STORAGE-VMWARE-ACME-01-CATALOG",
+          "STORAGE-VMWARE-ACME-01-DATA-01",
+          "STORAGE-VMWARE-ACME-01-DATA-02"
+      ],
+      "metadata":{
+          "APPLIANCE":false,
+          "ENVIRONMENT":"PRD",
+          "SYSTEM":"SAMPLE-SYSTEM",
+          "FUNCTION":"APPLICATION",
+          "SECTOR":"IT",
+          "RESPONSIBLE":"JOSE SILVA",
+          "CRITICAL":true,
+          "NEEDS_BACKUP":true,
+          "NOTES":null,
+          "APPLIANCE_SECONDARY":false
+      },
+      "is_template":false,
+      "created_at":"2025-04-28T19:08:21.408784Z",
+      "cluster":"DC-01-CLUSTER",
+      "host_vendor":"Hardware Vendor",
+      "host_model":"Server Model",
+      "host_ip":"192.168.0.100",
+      "type":"vm",
+      "environment":"vcloud",
+      "vcenter_name":"ACME-VCENTER01",
+      "owner":"user1.demo@example-company.com.br"
+  }
+owner: João V. Kienen
+source_repo: "CYBER__GVulnerabilities"
+last_reviewed: '2026-08-07'

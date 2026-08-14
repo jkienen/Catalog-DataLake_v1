@@ -1,0 +1,30 @@
+id: GOLD_HealthEDR-AssetsWindows
+layer: gold
+project: EDR Health Check Report
+sources_silver:
+- SILVER_HealthEDR-AssetsWindows
+description: |-
+  The Gold layer consolidates the data from the Silver layer into indicators ready for analytical and executive consumption.
+
+  All indicators must be generated per client, department group, and/or department.
+
+  The generated indicators are:
+kpis:
+- title: Average Host Score
+  calculation: average Host Score across monitored Windows hosts.
+  filters: null
+  reason: the Host Score summarizes the sensor's security configuration in a single number; tracking the average over time flags when the overall posture of the Windows fleet is declining before it turns into a concrete incident.
+  view: numeric average by reference month, detailed in a list with Host Name, Department, Host Score. This shows whether the drop is concentrated in a specific department or widespread.
+
+- title: Percentage of hosts in RFM (Reduced Functionality Mode)
+  calculation: ratio of hosts with RFM true over the total number of monitored Windows hosts.
+  filters: null
+  reason: a host in RFM has reduced sensor protection; each host in this condition is a blind spot that goes unnoticed if no one tracks the total.
+  view: percentage by reference month, detailed in a list with Host Name, OS Version, Department. The system version helps identify whether the problem repeats on the same version.
+
+- title: Percentage of hosts with at least one assessment item in Attention
+  calculation: ratio of hosts where at least one of the item columns (prefix "Item") has the value Attention over the total number of monitored Windows hosts.
+  filters: null
+  reason: each item in Attention is a posture criterion the host fails to meet; measuring how many hosts have at least one prioritizes where the team should investigate first, instead of treating each signal in isolation.
+  view: percentage by reference month, detailed in a list with Host Name, Department, and the names of the items in Attention. This distinguishes a host with a one-off failure from another with multiple failed criteria.
+last_reviewed: '2026-08-10'

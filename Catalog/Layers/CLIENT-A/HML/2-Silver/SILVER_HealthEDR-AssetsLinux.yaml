@@ -1,0 +1,106 @@
+id: SILVER_HealthEDR-AssetsLinux
+layer: silver
+project: EDR Health Check Report
+sources_raw:
+- RAW_Crowdstrike-Assets
+- RAW_Crowdstrike-SensorHealth
+- RAW_Crowdstrike-PreventionPolicies
+- RAW_Crowdstrike-USBPolicies
+- RAW_Crowdstrike-FirewallPolicies
+- RAW_Crowdstrike-SensorUpdatePolicies
+- RAW_Crowdstrike-ContentUpdatePolicies
+- RAW_VCenter-Assets
+sources_silver: []
+generates_audits:
+- AUDIT_HealthEDR-UnwatchedLinux
+execution_schedule: Sundays at 02:00 AM and on the 1st of the month at 02:00 AM
+filters: |-
+  Keeps only hosts with Host OS = Linux. Hosts with an operating system other than Linux, Mac and Windows are discarded at the source, regardless of the result of the cross-reference with VCenter.
+pipeline: |-
+  The Data Science team will be responsible for retrieving the raw data from the Raw layer and structuring it as shown in the next step.
+
+  Department / Server VM:
+
+  Hosts of type Workstation receive a fixed Department of "TI-SERVICEDESK" and Server VM equal to the Host Name itself. The remaining hosts are cross-referenced by Mac Address against the VCenter inventory: Department receives the Sector and Server VM receives the Asset VM of the matched record. Hosts that do not match are left without these two columns and are separated into the combined Audit for this layer.
+
+  Mac Address:
+
+  Union of the host's physical and connection addresses, deduplicated, sorted, and with the "-" separator replaced by ":".
+
+  Last Seen:
+
+  Converted from the UTC time returned by the platform to America/Sao_Paulo (UTC-3) and reformatted to YYYY-MM-DD.
+
+  Host State:
+
+  Capitalization of the host's raw status.
+
+  Uninstall Protection:
+
+  Capitalization of the uninstall protection value defined in the Sensor Update policy assigned to the host; falls back to "-" when the policy does not define the field.
+
+  RFM:
+
+  True when the host's reduced functionality mode indicator is marked as "yes"; false otherwise.
+
+  Linux Mode:
+
+  Kept only for Linux hosts; for hosts of other operating systems this column is left entirely empty and is dropped from the file.
+
+  Prevention Policy / USB Device Policy / Firewall Policy / Sensor Update Policy / Content Policy:
+
+  Each one resolved by cross-referencing the policy id assigned to the host, per policy type, against the respective list of named policies (Prevention, Device Control, Firewall, Sensor Update, Content Update); falls back to "-" when the id is not found in the corresponding list.
+
+  Host Score / Item: <signal>:
+
+  Cross-referenced from the host's security posture assessment (Zero Trust Assessment), matching by host id. Host Score receives the overall sensor configuration score. An "Item: <signal name>" column is created per evaluated signal: for Linux hosts in reduced functionality mode, every signal - except the RFM signal itself - receives "Check RFM" regardless of the individual result; in other cases the value is "Ok" when the signal meets the criterion and "Attention" when it does not.
+structure_notes: |-
+  The data sources will be organized into the columns Department, Server VM, Last Seen, Host Id, Host Name, Mac Address, Host Type, Host OS, OS Version, Kernel Version, Host State, RFM, Linux Mode, Uninstall Protection, Prevention Policy, USB Device Policy, Firewall Policy, Sensor Update Policy, Content Policy, Host Score, Item: Cloud ML - Cloud Anti-malware | Detection for Linux, Item: Cloud ML - Cloud Anti-malware | Prevention for Linux, Item: Sensor ML Anti-malware | Detection for Linux, Item: Sensor ML Anti-malware | Prevention for Linux, Item: Execution Blocking - Custom Blocking for Linux, Item: Execution Blocking - Suspicious Processes for Linux, Item: Script-Based Execution Monitoring for Linux, Item: CrowdStrike - Real Time Response for Linux, Item: Reduced Functionality Mode, Reference Month, Reference Year, Reference Date, ensuring consistency, asset traceability, and data readiness for the indicators layer.
+storage_notes: |-
+  Storage will be done in the Silver layer; the structured data will be kept ready for queries feeding the indicator calculations.
+
+  The data is organized following the standard naming convention. Additionally, temporal segregation must be maintained by collection period, using the YYYY-MM-DD naming convention, according to the frequency defined by the business. The following pattern must be followed:
+
+  CYBER/Client/Silver/HealthEDR/YYYY-MM-DD/AssetsLinux.json
+
+  This organization ensures temporal traceability, ingestion standardization, and ease of auditing the data.
+sample_output: |-
+  {
+    "Department": "DATACENTER",
+    "Server VM": "DC-APPSRV02",
+    "Last Seen": "2026-08-10",
+    "Host Id": "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6",
+    "Host Name": "srv-app02.example-company.com.br",
+    "Mac Address": [
+      "00:50:56:aa:bb:cc"
+    ],
+    "Host Type": "Server",
+    "Host OS": "Linux",
+    "OS Version": "AlmaLinux 8.10",
+    "Kernel Version": "4.18.0-553.144.1.el8_10.x86_64",
+    "Host State": "Visible",
+    "RFM": false,
+    "Linux Mode": "User Mode",
+    "Uninstall Protection": "Enabled",
+    "Prevention Policy": "platform_default",
+    "USB Device Policy": "-",
+    "Firewall Policy": "platform_default",
+    "Sensor Update Policy": "Custom: Default (Linux)",
+    "Content Policy": "platform_default",
+    "Host Score": 100.0,
+    "Item: Cloud ML - Cloud Anti-malware | Detection for Linux": "Ok",
+    "Item: Cloud ML - Cloud Anti-malware | Prevention for Linux": "Ok",
+    "Item: Sensor ML Anti-malware | Detection for Linux": "Ok",
+    "Item: Sensor ML Anti-malware | Prevention for Linux": "Ok",
+    "Item: Execution Blocking - Custom Blocking for Linux": "Ok",
+    "Item: Execution Blocking - Suspicious Processes for Linux": "Ok",
+    "Item: Script-Based Execution Monitoring for Linux": "Ok",
+    "Item: CrowdStrike - Real Time Response for Linux": "Ok",
+    "Item: Reduced Functionality Mode": "Ok",
+    "Reference Month": "08",
+    "Reference Year": "2026",
+    "Reference Date": "2026-08-10"
+  }
+owner: "João V. Kienen"
+source_repo: "CYBER__HealthEDR"
+last_reviewed: '2026-08-10'

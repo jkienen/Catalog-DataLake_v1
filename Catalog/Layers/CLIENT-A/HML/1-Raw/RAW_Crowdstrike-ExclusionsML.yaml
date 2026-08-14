@@ -1,0 +1,60 @@
+id: RAW_Crowdstrike-ExclusionsML
+layer: raw
+platform: Crowdstrike
+endpoint: |-
+  (ML Exclusions)
+  - GET /policy/queries/ml-exclusions/v1
+  - GET /policy/entities/ml-exclusions/v1
+description: |-
+  Obtains the Machine Learning exclusions registered on the Crowdstrike platform, including the excluded path, the ML engines to which the exclusion applies (excluded_from), and the covered host groups.
+load_type: Full
+frequency: Weekly
+volume_per_frequency: "?"
+execution_schedule: Sundays at 01:00 AM and on the 1st of the month at 01:00 AM
+extraction_notes: |-
+  The Data Science team will be responsible for running the routine that queries the described endpoint, applying the necessary filters, and storing the data in the Raw layer of the Data Lake.
+
+  Note: the extraction happens in two calls - the first returns only the ids of the registered exclusions, the second queries the full detail of each exclusion from those ids.
+filters: |-
+  Run the query with the following conditions:
+
+  - limit: 500
+storage_notes: |-
+  Storage will be done in the Raw layer, containing the data extracted directly from the described API endpoint, without any type of transformation, fully preserving the data.
+
+  The data is organized following the standard naming convention. Additionally, temporal segregation must be maintained by collection period, using the YYYY-MM-DD naming convention, according to the frequency defined by the business. The following pattern must be followed:
+
+  CYBER/Client/Raw/CROWDSTRIKE/YYYY-MM-DD/ExclusionsML.json
+
+  This organization ensures temporal traceability, ingestion standardization, and ease of auditing the protected server inventory data.
+sample_output: |-
+  {
+      "id": "ddeeff5566778899bbcc0011223344ee",
+      "value": "**\\Program Files*\\SampleApp*\\**",
+      "regexp_value": "(?:[^/\\\\]*[/\\\\])*Program Files[^/\\\\]*\\\\SampleApp[^/\\\\]*\\\\.*",
+      "value_hash": "ef2a5ab28c019faf3255fcf4c1c5b52d",
+      "excluded_from": [
+          "blocking"
+      ],
+      "groups": [
+          {
+              "id": "eeff667788990011ccdd2233445566ff",
+              "group_type": "staticByID",
+              "name": "Custom: Sample Application",
+              "description": "Sample application exclusion.\nTickets:\nhttps://example-company.com.br/tickets/0000",
+              "assignment_rule": "device_id:['aaaa0001aaaa0001aaaa0001aaaa0001','aaaa0002aaaa0002aaaa0002aaaa0002','aaaa0003aaaa0003aaaa0003aaaa0003','aaaa0004aaaa0004aaaa0004aaaa0004','aaaa0005aaaa0005aaaa0005aaaa0005','aaaa0006aaaa0006aaaa0006aaaa0006','aaaa0007aaaa0007aaaa0007aaaa0007','aaaa0008aaaa0008aaaa0008aaaa0008','aaaa0009aaaa0009aaaa0009aaaa0009'],hostname:[]",
+              "created_by": "user4.demo@example-company.com.br",
+              "created_timestamp": "2024-02-07T16:53:20.979689796Z",
+              "modified_by": "user4.demo@example-company.com.br",
+              "modified_timestamp": "2025-12-30T14:36:13.413421257Z"
+          }
+      ],
+      "applied_globally": false,
+      "last_modified": "2025-01-30T17:15:52.280549839Z",
+      "modified_by": "user1.demo@example-company.com.br",
+      "created_on": "2024-02-09T12:28:51.180515355Z",
+      "created_by": "user4.demo@example-company.com.br"
+  }
+owner: "João V. Kienen"
+source_repo: "CYBER__HealthEDR"
+last_reviewed: '2026-08-10'

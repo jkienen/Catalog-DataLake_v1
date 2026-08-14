@@ -1,0 +1,125 @@
+id: SILVER_GVulnerabilities-Assets
+layer: silver
+project: Vulnerability Management
+sources_raw:
+- RAW_Tenable-Assets
+- RAW_VCenter-Assets
+sources_silver: []
+generates_audits:
+- AUDIT_GVulnerabilities-UnwatchedAssets
+execution_schedule: Sundays at 02:00 AM and on the 1st of the month at 02:00 AM
+filters: |-
+  Perform the structuring with the following conditions:
+
+  - Disregard VCenter virtual machines marked as template.
+  - Keep only Tenable assets whose MAC address matches that of a VCenter virtual machine; the rest are separated for audit.
+pipeline: |-
+  The Data Science team will be responsible for retrieving the raw data from the Raw layer and structuring it as shown in the next step.
+
+  Department:
+
+  Starts from the asset's sector tag in Tenable and is replaced by the sector of the corresponding virtual machine in VCenter, when there is a MAC address match. In VCenter the sector follows this precedence: the sector declared in the machine's metadata, when it belongs to the list of departments kept in the secrets vault; otherwise, CYBER when the tenant contains "CYBER"; otherwise, DATACENTER when the tenant contains "FULL", "HOSP" or "CENTER", or when the tenant is empty; otherwise, TI-INFRA. When there is no sector in either source, it receives "-".
+
+  Last Department:
+
+  Stores the asset's previous sector when the VCenter sector differs from the one that came from the Tenable tag. When there is no change, it receives "-".
+
+  Department Changed:
+
+  True when the VCenter sector differs from the sector that came from the Tenable tag, false otherwise.
+
+  Server VM:
+
+  Name of the corresponding virtual machine in VCenter.
+
+  Server Name:
+
+  First agent name registered in Tenable. When absent, it receives "-".
+
+  Server Type:
+
+  Derived from the asset's type tag in Tenable. When absent, it receives "-".
+
+  Mac Address:
+
+  Set of unique MAC addresses declared in the asset's network interfaces. When the asset does not have detailed interfaces, the MAC addresses from the record itself are used; when both are absent, it receives "-".
+
+  Score ACR and Score AES:
+
+  Derived from the asset's risk assessments in Tenable. When the assessment does not exist, they receive 0.
+
+  Last Seen:
+
+  Date of the asset's last sighting, normalized to the YYYY-MM-DD format.
+
+  Server Installed Softwares:
+
+  List of installed products, extracting the product name from each CPE identifier registered on the asset. When the asset has no registered software, it receives "-".
+
+  Vulns Critical, Vulns High, Vulns Medium and Vulns Low:
+
+  Filled in on a second pass, by the vulnerabilities routine: count of the asset's active vulnerabilities at each severity, disregarding those with accepted risk.
+
+  Vulns Total:
+
+  Sum of the four severity counts.
+
+  Reference Month, Reference Year and Reference Date:
+
+  Month, year and date of the routine's execution.
+structure_notes: |-
+  The data sources will be organized into the columns Department, Server Id, Server VM, Server Name, Server Type, Score ACR, Score AES, Vulns Critical, Vulns High, Vulns Medium, Vulns Low, Vulns Total, Mac Address, Last Seen, Last Department, Department Changed, Server Has Agent?, Server Installed Softwares, Reference Month, Reference Year, Reference Date, ensuring consistency, asset traceability, and data readiness for the indicators layer.
+storage_notes: |-
+  Storage will be done in the Silver layer; the structured data will be kept ready for queries feeding the indicator calculations.
+
+  The data is organized following the standard naming convention. Additionally, temporal segregation must be maintained by collection period, using the YYYY-MM-DD naming convention, according to the frequency defined by the business. The following pattern must be followed:
+
+  CYBER/Client/Silver/GVulnerabilities/YYYY-MM-DD/Assets.json
+
+  This organization ensures temporal traceability, ingestion standardization, and ease of auditing the data.
+sample_output: |-
+  {
+      "Department": "TI",
+      "Server Id": "7b42e1d0-58ac-4f39-b6d1-20e8c45a9f13",
+      "Server VM": "ACME-GST-PORTAL-HML",
+      "Server Name": "acme-gst-portal-hml",
+      "Server Type": "Unix Server",
+      "Score ACR": 5.0,
+      "Score AES": 679.0,
+      "Vulns Critical": 0,
+      "Vulns High": 0,
+      "Vulns Medium": 0,
+      "Vulns Low": 0,
+      "Vulns Total": 0,
+      "Mac Address": [
+          "aa:bb:cc:41:9d:07"
+      ],
+      "Last Seen": "2026-03-24",
+      "Last Department": "TI",
+      "Department Changed": true,
+      "Server Has Agent?": true,
+      "Server Installed Softwares": [
+          "docker",
+          "exiv2",
+          "libexiv2",
+          "gnome-shell",
+          "libgcrypt",
+          "curl",
+          "libcurl",
+          "containerd",
+          "node.js",
+          "openssl",
+          "podman",
+          "nessus_agent",
+          "xz",
+          "vim",
+          "open_vm_tools",
+          "falcon_sensor"
+      ],
+      "Reference Month": "06",
+      "Reference Year": "2026",
+      "Reference Date": "2026-06-01"
+  }
+owner: João V. Kienen
+source_repo: "CYBER__GVulnerabilities"
+last_reviewed: '2026-08-07'

@@ -1,0 +1,72 @@
+id: SILVER_USBControl-UsageManagement
+layer: silver
+project: USB Device Control
+sources_raw:
+- RAW_Crowdstrike-USBPolicies
+- RAW_Crowdstrike-USBUsage
+sources_silver: []
+generates_audits:
+- AUDIT_USBControl-StaleExceptions
+execution_schedule: Sundays at 02:00 AM and on the 1st of the month at 02:00 AM
+filters: |-
+  The Silver layer keeps only the records that meet the following conditions:
+
+  - Exceptions with Match Method equal to COMBINED_ID, VID_PID_SERIAL or VID_PID (the rest are discarded).
+  - Usage records with Policy Action containing "Full access" (the rest are discarded before the cross-reference).
+pipeline: |-
+  The Data Science team will be responsible for retrieving the raw data from the Raw layer and structuring it as shown in the next step.
+
+  Last Seen, Last Connected Machines, Connection Type, Device Name:
+
+  Derived from the cross-reference between the exception and the usage with Policy Action "Full access", using the columns indicated by the exception's own Match Method (Device Combined Id; or Device Vendor Id + Device Product Id + Device Serial Id; or Device Vendor Id + Device Product Id). When there is no matching usage, the four columns receive "-".
+
+  Is Active:
+
+  True when the exception had a matching "Full access" usage, that is, when Last Seen was filled in by the cross-reference.
+
+  Usage History (Days):
+
+  Same value in every row of the file: interval in days between the oldest and most recent date across the entire usage dataset, not just the records with Policy Action "Full access".
+structure_notes: |-
+  The data sources will be organized into the columns Usage History (Days), Is Active, Exception Id, Exception Action, Connection Type, Match Method, Device Vendor Id, Device Product Id, Device Serial Id, Device Combined Id, Device Name, Description, Created At, Modified At, Last Seen, Last Connected Machines, Policy Id, Policy Name, Policy Platform, Policy Enabled, Enhanced File Metadata, USB Enforcement Mode, USB Device Class, USB Device Class Action, Reference Month, Reference Year, Reference Date, ensuring consistency, asset traceability, and data readiness for the indicators layer.
+storage_notes: |-
+  Storage will be done in the Silver layer; the structured data will be kept ready for queries feeding the indicator calculations.
+
+  The data is organized following the standard naming convention. Additionally, temporal segregation must be maintained by collection period, using the YYYY-MM-DD naming convention, according to the frequency defined by the business. The following pattern must be followed:
+
+  CYBER/Client/Silver/USBControl/YYYY-MM-DD/UsageManagement.json
+
+  This organization ensures temporal traceability, ingestion standardization, and ease of auditing the data.
+sample_output: |-
+  {
+    "Usage History (Days)": 6,
+    "Is Active": false,
+    "Exception Id": "3f2a91c8d4b6e01f7a5c9d2b8e4f6a10",
+    "Exception Action": "FULL_ACCESS",
+    "Connection Type": "-",
+    "Match Method": "COMBINED_ID",
+    "Device Vendor Id": "1452",
+    "Device Product Id": "4776",
+    "Device Serial Id": "0000924000018642139C715D",
+    "Device Combined Id": "1452_4776_0000924000018642139C715D",
+    "Device Name": "-",
+    "Description": "A. Doe",
+    "Created At": "2026-01-07",
+    "Modified At": "2026-01-07",
+    "Last Seen": "-",
+    "Last Connected Machines": "-",
+    "Policy Id": "a1b2c3d4e5f60718293a4b5c6d7e8f90",
+    "Policy Name": "Custom: Workstations",
+    "Policy Platform": "Windows",
+    "Policy Enabled": true,
+    "Enhanced File Metadata": false,
+    "USB Enforcement Mode": "MONITOR_ENFORCE",
+    "USB Device Class": "ANY",
+    "USB Device Class Action": "FULL_ACCESS",
+    "Reference Month": "08",
+    "Reference Year": "2026",
+    "Reference Date": "2026-08-10"
+  }
+owner: "João V. Kienen"
+source_repo: "CYBER__DeviceControl"
+last_reviewed: '2026-08-10'

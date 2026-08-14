@@ -1,0 +1,18 @@
+id: AUTOMATA_Remove-Stale-USB-Exceptions-in-Crowdstrike
+layer: automation
+project: USB Device Control
+description: |-
+  Removal of Unused Exceptions — Crowdstrike:
+
+  Remove the Device Control (USB) exception for devices that have gone 90 days or more without a registered "Full access" use.
+sources_silver: []
+sources_audit:
+- AUDIT_USBControl-StaleExceptions
+target: Crowdstrike
+frequency: Monthly
+execution_schedule: 10th of the month at 06:00 AM
+filters: NA
+pipeline: |-
+  The SOAR tool will be responsible for retrieving the records from the Audit layer, applying the necessary filters, and performing the automatic removal of the Device Control (USB) exception in the Crowdstrike policy.
+source_repo: "?"
+last_reviewed: '2026-08-10'

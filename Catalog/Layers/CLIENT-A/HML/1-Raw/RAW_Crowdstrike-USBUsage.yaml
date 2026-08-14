@@ -1,0 +1,50 @@
+id: RAW_Crowdstrike-USBUsage
+layer: raw
+platform: Crowdstrike
+endpoint: |-
+  (USB Usage - NGSIEM)
+  - POST /humio/api/v1/repositories/{repository}/queryjobs
+  - GET /humio/api/v1/repositories/{repository}/queryjobs/{id}
+description: |-
+  Obtains the connection, block, and policy violation events for USB devices and removable storage recorded in NGSIEM, including device identification, source computer, connection type, and applied policy action.
+load_type: Incremental
+frequency: Weekly
+volume_per_frequency: "?"
+execution_schedule: Sundays at 01:00 AM and on the 1st of the month at 01:00 AM
+extraction_notes: |-
+  The Data Science team will be responsible for running the routine that queries the described endpoint, applying the necessary filters, and storing the data in the Raw layer of the Data Lake.
+
+  Note: the extraction happens in two calls - the first starts the search in NGSIEM, the second queries the status until the search is complete and returns the events.
+filters: |-
+  Run the query with the following conditions:
+
+  - repository: "search-all"
+  - start: "-7d"
+  - end: "0d"
+  - query_string:
+  "#repo=base_sensor | in(#event_simpleName, values=[DcUsbDeviceConnected, DcUsbDevicePolicyViolation, DcUsbDeviceBlocked, DcRemovableStorageDeviceConnected, DcRemovableStorageDevicePolicyViolation, DcRemovableStorageDeviceBlocked]) | default(field=[DeviceManufacturer, DeviceProduct, DeviceSerialNumber], value="--", replaceEmpty=true) | case { #event_simpleName=DcUsb* | ConnectionType := "USB"; #event_simpleName=DcRemovableStorage* AND event_platform="Mac" | ConnectionType := "PCIe" | DeviceClass := "Mass Storage"; #event_simpleName=DcRemovableStorage* AND event_platform="Win" | ConnectionType := "Storage spaces" | DeviceClass := "Mass Storage"; } | join({ #repo=sensor_metadata #data_source_name=dcusbinterfacedescriptor-ds | groupBy(DeviceDescriptorSetHash, function=collect(DeviceUsbClass, separator=" | "), limit=max) }, field=DeviceDescriptorSetHash, include=[DeviceUsbClass], mode=left) | $falcon/devicecontrol:DCFriendlyPolicyAction() | DeviceId := format(format="%s_%s_%s", field=[DeviceVendorId, DeviceProductId, DeviceSerialNumber]) | case { ConnectionType = "PCIe" | case { event_platform=Mac | Device := format(format="%s %s (S/N: %s)", field=[DeviceManufacturer, DeviceProduct, DeviceSerialNumber]); event_platform=Win | Device := "SD card reader"; *; }; ConnectionType = "USB" | Device := format(format="%s %s (S/N: %s)", field=[DeviceManufacturer, DeviceProduct, DeviceSerialNumber]); *; } | case { ConnectionType = "USB" | default(field=DeviceUsbClass, value="No class", replaceEmpty=true) | DeviceClass := rename(DeviceUsbClass); *; } | groupBy([aid, DeviceInstanceId], function=[session(maxpause=10s, [collect([Device, ConnectionType, DeviceVendorId, DeviceProductId, DeviceSerialNumber, DeviceId, DeviceClass, ComputerName, event_platform]), selectLast([@timestamp, DcPolicyAction])])], limit=max) | default(field=[ComputerName], value="--", replaceEmpty=true) | DeviceClass=/Mass Storage|No class|Mobile|Printer/i | Date := formatTime("%Y-%m-%d %H:%M:%S", field=@timestamp, locale="pt_BR", timezone="America/Sao_Paulo") | table([Date, Device, DeviceVendorId, DeviceProductId, DeviceSerialNumber, DeviceId, ConnectionType, DcPolicyAction, DeviceClass, ComputerName, event_platform], sortby=@timestamp, order=desc, limit=max)"
+storage_notes: |-
+  Storage will be done in the Raw layer, containing the data extracted directly from the described API endpoint, without any type of transformation, fully preserving the data.
+
+  The data is organized following the standard naming convention. Additionally, temporal segregation must be maintained by collection period, using the YYYY-MM-DD naming convention, according to the frequency defined by the business. The following pattern must be followed:
+
+  CYBER/Client/Raw/CROWDSTRIKE/YYYY-MM-DD/USBUsage.json
+
+  This organization ensures temporal traceability, ingestion standardization, and ease of auditing the protected server inventory data.
+sample_output: |-
+  {
+    "Device": "Apple Inc. iPhone (S/N: 1a2b3c4d5e6f7a8b9c0d1e2f)",
+    "DeviceClass": "Vendor Specific Class | Use class information in the Interface Descriptors | Mobile (MTP/PTP) | Imaging | Human Interface Device | Audio",
+    "DeviceProductId": "4776",
+    "ComputerName": "ACM-4Q7XZ21",
+    "Date": "2026-08-10 08:54:22",
+    "DeviceId": "1452_4776_1a2b3c4d5e6f7a8b9c0d1e2f",
+    "DcPolicyAction": "Full access",
+    "DeviceSerialNumber": "1a2b3c4d5e6f7a8b9c0d1e2f",
+    "event_platform": "Win",
+    "DeviceVendorId": "1452",
+    "ConnectionType": "USB"
+  }
+owner: "João V. Kienen"
+source_repo: "CYBER__DeviceControl"
+last_reviewed: '2026-08-10'

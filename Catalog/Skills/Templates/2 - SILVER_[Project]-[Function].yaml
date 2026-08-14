@@ -1,0 +1,239 @@
+# =============================================================================
+# TEMPLATE - Silver layer
+# Output file: SILVER_<Project>-<Function>.yaml -- one file per structured dataset.
+#
+# Placeholders used in the examples below: <Project> is the business project,
+# <Function> is what the dataset delivers, <Client> is the organization the data
+# belongs to. Replace all of them.
+#
+# EXPECT THE SOURCE CODE TO VARY. Scripts are written by different people and
+# will not share a layout, a comment style, or a folder convention. Do not rely
+# on a fixed structure: locate the phases by what the code does -- read the Raw
+# output, normalize the fields, cross-reference other sources, drop what does
+# not match, write the structured output -- and map those to the fields below.
+#
+# Silver is where the BUSINESS RULES live. Everything the Raw template refused
+# to document -- records dropped in code, dates trimmed, values matched against
+# another source, columns derived from more than one field -- is described here,
+# in `pipeline`. Read the transformation phase line by line: a rule that is not
+# in the code is not a rule, and a rule in the code that is not in `pipeline`
+# leaves the dataset undocumented.
+#
+# STEP 0, BEFORE FILLING ANYTHING IN: how many Silver files does this project
+# need? This template describes ONE dataset, not one script and not one
+# repository. Enumerate the files first, by sweeping every output the code
+# writes:
+#   - ONE structured output with its own set of columns = ONE Silver file.
+#   - An output written only to feed the next script is still a Silver file when
+#     it is stored in the lake, and internal plumbing when it is not.
+#   - Records the code SETS APART because they did not match (unmatched,
+#     unwatched, orphan) are usually the Audit layer, not Silver. They are
+#     declared in `generates_audits` -- ask the user before deciding.
+#   - The same output rewritten later by another script (a second pass that
+#     fills in counters) is still ONE file, not two.
+#   - A write that PARTITIONS its output by a dimension -- OS, environment,
+#     region, tenant, version -- is MULTIPLE Silver files, one per variant,
+#     the moment the partitions stop sharing a schema: a column dropped for
+#     one group and kept for another (a dropna after a groupby is the usual
+#     tell), a field only some variants carry, a transformation that only
+#     applies past a version. When every partition keeps the exact same
+#     columns and differs only by the value inside them, it is still ONE
+#     file -- the split is a filter, not a new dataset. Check this from the
+#     code, not from the file count: three CSVs with identical headers are
+#     one dataset; three CSVs whose headers differ are three.
+# Get this count confirmed before writing any file: it defines every id.
+#
+# FORMAT CONVENTIONS (apply to every field below):
+#   - Literal block |- for every text field, even a single-line one.
+#     Never | and never |+.
+#   - "?" means "a real value exists and the user fills it on review".
+#     ALWAYS quoted: a bare `execution_schedule: ?` breaks the parser
+#     (ScannerError).
+#   - NA (unquoted, no block) means "does not exist". NA and "?" are not
+#     interchangeable.
+#   - Dates in single quotes, otherwise YAML converts them to a date object.
+#   - No blank line between keys in the generated file. The blank lines in
+#     this template exist only to separate the comment blocks.
+#   - THE VALUE ON A BUSINESS-DECISION LINE IS THE DEFAULT. Every field whose
+#     comment ends in "Example of what the user answers" is written into the
+#     generated file exactly as it stands here. "?" means nobody has answered
+#     yet: carry the "?" over and let the user fill it on review. Replace it
+#     with a real value -- `load_type: "Full"` -- and that value becomes the
+#     standing answer for every file of the project: write it in and do NOT
+#     ask the question. Editing this template is how the user answers once
+#     instead of answering per file.
+#   - Save the file with CRLF line endings.
+#   - Keep the field order below. `last_reviewed` closes every file of every
+#     layer -- it is always the last field.
+# =============================================================================
+
+# id -- SILVER_<Project>-<Function>. Confirm both tokens with the user.
+# <Project> is the business project as a single token, no spaces and no
+# accents. <Function> is what the dataset answers, not the script file name and
+# not the name of the variable the code saves it under.
+# Example:
+id: SILVER_[Project]-[Function]
+
+# layer -- always "silver".
+layer: silver
+
+# project -- the business project spelled out, accents and all. Unlike Raw,
+# Silver DOES carry this field. A repository is not a project: ask what business
+# name the user wants for it, and offer the possibility that the script belongs
+# to an already cataloged project despite the repository name.
+# Example:
+project: EDR Health Check Report
+
+# sources_raw -- YAML list of the Raw ids this dataset consumes. Read them from
+# the code: every file the script opens before transforming. Each id listed must
+# exist as a Raw file with that exact name -- a typo here breaks the graph edge.
+# Use [] when the dataset is built from Silver sources only.
+# Example:
+sources_raw:
+- RAW_[Platform]-[Endpoint]
+
+# sources_silver -- YAML list of other Silver ids this dataset consumes. This is
+# the common chain: script B reads the structured output script A wrote. Use []
+# when it reads Raw only.
+#
+# A SECOND PASS IS NOT A SOURCE. When another script reopens this dataset later
+# and fills columns in it -- counters, flags, totals -- that script does NOT go
+# here. `sources_*` answers what must exist BEFORE this file can be built, and
+# the file was already built without it. Declaring it would draw a cycle in the
+# graph, telling the reader that neither dataset can come first, which is false.
+# Document the enrichment in `pipeline` instead, on the columns it fills, naming
+# the routine that fills them.
+# Example: [] or a list with one id per Silver consumed.
+sources_silver: []
+
+# generates_audits -- YAML list of the Audit ids this pipeline produces: the
+# records the code writes to a SEPARATE file because they did not match the
+# cross-reference (unmatched, unwatched, orphan). NA when it produces none.
+# Do not invent the id -- ask the user for the Audit name.
+# Example: NA, or a list with one id per audit produced.
+generates_audits: NA
+
+# execution_schedule -- business decision. Raw, Silver and
+# Automation are usually staggered (05:00 -> 06:00 -> 07:00), so the user
+# answers the whole chain at once rather than one dataset at a time.
+# Example of what the user answers: a weekly slot and a monthly one, each with
+# its hour, written in the language of the templates.
+execution_schedule: Sundays at 02:00 AM and on the 1st of the month at 02:00 AM
+
+# filters -- the filtering the code applies OVER the Raw data, which is exactly
+# what the Raw template refused to document: records dropped after the call,
+# date ranges trimmed in code, records kept only when they match another source.
+# Write it as prose, one bullet per condition.
+# NA (unquoted, no block) when the code keeps every record it read.
+# Do not use "?" for this -- NA means the filter does not exist.
+filters: NA
+
+# pipeline -- the heart of the file. Keep the first paragraph verbatim, then add
+# one block per DERIVED column: the column name on its own line, then the rule
+# in prose, read from the transformation phase of the code.
+# What deserves a block:
+#   - a column computed from more than one field, or from another source
+#   - a fallback value ("-", 0, false) and the condition that triggers it
+#   - a classification with an order of precedence -- describe the precedence,
+#     not just the outcome
+#   - a value carried over from a previous run (last state, changed flag)
+# What does not: a column copied straight from the Raw record under a new name.
+# Describe the rule, never the syntax: no variable names, no function names.
+pipeline: |-
+  The Data Science team will be responsible for retrieving the raw data from the Raw layer and structuring it as shown in the next step.
+
+  Applied For:
+
+  Derived from the exception's groups. Every quoted value present in each group's assignment_rule is collected (in the rule, only the values are quoted; the keys never are). When the exception is global (Applied Globally = true) or has no groups, Applied For receives "-".
+
+# structure_notes -- keep the text below, changing only the column list. List
+# EVERY column of the output, in the order the code writes them, including the
+# reference columns at the end. The list must match the keys of sample_output
+# one to one.
+structure_notes: |-
+  The data sources will be organized into the columns Exception ID, Exception Name, Exception Description, Exclusion Pattern, Exclusion Image, Exclusion Commandline, Applied For, Applied Globally, Created Date, Created By, Reference Month, Reference Year, Reference Date, ensuring consistency, asset traceability, and data readiness for the indicators layer.
+
+# storage_notes -- keep the text below, changing only the path line. Pattern:
+#   CYBER/<Client>/Silver/<Project>/YYYY-MM-DD/<Function>.json
+#   <Client>    the organization. Title-case in the path, even when the folder
+#               under Layers/ is uppercase
+#   <Project>   the project token, the same one used in the id
+#   <Function>  the file name in the lake. It does NOT necessarily match the id
+#               token -- ask the user for the real name.
+# Note the Silver path carries the PROJECT where Raw carries the PLATFORM, and
+# the closing sentence below is shorter than the Raw one.
+storage_notes: |-
+  Storage will be done in the Silver layer; the structured data will be kept ready for queries feeding the indicator calculations.
+
+  The data is organized following the standard naming convention. Additionally, temporal segregation must be maintained by collection period, using the YYYY-MM-DD naming convention, according to the frequency defined by the business. The following pattern must be followed:
+
+  CYBER/<Client>/Silver/<Project>/YYYY-MM-DD/<Function>.json
+
+  This organization ensures temporal traceability, ingestion standardization, and ease of auditing the data.
+
+# sample_output -- ONE record of the STRUCTURED output, after the transformation
+# -- not the Raw record. Its keys are the columns listed in structure_notes, in
+# the same order.
+# You add the print to the script yourself (indent of 4, right after the record
+# is assembled and before it is written to disk), tell the user what you
+# changed, and ask them to run it and paste the result. Never open the project's
+# data files yourself when its CLAUDE.md or README restricts reading them.
+# If the sample is not available yet, leave "?" and the user fills it on review.
+#
+# TRIM REPEATED ELEMENTS BEFORE WRITING. An array whose entries repeat the
+# same shape -- a dozen network interfaces, forty installed packages -- teaches
+# nothing after the first entry and buries the record it was meant to
+# illustrate. Keep ONE and drop the rest, choosing the entry with the most
+# fields filled in. The sample exists to show the SHAPE of the record, never
+# its volume. Distinct values stay -- two addresses are two addresses -- but a
+# value repeated verbatim is kept once.
+#
+# ANONYMIZE before writing the file, without asking -- this goes to git.
+# Replace with a fictional value of the SAME format and SAME length:
+#   hostname / VM name, e-mail, person name, IPv4/IPv6, MAC address (keeping
+#   the vendor OUI prefix when it is informative), the organization name where
+#   it appears inside the JSON, internal identifiers (asset id, tenant id,
+#   policy id, uuid, serial number), datastore / LUN / cluster names.
+# Leave untouched -- this is what gives the sample its technical value:
+#   OS and agent versions, CPEs, CVEs, plugin ids, timestamps, booleans,
+#   risk scores, status enums, and every column name.
+# Silver samples carry MORE free text than Raw ones, because the structured
+# record keeps descriptions, comments and "created by" fields side by side.
+# Review them one by one, then grep the finished file for the organization name
+# and for the e-mail, IP and MAC patterns of the original sample.
+# Anonymize INSIDE sample_output only -- `owner` below is documentation
+# metadata and must never be replaced.
+# Example:
+sample_output: |-
+  {
+    "Exception ID": "3b7f2d18c04e9a65d1f83b402c7e5a91",
+    "Exception Name": "HOST01",
+    "Exception Description": "process exclusion, apparently a false positive",
+    "Exclusion Pattern": "LinWebshell",
+    "Exclusion Image": "/opt/cpanel/ea-php74/root/usr/sbin/php-fpm",
+    "Exclusion Commandline": "/opt/cpanel/ea-php74/root/usr/sbin/php-fpm\\s+--nodaemonize",
+    "Applied For": "host01.example.internal, host02.example.internal",
+    "Applied Globally": false,
+    "Created Date": "2025-10-10T14:22:45.714921672Z",
+    "Created By": "user1@example.com",
+    "Reference Month": "07",
+    "Reference Year": "2026",
+    "Reference Date": "2026-07-28"
+  }
+
+# owner -- business decision. This is who documented the dataset,
+# not a value from the data. Never anonymize it.
+# Example of what the user answers: A. Doe
+owner: "?"
+
+# source_repo -- business decision. Always the real repository of
+# origin, even when the business project carries a different name.
+# Example of what the user answers: github.com/<org>/<repo>
+source_repo: "project_folder_name"
+
+# last_reviewed -- the date the catalog was written. Stays "?" while the
+# files are generated and is filled for all of them at once at the closing
+# step, with the current date. It is NOT a date read from the project.
+# Always single-quoted, otherwise YAML turns it into a date object.
+# Example of what the user answers: '2026-06-02'
+last_reviewed: "?"

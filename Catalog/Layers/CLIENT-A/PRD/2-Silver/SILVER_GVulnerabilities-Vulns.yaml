@@ -1,0 +1,95 @@
+id: SILVER_GVulnerabilities-Vulns
+layer: silver
+project: Vulnerability Management
+sources_raw:
+- RAW_Tenable-Vulns
+sources_silver:
+- SILVER_GVulnerabilities-Assets
+generates_audits: NA
+execution_schedule: Sundays at 02:00 AM and on the 1st of the month at 02:00 AM
+filters: |-
+  Perform the structuring with the following conditions:
+
+  - Split the records by the vulnerability's state: those marked as fixed feed the fixed vulnerabilities dataset, and the rest remain in this one.
+  - Keep only the records whose asset identifier exists in the assets dataset; the rest are separated for audit.
+pipeline: |-
+  The Data Science team will be responsible for retrieving the raw data from the Raw layer and structuring it as shown in the next step.
+
+  Severity:
+
+  Uses the severity calculated by VPR v2 when it exists; otherwise, the record's own severity. The value is standardized with an initial capital letter.
+
+  Server System:
+
+  Operating system of the affected asset. When the source brings more than one, the first is considered.
+
+  First Seen:
+
+  Vulnerability's resurgence date when it exists; otherwise, the date of the first detection. Normalized to the YYYY-MM-DD format.
+
+  Department, Server VM and Server Type:
+
+  Brought from the assets dataset, by matching the asset identifier.
+
+  Vuln Group and Vuln Id:
+
+  Derived, respectively, from the identifier of the plugin that detected the vulnerability and the identifier of the occurrence.
+
+  Reference Month, Reference Year and Reference Date:
+
+  Month, year and date of the routine's execution.
+
+  Vuln Age-in-days:
+
+  Number of days between the execution date and the vulnerability's First Seen.
+structure_notes: |-
+  The data sources will be organized into the columns Department, Severity, Server Id, Server VM, Server Name, Server Ip, Server Type, Server System, Vuln Age-in-days, Vuln Group, Vuln Id, Vuln Name, Vuln Family, Vuln Resume, Vuln Solution, Vuln CVEs, Vuln Source, Vuln State, Risk State, First Seen, VPR, VPR v2, VPR v2 Percentile, EPSS Score, Exploit Available, Exploit Maturity, Exploitability Ease, Exploited By Malware, Exploited By Nessus, On CISA KEV, Reference Month, Reference Year, Reference Date, ensuring consistency, asset traceability, and data readiness for the indicators layer.
+storage_notes: |-
+  Storage will be done in the Silver layer; the structured data will be kept ready for queries feeding the indicator calculations.
+
+  The data is organized following the standard naming convention. Additionally, temporal segregation must be maintained by collection period, using the YYYY-MM-DD naming convention, according to the frequency defined by the business. The following pattern must be followed:
+
+  CYBER/Client/Silver/GVulnerabilities/YYYY-MM-DD/Vulns.json
+
+  This organization ensures temporal traceability, ingestion standardization, and ease of auditing the data.
+sample_output: |-
+  {
+      "Department": "DEV",
+      "Severity": "High",
+      "Server Id": "3c07a428-91fd-4b60-8e27-4a1d9f0cb572",
+      "Server VM": "ACME-APP-WORKER-01",
+      "Server Name": "acme-dev-k8s-app-worker-prd-01",
+      "Server Ip": "10.0.0.30",
+      "Server Type": "Unix Server",
+      "Server System": "Oracle Linux Server 9.7",
+      "Vuln Age-in-days": 28,
+      "Vuln Group": 299303,
+      "Vuln Id": "9f18b4c0-7ed3-542a-bc61-58d0a3f27e94",
+      "Vuln Name": "Oracle Linux 8 / 9 : Unbreakable Enterprise kernel (ELSA-2026-50113)",
+      "Vuln Family": "Oracle Linux Local Security Checks",
+      "Vuln Resume": "The remote Oracle Linux host is missing one or more security updates.",
+      "Vuln Solution": "Update the affected packages.",
+      "Vuln CVEs": [
+          "CVE-2018-1000204"
+      ],
+      "Vuln Source": "AGENT",
+      "Vuln State": "OPEN",
+      "Risk State": "NONE",
+      "First Seen": "2026-02-24",
+      "VPR": 6.7,
+      "VPR v2": 7.6,
+      "VPR v2 Percentile": 98.57,
+      "EPSS Score": 0.171,
+      "Exploit Available": true,
+      "Exploit Maturity": "UNPROVEN",
+      "Exploitability Ease": "Exploits are available",
+      "Exploited By Malware": false,
+      "Exploited By Nessus": false,
+      "On CISA KEV": false,
+      "Reference Month": "06",
+      "Reference Year": "2026",
+      "Reference Date": "2026-06-01"
+  }
+owner: João V. Kienen
+source_repo: "CYBER__GVulnerabilities"
+last_reviewed: '2026-08-07'

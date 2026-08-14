@@ -1,0 +1,24 @@
+id: GOLD_HealthEDR-ExclusionsSVE
+layer: gold
+project: EDR Health Check Report
+sources_silver:
+- SILVER_HealthEDR-ExclusionsSVE
+description: |-
+  The Gold layer consolidates the data from the Silver layer into indicators ready for analytical and executive consumption.
+
+  All indicators must be generated per client, department group, and/or department.
+
+  The generated indicators are:
+kpis:
+- title: Total number of Sensor Visibility exceptions
+  calculation: count of distinct Exception ID.
+  filters: null
+  reason: each exception reduces the sensor's visibility over a specific path; the total measures how much of the monitored surface is out of view and serves as a baseline for tracking growth between periods, since a forgotten exception becomes a permanent blind spot.
+  view: numeric count by reference month, detailed in a list with Exception Value, Applied For, Created By.
+
+- title: Percentage of exceptions applied globally
+  calculation: ratio of records with Applied Globally true over the total number of Sensor Visibility exceptions.
+  filters: null
+  reason: a global exception reduces visibility across the entire fleet at once, instead of being restricted to specific hosts; tracking this ratio shows how much of the visibility suspension has broad reach, the type of configuration that most deserves periodic review.
+  view: percentage by reference month, detailed in a list with Exception Value, Applied For, Created Date.
+last_reviewed: '2026-08-10'

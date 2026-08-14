@@ -1,0 +1,148 @@
+# =============================================================================
+# TEMPLATE - Automation layer
+# Output file: AUTOMATA_<Context>-in-<Target>.yaml -- one file per action taken
+# on a platform.
+#
+# Placeholders used in the examples below: <Context> is the action, <Target> is
+# the platform it lands on, <Project> is the business project. Replace all of
+# them.
+#
+# THIS IS THE ONLY LAYER THAT CHANGES THE WORLD. Raw, Silver, Audit and Gold
+# describe data; an automation acts back on the platform the data came from --
+# it revokes, deletes, tags, closes, notifies. Two consequences follow:
+#   - Nothing here is inferred. The action is described by the USER, in their
+#     own words, and written down from that summary. Never propose an action the
+#     user did not ask for, and never widen one they described narrowly.
+#   - The audit layer usually feeds it. Records set apart because they did not
+#     match are exactly the records an automation acts on, and the audit is what
+#     keeps their history after the action erases them from the source.
+#
+# WHERE IT RUNS: in the SOAR tool, not in the repository, which is why
+# `pipeline` names the SOAR as the actor. The repository still gets declared in
+# `source_repo`: the one that carries the code when it exists there -- often
+# commented out, waiting for approval -- or the one the routine was born from.
+#
+# STEP 0, BEFORE FILLING ANYTHING IN: how many Automation files? One per ACTION
+# on a platform, not one per source and not one per project. The same audit read
+# twice, once to notify and once to delete, is two files -- they run on
+# different schedules and are approved separately.
+#
+# FORMAT CONVENTIONS (apply to every field below):
+#   - Literal block |- for every text field, even a single-line one.
+#     Never | and never |+.
+#   - "?" means "a real value exists and the user fills it on review".
+#     ALWAYS quoted: a bare `frequency: ?` breaks the parser (ScannerError).
+#   - NA (unquoted, no block) means "does not exist". NA and "?" are not
+#     interchangeable. `source_repo` is never NA -- it is "?" until the user
+#     gives the repository.
+#   - Empty YAML list [] for a source list that carries nothing.
+#   - Dates in single quotes, otherwise YAML converts them to a date object.
+#   - No blank line between keys in the generated file. The blank lines in
+#     this template exist only to separate the comment blocks.
+#   - THE VALUE ON A BUSINESS-DECISION LINE IS THE DEFAULT. Every field whose
+#     comment ends in "Example of what the user answers" is written into the
+#     generated file exactly as it stands here. "?" means nobody has answered
+#     yet: carry the "?" over and let the user fill it on review. Replace it
+#     with a real value -- `load_type: "Full"` -- and that value becomes the
+#     standing answer for every file of the project: write it in and do NOT
+#     ask the question. Editing this template is how the user answers once
+#     instead of answering per file.
+#   - Save the file with CRLF line endings.
+#   - Keep the field order below. `last_reviewed` closes every file of every
+#     layer -- it is always the last field.
+#   - There is no `owner` field in this layer.
+# =============================================================================
+
+# id -- AUTOMATA_<Context>-in-<Target>. Confirm both tokens with the user.
+# <Context> is written verb first and does NOT carry the project token the other
+# layers use: Revoke-USB-Device-Usage, Delete-Unwatched-Assets,
+# Reassign-Asset-Tags. Name what the routine does, not what it reads.
+# <Target> closes the id with the platform the action lands on, joined by
+# `-in-`, and repeats the value of the `target` field below. Two routines doing
+# the same thing on different platforms are told apart here and nowhere else.
+# Example:
+id: AUTOMATA_[Context]-in-[Target]
+
+# layer -- always "automation". Note it is not "automata": the file name uses
+# one word and the field another.
+layer: automation
+
+# project -- the business project spelled out, the same value carried by the
+# Silver and Audit files it consumes. Already answered earlier in the trail -
+# reuse it, do not ask again.
+# Example:
+project: EDR Health Check Report
+
+# description -- two parts:
+#   1. a title line "<Readable action> — <Target>:", closing with the same
+#      platform named in `target` and in the id, never with the object acted on
+#      -- the object is already in the action.
+#   2. one sentence with WHAT IS ACTED ON and under WHICH CONDITION, written
+#      from the user's summary.
+# Every number in the condition comes from the user. An automation with a
+# threshold you invented is an automation that will delete the wrong thing.
+# Example:
+description: |-
+  Removal of Unused Exceptions — Vendor:
+
+  Remove access granted to removable devices that have been inactive for more than three months.
+
+# sources_silver -- YAML list of the Silver ids the routine reads. [] when it
+# reads only audits.
+# Example:
+sources_silver: []
+
+# sources_audit -- YAML list of the Audit ids the routine reads.
+# Write `sources_audit: []` when the routine reads only Silver files, the same
+# way `sources_silver: []` is written when it reads only audits. The empty list
+# is declared, never omitted: an absent field reads as forgotten.
+# An automation reads Silver and Audit only. Raw is untreated and Gold is an
+# indicator - neither is ever a source here.
+# Example:
+sources_audit:
+- AUDIT_[Project]-[Audit]
+
+# target -- the platform where the ACTION LANDS, which is not necessarily the
+# platform the data came from. A routine may read data extracted from one system
+# and act on another. Ask instead of copying the source platform.
+# Example:
+target: Vendor
+
+# frequency -- business decision.
+# Example of what the user answers: how often the routine runs - weekly,
+# monthly - written in the language of the templates.
+frequency: Monthly
+
+# execution_schedule -- business decision. The automation is the
+# last link of the chain (05:00 -> 06:00 -> 07:00), and it usually runs later
+# than the Silver that feeds it, on the same day.
+# Example of what the user answers: a monthly slot with its hour, written in the
+# language of the templates.
+execution_schedule: 10th of the month at 06:00 AM
+
+# filters -- the conditions that restrict WHICH records the routine acts on,
+# beyond what the source already carries. NA (unquoted, no block) when it acts
+# on every record of the source.
+# Do not use "?" for this -- NA means the filter does not exist.
+filters: NA
+
+# pipeline -- keep the sentence below, changing only the action at the end and
+# the guarantees the routine must observe before acting. The SOAR is the actor,
+# and any safeguard the user describes - a minimum history, a dry run, an
+# approval step - belongs here, because it is the part that keeps the routine
+# from acting on incomplete data.
+pipeline: |-
+  The SOAR tool will be responsible for retrieving the processed data from the Silver layer, applying the necessary filters, ensuring at least three months of historical data exist, and performing the automatic blocking of the devices.
+
+# source_repo -- business decision. Always the real repository of
+# origin, including when the code lives there commented out waiting for
+# approval.
+# Example of what the user answers: github.com/<org>/<repo>
+source_repo: "?"
+
+# last_reviewed -- the date the catalog was written. Stays "?" while the
+# files are generated and is filled for all of them at once at the closing
+# step, with the current date. It is NOT a date read from the project.
+# Always single-quoted, otherwise YAML turns it into a date object.
+# Example of what the user answers: '2026-06-02'
+last_reviewed: "?"

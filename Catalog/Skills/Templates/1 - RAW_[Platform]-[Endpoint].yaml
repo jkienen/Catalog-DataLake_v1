@@ -1,0 +1,235 @@
+# =============================================================================
+# TEMPLATE - Raw layer
+# Output file: RAW_<Platform>-<Endpoint>.yaml -- one file per extracted dataset.
+#
+# Placeholders used in the examples below: <Platform> is the source system,
+# <Client> is the organization the data belongs to, <Project> is the business
+# project, <Endpoint> is the dataset. Replace all of them.
+#
+# EXPECT THE SOURCE CODE TO VARY. Scripts are written by different people and
+# will not share a layout, a comment style, or a folder convention. Do not rely
+# on a fixed structure: locate the phases by what the code does -- read the
+# configuration, authenticate, call the API, transform, write the output --
+# and map those to the fields below.
+#
+# STEP 0, BEFORE FILLING ANYTHING IN: how many Raw files does this project need?
+# This template describes ONE dataset, not one script and not one repository.
+# Enumerate the files first, by sweeping every API call in the project:
+#   - DISCARD calls that only obtain credentials: token/authentication
+#     endpoints and secret-vault endpoints. They carry no business data.
+#   - ONE call becomes TWO Raw files when it is invoked more than once with
+#     different filters and yields distinct datasets (for example the same
+#     export called once for open records and once for closed ones).
+#   - TWO calls collapse into ONE Raw when the second only exists to complete
+#     the first (trigger the export, then fetch the result chunks).
+#   - An auxiliary lookup may deserve its own Raw file, or may be internal
+#     plumbing. When unsure, ask the user -- do not decide silently.
+# Get this count confirmed before writing any file: it defines every id.
+#
+# FORMAT CONVENTIONS (apply to every field below):
+#   - Literal block |- for every text field, even a single-line one.
+#     Never | and never |+.
+#   - "?" means "a real value exists and the user fills it on review".
+#     ALWAYS quoted: a bare `load_type: ?` breaks the parser (ScannerError).
+#   - NA (unquoted, no block) means "does not exist". NA and "?" are not
+#     interchangeable.
+#   - Dates in single quotes, otherwise YAML converts them to a date object.
+#   - No blank line between keys in the generated file. The blank lines in
+#     this template exist only to separate the comment blocks.
+#   - THE VALUE ON A BUSINESS-DECISION LINE IS THE DEFAULT. Every field whose
+#     comment ends in "Example of what the user answers" is written into the
+#     generated file exactly as it stands here. "?" means nobody has answered
+#     yet: carry the "?" over and let the user fill it on review. Replace it
+#     with a real value -- `load_type: "Full"` -- and that value becomes the
+#     standing answer for every file of the project: write it in and do NOT
+#     ask the question. Editing this template is how the user answers once
+#     instead of answering per file.
+#   - Save the file with CRLF line endings.
+#   - Keep the field order below. `last_reviewed` closes every file of every
+#     layer -- it is always the last field.
+# =============================================================================
+
+# id -- RAW_<Platform>-<Endpoint>. Confirm both tokens with the user.
+# <Endpoint> is NOT the SDK class or method name. SDKs name things after their
+# own internals, and the catalog names them after what the data IS, so the two
+# often diverge (singular vs plural, inverted word order, a different noun
+# entirely). Always confirm the token instead of transcribing the class name.
+# Raw never carries a `project` field -- the graph falls back to `platform`.
+# Example:
+id: RAW_[Platform]-[Endpoint]
+
+# layer -- always "raw".
+layer: raw
+
+# platform -- the source system. Infer it from the code, then confirm with the
+# user. Signals that usually agree: the SDK or client library imported at the
+# top of the script, the folder the script lives in, the base URL, and the
+# credential identifier used to fetch the secret. Different authors expose
+# different signals, so cross-check more than one before deciding.
+# Written UPPERCASE in the storage_notes path.
+# Example:
+platform: Vendor
+
+# endpoint -- one title line "(<Readable name>)" plus one bullet per REST path.
+# The path comes from the VENDOR DOCUMENTATION, never from the SDK class name;
+# SDK-based code does not contain the path anywhere, and code that builds the
+# URL from configuration or from a secret vault does not either.
+# When the code is SDK-based, look the operation up in the vendor's official
+# API documentation (the SDK method name is the search term) BEFORE asking the
+# user or leaving a placeholder. State the path found and which call it maps
+# to, so the user can correct it. Only fall back to asking the user, and then
+# to /path/example, when the documentation does not resolve it either.
+# Never guess a path outright.
+# More than one bullet is expected when the extraction takes two calls
+# (one to trigger the export, one to fetch the result).
+# Example:
+endpoint: |-
+  (Assets)
+  - /path/example
+
+# description -- one sentence on what the dataset represents, naming the main
+# groups of fields it carries. Write it yourself from the code; do not ask.
+# Example:
+description: |-
+  Obtains the full inventory of monitored assets, including host identification, agent versions, tag-based classification, and risk indicators.
+
+# load_type -- business decision. The code only hints:
+# overwrite = Full; deduplication or a retention cut = Incremental.
+# Example of what the user answers: Full
+load_type: Full
+
+# frequency -- business decision.
+# Example of what the user answers: how often the extraction runs - weekly,
+# monthly - written in the language of the templates.
+frequency: Weekly
+
+# volume_per_frequency -- business decision. In practice it is
+# estimated per platform, not per dataset.
+# Example of what the user answers: 20Mb
+volume_per_frequency: "?"
+
+# execution_schedule -- business decision. Raw, Silver and
+# Automation are usually staggered (05:00 -> 06:00 -> 07:00), so the user
+# answers the whole chain at once rather than one dataset at a time.
+# Example of what the user answers: a weekly slot and a monthly one, each with
+# its hour, written in the language of the templates.
+execution_schedule: Sundays at 01:00 AM and on the 1st of the month at 01:00 AM
+
+# extraction_notes -- keep the text below verbatim.
+# Add a second paragraph starting with "Note:" only when the extraction has a
+# real nuance. The most common one is the two-step export: one endpoint starts
+# the query and another retrieves the result in chunks.
+extraction_notes: |-
+  The Data Science team will be responsible for running the routine that queries the described endpoint, applying the necessary filters, and storing the data in the Raw layer of the Data Lake.
+
+# filters -- the LITERAL parameters passed to the API call, read from the code.
+# Only what the query itself filters. A filter applied afterwards in code
+# (dropping records, trimming by date, matching against another source) does
+# NOT belong here -- that is Silver.
+# One bullet per named parameter of the call, `parameter: value`. Reproduce the
+# value as the code passes it -- never paraphrase or summarize it in prose.
+# A literal string parameter (a query body, an FQL filter) is quoted and kept
+# verbatim, in full, even when long. A time window computed at runtime
+# (now - 7 days) is written as the relative window it represents (`-7d` to
+# `0d`), never as the epoch/timestamp value that one run happened to produce.
+# If the call takes no parameters at all, write `filters: NA` (unquoted, no
+# block). Do not use "?" for this -- NA means the filter does not exist.
+# Present the code reading to the user as a suggestion, not as a decision.
+# Example:
+filters: |-
+  Run the query with the following conditions:
+
+  - limit: 10000
+
+# storage_notes -- keep the text below, changing only the path line. Pattern:
+#   CYBER/<Client>/Raw/<PLATFORM>/YYYY-MM-DD/<Endpoint>.json
+#   <Client>    the organization. Title-case in the path, even when the folder
+#               under Layers/ is uppercase
+#   <PLATFORM>  uppercase
+#   <Endpoint>  the file name in the lake. It does NOT necessarily match the id
+#               token -- ask the user for the real name.
+# The closing sentence below is specific to Raw; Silver uses a different one.
+storage_notes: |-
+  Storage will be done in the Raw layer, containing the data extracted directly from the described API endpoint, without any type of transformation, fully preserving the data.
+
+  The data is organized following the standard naming convention. Additionally, temporal segregation must be maintained by collection period, using the YYYY-MM-DD naming convention, according to the frequency defined by the business. The following pattern must be followed:
+
+  CYBER/<Client>/Raw/<PLATFORM>/YYYY-MM-DD/<Endpoint>.json
+
+  This organization ensures temporal traceability, ingestion standardization, and ease of auditing the protected server inventory data.
+
+# sample_output -- ONE record only, exactly as the API returned it
+# (pre-normalization, before any treatment in code).
+# You add the print to the script yourself (indent of 4, right after the API
+# call and before any transformation), tell the user what you changed, and ask
+# them to run it and paste the result. Never open the project's data files
+# yourself when its CLAUDE.md or README restricts reading them.
+# If the sample is not available yet, leave "?" and the user fills it on review.
+#
+# TRIM REPEATED ELEMENTS BEFORE WRITING. An array whose entries repeat the
+# same shape -- a dozen network interfaces, forty installed packages -- teaches
+# nothing after the first entry and buries the record it was meant to
+# illustrate. Keep ONE and drop the rest, choosing the entry with the most
+# fields filled in. The sample exists to show the SHAPE of the record, never
+# its volume. Distinct values stay -- two addresses are two addresses -- but a
+# value repeated verbatim is kept once.
+#
+# ANONYMIZE before writing the file, without asking -- this goes to git.
+# Replace with a fictional value of the SAME format and SAME length:
+#   hostname / VM name, e-mail, person name, IPv4/IPv6, MAC address (keeping
+#   the vendor OUI prefix when it is informative), the organization name where
+#   it appears inside the JSON, internal identifiers (asset id, tenant id,
+#   policy id, uuid, serial number), datastore / LUN / cluster names.
+# Leave untouched -- this is what gives the sample its technical value:
+#   OS and agent versions, CPEs, CVEs, plugin ids, timestamps, booleans,
+#   risk scores, status enums, and every key name.
+# Free-text fields (description, created by, comments) are the blind spot:
+# a real name hides there more easily than in a structured field. Review them
+# one by one, then grep the finished file for the organization name and for
+# the e-mail, IP and MAC patterns of the original sample.
+# Anonymize INSIDE sample_output only -- `owner` below is documentation
+# metadata and must never be replaced.
+# Example:
+sample_output: |-
+  {
+    "asset_id": "aaaa1111bbbb2222cccc3333dddd4444",
+    "hostname": "host01.example.internal",
+    "ip_address": "10.20.30.40",
+    "mac_address": "00-11-22-33-44-01",
+    "operating_system": "AlmaLinux 8.10",
+    "agent_version": "7.38.19102.0",
+    "agent_installed": true,
+    "first_seen": "2022-01-13T11:06:08Z",
+    "last_seen": "2026-07-23T16:36:57Z",
+    "risk_score": 743,
+    "tags": [
+      {
+        "key": "DEPARTMENT",
+        "value": "INFRA"
+      },
+      {
+        "key": "TYPE",
+        "value": "Server"
+      }
+    ],
+    "owner_contact": "user1@example.com",
+    "serial_number": "SN-1122334455667788",
+    "tenant_id": "1a2b3c4d5e6f7a8b9c0d1e2f3a4"
+  }
+
+# owner -- business decision. This is who documented the dataset,
+# not a value from the data. Never anonymize it.
+# Example of what the user answers: A. Doe
+owner: "?"
+
+# source_repo -- business decision. Always the real repository of
+# origin, even when the business project carries a different name.
+# Example of what the user answers: github.com/<org>/<repo>
+source_repo: "project_folder_name"
+
+# last_reviewed -- the date the catalog was written. Stays "?" while the
+# files are generated and is filled for all of them at once at the closing
+# step, with the current date. It is NOT a date read from the project.
+# Always single-quoted, otherwise YAML turns it into a date object.
+# Example of what the user answers: '2026-06-02'
+last_reviewed: "?"

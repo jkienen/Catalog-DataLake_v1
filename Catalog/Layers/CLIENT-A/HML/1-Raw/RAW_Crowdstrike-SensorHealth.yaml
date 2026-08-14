@@ -1,0 +1,80 @@
+id: RAW_Crowdstrike-SensorHealth
+layer: raw
+platform: Crowdstrike
+endpoint: |-
+  (Zero Trust Assessment)
+  - GET /zero-trust-assessment/entities/assessments/v1
+description: |-
+  Obtains the security posture assessment (Zero Trust Assessment) of each host, including the overall sensor score and the individual result of each configuration and behavior criterion evaluated.
+load_type: Full
+frequency: Weekly
+volume_per_frequency: "?"
+execution_schedule: Sundays at 01:00 AM and on the 1st of the month at 01:00 AM
+extraction_notes: |-
+  The Data Science team will be responsible for running the routine that queries the described endpoint, applying the necessary filters, and storing the data in the Raw layer of the Data Lake.
+
+  Note: the extraction happens in batches - the host ids (aid) obtained from the Devices dataset are sent in groups of up to 1000 per call.
+filters: |-
+  Run the query with the following conditions:
+
+  - ids: list of "Host Id" obtained from the Devices dataset, in batches of up to 1000
+storage_notes: |-
+  Storage will be done in the Raw layer, containing the data extracted directly from the described API endpoint, without any type of transformation, fully preserving the data.
+
+  The data is organized following the standard naming convention. Additionally, temporal segregation must be maintained by collection period, using the YYYY-MM-DD naming convention, according to the frequency defined by the business. The following pattern must be followed:
+
+  CYBER/Client/Raw/CROWDSTRIKE/YYYY-MM-DD/SensorHealth.json
+
+  This organization ensures temporal traceability, ingestion standardization, and ease of auditing the protected server inventory data.
+sample_output: |-
+  {
+      "aid": "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6",
+      "cid": "9f8e7d6c5b4a3928170615f4e3d2c1b0",
+      "system_serial_number": "VMware-1a 2b 3c 4d 5e 6f 7a 8b-9c 0d 1e 2f 3a 4b 5c 6d",
+      "event_platform": "Lin",
+      "product_type_desc": "Server",
+      "modified_time": "2026-08-07T20:56:49Z",
+      "sensor_file_status": "not deployed",
+      "assessment": {
+          "sensor_config": 100,
+          "os": 0,
+          "overall": 100,
+          "version": "4.0.7"
+      },
+      "assessment_items": {
+          "os_signals": [],
+          "sensor_signals": [
+              {
+                  "signal_id": "ml_cloud_antimalware_detection_lin",
+                  "signal_name": "Cloud ML - Cloud Anti-malware | Detection for Linux",
+                  "group_name": "Prevention",
+                  "criteria": "Cloud ML - Cloud Anti-malware Detection: set to Aggressive or higher",
+                  "meets_criteria": "yes"
+              },
+              {
+                  "signal_id": "ml_cloud_antimalware_prevention_lin",
+                  "signal_name": "Cloud ML - Cloud Anti-malware | Prevention for Linux",
+                  "group_name": "Prevention",
+                  "criteria": "Cloud ML - Cloud Anti-malware Prevention: set to Moderate or higher",
+                  "meets_criteria": "yes"
+              },
+              {
+                  "signal_id": "real_time_response_enabled_lin",
+                  "signal_name": "CrowdStrike - Real Time Response for Linux",
+                  "group_name": "Sensor",
+                  "criteria": "Real Time Response: enabled",
+                  "meets_criteria": "yes"
+              },
+              {
+                  "signal_id": "in_full_functionality",
+                  "signal_name": "Reduced Functionality Mode",
+                  "group_name": "Sensor",
+                  "criteria": "Reduced Functionality Mode: disabled",
+                  "meets_criteria": "yes"
+              }
+          ]
+      }
+  }
+owner: "João V. Kienen"
+source_repo: "CYBER__HealthEDR"
+last_reviewed: '2026-08-10'

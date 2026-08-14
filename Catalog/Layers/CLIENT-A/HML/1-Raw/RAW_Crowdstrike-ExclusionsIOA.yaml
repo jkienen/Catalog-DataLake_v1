@@ -1,0 +1,61 @@
+id: RAW_Crowdstrike-ExclusionsIOA
+layer: raw
+platform: Crowdstrike
+endpoint: |-
+  (IOA Exclusions)
+  - GET /policy/queries/ioa-exclusions/v1
+  - GET /policy/entities/ioa-exclusions/v1
+description: |-
+  Obtains the IOA (Indicator of Attack) exclusions registered on the Crowdstrike platform, including the excluded detection pattern, the image and command line regular expressions, and the host groups to which the exclusion applies.
+load_type: Full
+frequency: Weekly
+volume_per_frequency: "?"
+execution_schedule: Sundays at 01:00 AM and on the 1st of the month at 01:00 AM
+extraction_notes: |-
+  The Data Science team will be responsible for running the routine that queries the described endpoint, applying the necessary filters, and storing the data in the Raw layer of the Data Lake.
+
+  Note: the extraction happens in two calls - the first returns only the ids of the registered exclusions, the second queries the full detail of each exclusion from those ids.
+filters: |-
+  Run the query with the following conditions:
+
+  - limit: 500
+storage_notes: |-
+  Storage will be done in the Raw layer, containing the data extracted directly from the described API endpoint, without any type of transformation, fully preserving the data.
+
+  The data is organized following the standard naming convention. Additionally, temporal segregation must be maintained by collection period, using the YYYY-MM-DD naming convention, according to the frequency defined by the business. The following pattern must be followed:
+
+  CYBER/Client/Raw/CROWDSTRIKE/YYYY-MM-DD/ExclusionsIOA.json
+
+  This organization ensures temporal traceability, ingestion standardization, and ease of auditing the protected server inventory data.
+sample_output: |-
+  {
+      "id": "aabbccdd11223344eeff5566778899aa",
+      "name": "SAMPLEAPP01",
+      "description": "process exclusion, apparently a false positive",
+      "pattern_id": "00000",
+      "pattern_name": "LinSamplePattern",
+      "ifn_regex": "/opt/sampleapp/bin/sample-service",
+      "cl_regex": "/opt/sampleapp/bin/sample-service\\s+--nodaemonize",
+      "detection_json": "",
+      "groups": [
+          {
+              "id": "bbccddee22334455ffaa6677889900bb",
+              "group_type": "static",
+              "name": "Custom: SAMPLE-EXCLUSION",
+              "description": "",
+              "assignment_rule": "device_id:[],hostname:['srv-app08.example-company.cloud','srv-app03.example-company.cloud']",
+              "created_by": "user2.demo@example-company.com.br",
+              "created_timestamp": "2025-10-10T14:17:14.821101835Z",
+              "modified_by": "user2.demo@example-company.com.br",
+              "modified_timestamp": "2025-10-10T14:18:00.871386399Z"
+          }
+      ],
+      "applied_globally": false,
+      "last_modified": "2025-10-10T14:22:45.714921672Z",
+      "modified_by": "user2.demo@example-company.com.br",
+      "created_on": "2025-10-10T14:22:45.714921672Z",
+      "created_by": "user2.demo@example-company.com.br"
+  }
+owner: "João V. Kienen"
+source_repo: "CYBER__HealthEDR"
+last_reviewed: '2026-08-10'

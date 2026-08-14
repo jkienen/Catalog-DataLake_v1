@@ -1,0 +1,68 @@
+id: GOLD_GVulnerabilities-VulnsFixed
+layer: gold
+project: Vulnerability Management
+sources_silver:
+- SILVER_GVulnerabilities-VulnsFixed
+description: |-
+  The Gold layer consolidates the data from the Silver layer into indicators ready for analytical and executive consumption.
+
+  All indicators must be generated per client, department group, and/or department.
+
+  Reference SLAs: Critical = 80 days | High = 100 days | Medium = 120 days | Low = 140 days.
+
+  The generated indicators are:
+kpis:
+- title: Number of vulnerabilities fixed by severity
+  calculation: count of records grouped by "Vuln Severity" (in the reference month).
+  filters: null
+  reason: risk outflow volume, it measures the remediation effort/delivery for the period.
+  view: null
+
+- title: Number of vulnerabilities fixed by severity (year-to-date)
+  calculation: cumulative count for the current year, grouped by "Vuln Severity".
+  filters: null
+  reason: annual trend view of remediation delivery, useful for targets and YTD comparisons.
+  view: null
+
+- title: Average remediation time (MTTR) by severity
+  calculation: MTTR = "Last Fixed" - "First Seen", aggregated by "Vuln Severity". Display average, median, and p90/p95. Average at the client/group level weighted by the volume of each department; at the department level, the department's own arithmetic mean.
+  filters: null
+  reason: MTTR is the central KPI for remediation effectiveness; broken down by severity it shows whether deadlines keep pace with severity.
+  view: null
+
+- title: Average remediation time (MTTR) by severity (year-to-date)
+  calculation: MTTR = "Last Fixed" - "First Seen", aggregated by "Vuln Severity", cumulative for the current year.
+  filters: null
+  reason: annual MTTR trend; it shows sustained improvement or degradation of the process.
+  view: null
+
+- title: Percentage of vulnerabilities fixed within SLA by severity
+  calculation: of the fixed vulnerabilities, the percentage whose MTTR ("Last Fixed" - "First Seen") ≤ the SLA for the severity. Monthly and year-to-date views.
+  filters: null
+  reason: measures deadline discipline in delivery and is the main accountability number for remediation.
+  view: null
+
+- title: Net balance / burndown (inflows vs. outflows)
+  calculation: by month, new vulnerabilities (12. New vulnerabilities in the month) minus fixed vulnerabilities (1. Number of vulnerabilities fixed by severity); accumulate for the burndown curve.
+  filters: null
+  reason: shows whether the department is winning or losing the race, more informative than fixed volume alone. Requires cross-referencing the active and fixed vulnerabilities datasets.
+  view: null
+
+- title: Severity mix — fixed vs. open
+  calculation: percentage distribution by "Vuln Severity" for the fixed ones, compared to the distribution of the active ones (active vulnerabilities).
+  filters: null
+  reason: reveals whether the department closes many low-severity items while criticals age, or whether it prioritizes correctly.
+  view: null
+
+- title: Reopening / recurrence rate
+  calculation: ratio of vulnerabilities that are recorded as fixed and reappear as active in a later month (same "Vuln Id" + "Server Id").
+  filters: null
+  reason: a quality signal that volume doesn't capture — a patch that didn't take, a rollback, or a regression. Requires cross-referencing fixed × active vulnerabilities across monthly windows.
+  view: null
+
+- title: Top fixed CVEs / families
+  calculation: '"Vuln Family" ordered by the number of instances fixed in the period.'
+  filters: null
+  reason: shows effective patch campaigns and the concrete impact of remediation actions.
+  view: null
+last_reviewed: '2026-08-07'

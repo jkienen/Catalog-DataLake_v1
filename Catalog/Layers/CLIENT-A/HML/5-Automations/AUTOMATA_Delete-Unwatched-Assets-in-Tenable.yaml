@@ -1,0 +1,19 @@
+id: AUTOMATA_Delete-Unwatched-Assets-in-Tenable
+layer: automation
+project: Vulnerability Management
+description: |-
+  Removal of Unmatched Assets — Tenable:
+
+  Remove from Tenable the assets that do not have a match in the VCenter inventory and that have not been seen for more than ten days.
+sources_silver: []
+sources_audit:
+- AUDIT_GVulnerabilities-UnwatchedAssets
+target: Tenable
+frequency: Monthly
+execution_schedule: 10th of the month at 06:00 AM
+filters: |-
+  Only retrieve assets where the Last Seen column is older than 10 days.
+pipeline: |-
+  The SOAR tool will be responsible for retrieving the processed data from the audit stored in the Silver layer, applying the necessary filters, and performing the automatic removal of the assets on the platform.
+source_repo: "?"
+last_reviewed: '2026-08-07'

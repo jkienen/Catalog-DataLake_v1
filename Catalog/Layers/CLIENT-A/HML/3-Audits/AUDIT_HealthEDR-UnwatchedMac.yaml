@@ -1,0 +1,22 @@
+id: AUDIT_HealthEDR-UnwatchedMac
+layer: audit
+project: EDR Health Check Report
+sources_silver:
+- SILVER_HealthEDR-AssetsMac
+description: |-
+  Health Check (EDR) - Unmatched Hosts (Mac):
+
+  Mac hosts whose Host Type is not Workstation (which always matches by a fixed rule) and whose Mac Address does not match any record in the VCenter inventory; they are left with Department and Server VM empty ("-") and are separated from this Silver.
+
+  Note: they will be stored separately for later tracking and possible automatic removal.
+storage_notes: |-
+  Storage will be done in the Silver layer; the structured data will be kept ready for queries feeding the indicator calculations.
+
+  The data is organized following the standard naming convention. Additionally, temporal segregation must be maintained by collection period, using the YYYY-MM-DD naming convention, according to the frequency defined by the business. The following pattern must be followed:
+
+  CYBER/Client/Silver/HealthEDR/YYYY-MM-DD/UnwatchedMac.json
+
+  This organization ensures temporal traceability, ingestion standardization, and ease of auditing the data.
+owner: "João V. Kienen"
+source_repo: "CYBER__HealthEDR"
+last_reviewed: '2026-08-10'
