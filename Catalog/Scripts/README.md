@@ -1,26 +1,6 @@
 # Graph Generator
 
-Renders `Catalog/DataLake-Graph_Pyvis.html` from the YAML files under `Catalog/Layers/`: an interactive, color-coded graph of the whole catalog.
-
----
-
-## Setup
-
-**Windows**
-
-```
-python -m venv .venv
-.venv\Scripts\Activate.ps1
-```
-
-**Linux**
-
-```
-python3 -m venv .venv
-source .venv/bin/activate
-```
-
-(Skip this step if `.venv` already exists.)
+Renders `Catalog/DataLake-Graph_Pyvis.html` from the YAML files under `Catalog/Layers/`: an interactive, color-coded graph of the whole catalog — one column per layer, filterable by client, platform and project, with a detail panel per node.
 
 ---
 
@@ -35,13 +15,10 @@ pip install -r requirements.txt
 python ./Generate-Graph_Pyvis.py
 ```
 
-```
-deactivate
-```
-
 ---
 
-## Configuration
+<details>
+<summary><strong>Configuration</strong> (click to expand)</summary>
 
 A handful of constants near the top of the script (`Part 1: Setup`) control how the graph looks and reads, without touching the logic that builds it. Change them directly in `Generate-Graph_Pyvis.py` and re-run the script to apply them.
 
@@ -62,22 +39,26 @@ A handful of constants near the top of the script (`Part 1: Setup`) control how 
 </tbody>
 </table>
 
----
+</details>
 
-## Dependencies
+<details>
+<summary><strong>Dependencies</strong> (click to expand)</summary>
 
-- [`pyyaml`](https://pyyaml.org/): a library for reading and writing YAML files in Python. Here it reads the `.yaml` files under `Catalog/Layers/`, one per dataset, rule, audit, indicator or automation.
-- [`networkx`](https://networkx.org/): a library for creating and analyzing graphs (nodes and the edges between them) as plain Python objects, with no rendering of its own. Here it builds that node/edge structure from the links declared in each YAML (`sources_raw`, `sources_silver`, `sources_audit`, `generates_audits`).
-- [`pyvis`](https://pyvis.readthedocs.io/): a library that takes a graph (a `networkx` graph, in this case) and turns it into an interactive HTML page, using the JavaScript library [vis.js](https://visjs.org/) to draw and let the user drag, zoom and click nodes in the browser. Here it renders the graph as `Catalog/DataLake-Graph_Pyvis.html`, and the script layers the client/platform/project filters and the detail panel on top of that page after `pyvis` generates it.
+- [`pyyaml`](https://pyyaml.org/): reads the `.yaml` files under `Catalog/Layers/`, one per dataset, rule, audit, indicator or automation.
+- [`networkx`](https://networkx.org/): builds the node/edge structure from the links declared in each YAML (`sources_raw`, `sources_silver`, `sources_audit`, `generates_audits`) — no rendering of its own.
+- [`pyvis`](https://pyvis.readthedocs.io/): turns that graph into the interactive HTML page (`Catalog/DataLake-Graph_Pyvis.html`), using [vis.js](https://visjs.org/) to draw and let the user drag, zoom and click nodes. The client/platform/project filters and the detail panel are layered on top of pyvis's own output afterward.
 
----
+</details>
 
-## A Note on Internet Access and Data Exposure
+<details>
+<summary><strong>A Note on Internet Access and Data Exposure</strong> (click to expand)</summary>
 
-**The script itself makes no network calls.** It only reads the local `.yaml` files under `Catalog/Layers/` and writes a local HTML file: the catalog data never leaves the machine at this step, and nothing is uploaded anywhere.
+**The script itself makes no network calls.** It only reads the local `.yaml` files under `Catalog/Layers/` and writes a local HTML file — nothing leaves the machine at this step.
 
-**The internet dependency happens later, in the browser.** The generated HTML loads the `vis-network.js` library from an external CDN (`cdn_resources="remote"` in the script) instead of bundling it locally, so opening `Catalog/DataLake-Graph_Pyvis.html` requires an internet connection; without it, the page loads but the graph does not render.
+**The internet dependency happens later, in the browser.** The generated HTML loads `vis-network.js` from an external CDN (`cdn_resources="remote"`) instead of bundling it locally, so opening the file requires a connection; without one, the page loads but the graph doesn't render.
 
-**What that dependency means for security.** The catalog data itself (node labels, descriptions, samples, KPIs) is embedded directly in the local HTML file, escaped as text, not executed as code, so the catalog's own content cannot inject a script into the page. The one piece of code the page does execute from the outside is `vis-network.js`, fetched fresh from the CDN every time the file is opened. That is a standard third-party-CDN trust relationship, not a flaw specific to this script, but it is worth naming plainly: if that CDN were ever compromised or the connection intercepted, the injected script would run on the same page as the catalog's data. For an internal security catalog, that is a low-probability but non-zero supply-chain exposure.
+**What that dependency means for security.** The catalog data itself — labels, descriptions, samples, KPIs — is embedded as escaped text, not executed as code, so the catalog's own content cannot inject a script. The one piece of code the page runs from the outside is `vis-network.js`, fetched fresh from the CDN on every open: a standard third-party-CDN trust relationship, worth naming plainly for an internal security catalog even though it is not a flaw specific to this script.
 
-**If that trade-off matters for your environment**, `pyvis` also supports `cdn_resources="local"`, which copies the JavaScript library next to the generated HTML instead of fetching it from the CDN; the page then renders fully offline and makes no external request at all. That is a one-line change in `Generate-Graph_Pyvis.py` if the team decides the extra local file is worth trading for removing the CDN dependency.
+**If that trade-off matters for your environment**, `pyvis` also supports `cdn_resources="local"`, which copies the library next to the generated HTML instead of fetching it — the page then renders fully offline. That is a one-line change in `Generate-Graph_Pyvis.py` if the team decides the extra local file is worth it.
+
+</details>

@@ -2,6 +2,19 @@
 
 > Attributes every vulnerability found by Tenable to the department that actually owns the affected server, and builds the risk and exploitability signals a manual export never carried.
 
+<p align="center">
+  <img src="../../Catalog/Files/concept-vulnmanage.png" alt="Catalog graph for Vulnerability Management: 4 Raw endpoints from Tenable and VCenter feed 3 Silver datasets — assets, active vulnerabilities, and vulnerabilities fixed last month — the asset dataset branches into an Audit of unmatched hosts, all three feed a matching Gold indicator file, and the audit feeds two Automations that delete unwatched assets and reassign asset tags in Tenable.">
+</p>
+
+<table width="100%">
+<thead>
+<tr><th>Before<div><img width="300" height="1" alt=""></div></th><th>Now<div><img width="300" height="1" alt=""></div></th><th>What it buys<div><img width="400" height="1" alt=""></div></th></tr>
+</thead>
+<tbody>
+<tr><td>vulnerabilities sit in Tenable with no route to the owning department</td><td>every vulnerability attributed automatically, through the same VCenter inventory shared across projects</td><td>accepted-risk visibility and exploitability-based prioritization a manual export never carried</td></tr>
+</tbody>
+</table>
+
 ---
 
 ## Why This Project Exists
@@ -10,13 +23,14 @@
 
 **Task:** Attribute every vulnerability to its owning department faster than a manual export, and add what a manual export never carried: accepted-risk visibility and prioritization by real exploitability, not severity alone.
 
-**Action:** One script pulls the VCenter inventory, the shared source of truth used across the other projects. A second pulls Tenable's asset inventory and risk scores, cross-references it against VCenter by MAC to confirm or correct each asset's department, flagging drift from the real owner and setting aside whatever it can't match. A third pulls every active vulnerability plus everything fixed in the previous month, enriches each with its prioritization signals (EPSS score, CISA KEV presence, exploit availability and maturity), attributes it through the cross-referenced asset, and tallies the severity counts back onto the asset record.
+**Action:** Every asset pulled from Tenable is cross-referenced against the VCenter inventory by MAC address, confirming or correcting its department and flagging when Tenable's own tag has drifted from the real owner; whatever cannot be matched is set aside instead of dropped. Every vulnerability — active or fixed in the previous month — is enriched with its exploitability signals (EPSS score, CISA KEV presence, exploit availability and maturity) and attributed through that same cross-reference.
 
 **Result:** Vulnerabilities reach their owning department faster than a manual export, and the pipeline leaves behind what manual exports never did: the raw material for automated KPIs like remediation progress, accepted-risk tracking, and exploitability-based prioritization.
 
 ---
 
-## Scripts
+<details>
+<summary><strong>Scripts</strong> (click to expand)</summary>
 
 <table width="100%">
 <thead>
@@ -29,29 +43,10 @@
 </tbody>
 </table>
 
----
+</details>
 
-## Setup
-
-**Windows**
-
-```
-python -m venv .venv
-.venv\Scripts\Activate.ps1
-```
-
-**Linux**
-
-```
-python3 -m venv .venv
-source .venv/bin/activate
-```
-
-(Skip this step if `.venv` already exists.)
-
----
-
-## Usage
+<details>
+<summary><strong>Usage</strong> (click to expand)</summary>
 
 ```
 cd Scripts
@@ -66,6 +61,4 @@ python './2. Tenable/2.1. Extract_Assets.py'
 python './2. Tenable/2.2. Extract_Vulns.py'
 ```
 
-```
-deactivate
-```
+</details>

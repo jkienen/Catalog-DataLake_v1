@@ -1,6 +1,19 @@
 # EDR Health Check
 
-> Turns a day of manual CrowdStrike auditing into an automated report: sensor health, policy coverage, and exclusions, cross-referenced against the real server inventory.
+> Turns a day of manual CrowdStrike auditing into an automated report — sensor health, policy coverage and exclusions, cross-referenced against the real server inventory.
+
+<p align="center">
+  <img src="../../Catalog/Files/concept-healthEDR.png" alt="Catalog graph for EDR Health Check: 11 Raw endpoints from Crowdstrike and VCenter feed 6 Silver datasets — assets per OS and exclusions per type — three of which branch into an Audit of unwatched hosts, all six feed a matching Gold indicator file, and the audits feed two Automations that delete unwatched assets and reassign asset tags in Crowdstrike.">
+</p>
+
+<table width="100%">
+<thead>
+<tr><th>Before<div><img width="300" height="1" alt=""></div></th><th>Now<div><img width="300" height="1" alt=""></div></th><th>What it buys<div><img width="400" height="1" alt=""></div></th></tr>
+</thead>
+<tbody>
+<tr><td>~8 hours by hand, per client, every cycle</td><td>one automated pipeline, same report</td><td>a consistency no manual version reached</td></tr>
+</tbody>
+</table>
 
 ---
 
@@ -8,15 +21,16 @@
 
 **Situation:** Building a CrowdStrike EDR health-check report (sensor health, security best practices, configured exceptions) took an analyst roughly **8 hours**, a full day, on a monthly or weekly cadence, and it had to be rebuilt per client. At a day each, doing it by hand for every client stops being feasible.
 
-**Task:** Automate that report so it protects the endpoint perimeter the way the manual version did (sensor status, policy exceptions, security best practices), without costing a day of analyst time per client.
+**Task:** Automate that report so it protects the endpoint perimeter the way the manual version did — sensor status, policy exceptions, security best practices — without costing a day of analyst time per client.
 
-**Action:** One script pulls the real server inventory from VCenter, the source of truth for which VM belongs to which department. A second pulls every host from CrowdStrike Falcon, its assigned policies and its sensor-health signals, cross-referencing it against that inventory to attribute it correctly; whatever cannot be matched is set aside instead of silently dropped. A third pulls every exclusion configured in Falcon, the exceptions that could otherwise quietly weaken protection without anyone noticing.
+**Action:** Every host pulled from Falcon is cross-referenced against the VCenter inventory to attribute it to the right department; whatever cannot be matched is set aside instead of silently dropped. Every exclusion configured in Falcon — IOA, Sensor Visibility, ML — is captured by type, because a quiet exception is exactly what weakens protection without anyone noticing.
 
 **Result:** The manual report is gone, and what replaced it didn't just save the analyst's **day per client**: the automated reports come out to a noticeably more consistent standard than the manual ones ever did.
 
 ---
 
-## Scripts
+<details>
+<summary><strong>Scripts</strong> (click to expand)</summary>
 
 <table width="100%">
 <thead>
@@ -29,29 +43,10 @@
 </tbody>
 </table>
 
----
+</details>
 
-## Setup
-
-**Windows**
-
-```
-python -m venv .venv
-.venv\Scripts\Activate.ps1
-```
-
-**Linux**
-
-```
-python3 -m venv .venv
-source .venv/bin/activate
-```
-
-(Skip this step if `.venv` already exists.)
-
----
-
-## Usage
+<details>
+<summary><strong>Usage</strong> (click to expand)</summary>
 
 ```
 cd Scripts
@@ -66,6 +61,4 @@ python './2. EDR/2.1. Generate_Assets.py'
 python './2. EDR/2.2. Generate_Exclusions.py'
 ```
 
-```
-deactivate
-```
+</details>

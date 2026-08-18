@@ -1,6 +1,19 @@
 # Device Control (USB)
 
->Keeps CrowdStrike's USB Device Control exceptions honest: it builds the usage history Falcon does not keep on its own, so an exception nobody uses anymore can be found and revoked instead of sitting open indefinitely.
+> Keeps CrowdStrike's USB Device Control exceptions honest: it builds the usage history Falcon does not keep on its own, so an exception nobody uses anymore can be found and revoked instead of sitting open indefinitely.
+
+<p align="center">
+  <img src="../../Catalog/Files/concept-devicecontrol.png" alt="Catalog graph for Device Control: 2 Raw endpoints from Crowdstrike — USB policies and USB usage — feed a single Silver dataset that cross-references exceptions against usage history, branches into an Audit of stale exceptions, feeds a Gold indicator file, and the audit feeds one Automation that removes stale USB exceptions in Crowdstrike.">
+</p>
+
+<table width="100%">
+<thead>
+<tr><th>Before<div><img width="300" height="1" alt=""></div></th><th>Now<div><img width="300" height="1" alt=""></div></th><th>What it buys<div><img width="400" height="1" alt=""></div></th></tr>
+</thead>
+<tbody>
+<tr><td>impossible past 7 days — Falcon doesn't keep the data</td><td>a rolling 3–6 month usage history, refreshed weekly</td><td>~8 hours per review, per analyst, replaced by an automatic check</td></tr>
+</tbody>
+</table>
 
 ---
 
@@ -10,13 +23,14 @@
 
 **Task:** Build a usage history that outlives Falcon's 7-day window, so exceptions can be checked against real usage instead of staying open indefinitely.
 
-**Action:** Every 7 days, one script pulls USB/removable-storage events from NGSIEM into a rolling 3 or 6-month history. A second pulls the current exceptions from Falcon's Device Control policies. A third cross-references both, flagging each exception active or dormant with the machines and dates that prove it, feeding the automation that revokes what nobody uses.
+**Action:** Every exception is matched against the rolling usage history — by its combined id, or by vendor+product+serial, or by vendor+product alone, depending on what the exception itself declares — and flagged active or dormant with the machines and dates that prove it, feeding the automation that revokes what nobody uses.
 
 **Result:** The check goes from impossible — the data needed simply doesn't survive past 7 days on the platform — to automatic, replacing roughly **8 hours per review** of manual work per analyst.
 
 ---
 
-## Scripts
+<details>
+<summary><strong>Scripts</strong> (click to expand)</summary>
 
 <table width="100%">
 <thead>
@@ -29,29 +43,10 @@
 </tbody>
 </table>
 
----
+</details>
 
-## Setup
-
-**Windows**
-
-```
-python -m venv .venv
-.venv\Scripts\Activate.ps1
-```
-
-**Linux**
-
-```
-python3 -m venv .venv
-source .venv/bin/activate
-```
-
-(Skip this step if `.venv` already exists.)
-
----
-
-## Usage
+<details>
+<summary><strong>Usage</strong> (click to expand)</summary>
 
 ```
 cd Scripts
@@ -66,6 +61,4 @@ python './Falcon/2. Extract_USB_Devices.py'
 python './3. Generate_USB-Audit-Usage.py'
 ```
 
-```
-deactivate
-```
+</details>
