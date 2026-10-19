@@ -1,0 +1,51 @@
+id: RAW_Crowdstrike-Users-WS
+layer: raw
+platform: Crowdstrike
+endpoint: |-
+  (Users)
+  - GET /user-management/queries/users/v1
+  - POST /user-management/entities/users/GET/v1
+description: |-
+  Obtains the tenant's console users, including identification (UUID, e-mail, name), status, MFA factors, creation date, and last login date. The data comes from Client B's desktop (workstation) tenant.
+load_type: Full
+frequency: Monthly
+volume_per_frequency: 3Kb
+execution_schedule: 1st of the month at 03:00 AM
+extraction_notes: |-
+  The Data Science team will be responsible for running the routine that queries the described endpoint, applying the necessary filters, and storing the data in the Raw layer of the Data Lake.
+
+  Note: the extraction happens in two steps: the first call returns the users' UUIDs and the second returns the record of each one.
+
+  Note: Client B has two tenants in CrowdStrike, one for desktops and one for servers, each with its own credential. This extraction uses the desktop tenant's credential; the same query is run on the other tenant in RAW_Crowdstrike-Users-SRV.
+filters: |-
+  Run the query with the following conditions:
+
+  - limit: 500
+  - offset: pagination offset (0, 500, 1000...)
+  - ids: UUIDs returned by the first call, in batches of 100
+storage_notes: |-
+  Storage will be done in the Raw layer, containing the data extracted directly from the described API endpoint, without any type of transformation, fully preserving the data.
+
+  The data is organized following the standard naming convention. Additionally, temporal segregation must be maintained by collection period, using the YYYY-MM-DD naming convention, according to the frequency defined by the business. The following pattern must be followed:
+
+  CYBER/Client-B/Raw/CROWDSTRIKE/YYYY-MM-DD/Users-WS.json
+
+  This organization ensures temporal traceability, ingestion standardization, and ease of auditing the protected server inventory data.
+sample_output: |-
+  {
+    "uuid": "bbbb2222-cc33-4dd4-8ee5-ffffff666666",
+    "cid": "2b3c4d5e6f7a48b9c0d1e2f3a4b5c6d7",
+    "uid": "user.example@example.com.br",
+    "status": "active",
+    "first_name": "INFRA -",
+    "last_name": "Example User",
+    "last_login_at": "2026-10-16T18:40:50.834786Z",
+    "factors": [
+      "TOTP"
+    ],
+    "created_at": "2026-10-09T20:23:40.955468Z",
+    "updated_at": "2026-10-09T23:24:20.961655Z"
+  }
+owner: "Cyber Security Team"
+source_repo: "CYBER__FalconAudits"
+last_reviewed: '2026-10-16'

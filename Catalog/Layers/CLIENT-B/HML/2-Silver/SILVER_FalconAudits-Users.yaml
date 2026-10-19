@@ -1,0 +1,86 @@
+id: SILVER_FalconAudits-Users
+layer: silver
+project: Tenant Audit (CrowdStrike)
+sources_raw:
+- RAW_Crowdstrike-Users-WS
+- RAW_Crowdstrike-Users-SRV
+- RAW_Crowdstrike-UserRoles-WS
+- RAW_Crowdstrike-UserRoles-SRV
+sources_silver: []
+generates_audits: NA
+execution_schedule: 1st of the month at 05:00 AM
+filters: NA
+pipeline: |-
+  The Data Science team will be responsible for retrieving the raw data from the Raw layer and structuring it as shown in the next step.
+
+  Tenant:
+
+  Client B has two tenants in CrowdStrike, one for desktops and one for servers. The records of both are read from their respective Raws, processed by the same rules described below and merged into the same set. The Tenant column receives "Desktops" for the records coming from the desktop tenant's Raws and "Servers" for those coming from the server tenant's Raws.
+
+  Rows:
+
+  One row per user in each tenant, with the roles granted to the user in that tenant. The same person with an account in both tenants appears once in each.
+
+  User Name:
+
+  The user's first and last name joined by a space; "-" when both are empty.
+
+  Status:
+
+  Capitalized user status.
+
+  Created / Last Login:
+
+  Creation and last login dates, converted from the UTC time returned by the platform to America/Sao_Paulo (UTC-3) and formatted as YYYY-MM-DD. Last Login receives "-" when the user has never logged in.
+
+  Days Since Last Login:
+
+  Days between the last login date and the run date; "-" when the user has never logged in.
+
+  Roles / Roles Total:
+
+  Distinct names of the roles granted to the user, sorted and joined by "; ", and the number of distinct roles. Both receive "-" when the user's role query fails.
+
+  Grant Type:
+
+  Distinct grant types of the user's roles in readable text (Direct, Default CID Group), sorted and joined by "; ".
+
+  Falcon Administrator:
+
+  True when Falcon Administrator is among the user's roles.
+
+  Item: Activity:
+
+  "Ok" when the last login happened within the 45 days before the run; "Attention" when that period has passed or when the user has never logged in.
+structure_notes: |-
+  The data sources will be organized into the columns User Name, User Email, User UUID, Status, Created, Last Login, Days Since Last Login, Roles, Roles Total, Grant Type, Falcon Administrator, Item: Activity, Tenant, Reference Month, Reference Year, Reference Date, ensuring consistency, asset traceability, and data readiness for the indicators layer.
+storage_notes: |-
+  Storage will be done in the Silver layer; the structured data will be kept ready for queries feeding the indicator calculations.
+
+  The data is organized following the standard naming convention. Additionally, temporal segregation must be maintained by collection period, using the YYYY-MM-DD naming convention, according to the frequency defined by the business. The following pattern must be followed:
+
+  CYBER/Client-B/Silver/FalconAudits/YYYY-MM-DD/Users.json
+
+  This organization ensures temporal traceability, ingestion standardization, and ease of auditing the data.
+sample_output: |-
+  {
+    "User Name": "INFRA - Example User",
+    "User Email": "user.example@example.com.br",
+    "User UUID": "bbbb2222-cc33-4dd4-8ee5-ffffff666666",
+    "Status": "Active",
+    "Created": "2026-10-13",
+    "Last Login": "2026-10-16",
+    "Days Since Last Login": 0,
+    "Roles": "Falcon Analyst - Read Only",
+    "Roles Total": 1,
+    "Grant Type": "Direct",
+    "Falcon Administrator": false,
+    "Item: Activity": "Ok",
+    "Tenant": "Servers",
+    "Reference Month": "10",
+    "Reference Year": "2026",
+    "Reference Date": "2026-10-16"
+  }
+owner: "Cyber Security Team"
+source_repo: "CYBER__FalconAudits"
+last_reviewed: '2026-10-16'

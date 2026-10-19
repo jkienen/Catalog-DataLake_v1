@@ -1,0 +1,31 @@
+id: GOLD_FalconAudits-Changes
+layer: gold
+project: Tenant Audit (CrowdStrike)
+sources_silver:
+- SILVER_FalconAudits-Changes
+sources_audit: []
+description: |-
+  The Gold layer consolidates the data from the Silver layer into indicators ready for analytical and executive consumption.
+
+  All indicators must be generated per client, department group, and/or department.
+
+  The generated indicators are:
+kpis:
+- title: Uninstall protection disabled or in maintenance
+  calculation: count of rows with Change Type equal to Uninstall Protection and After different from Enabled.
+  filters: null
+  reason: uninstall protection is what requires the token to remove the sensor; with it disabled or in maintenance mode, anyone with administrative access to the host removes the EDR without leaving the trail of a revealed token. A policy changed this way unprotects all the hosts it covers at once, so each change must have a maintenance window that justifies it and a return to Enabled at the end.
+  view: numeric count by reference month, detailed in a list with Event Date, Event Time, Actor, Target, Before, and After. The before and after pair shows whether the protection was turned off or back on, and the policy name indicates which hosts were affected.
+
+- title: API clients created in the month
+  calculation: count of rows with Change Type equal to API Client and Action equal to Create.
+  filters: null
+  reason: each new API client is a permanent credential with the scopes it received at creation, able to read or change the tenant without login or second factor. Every creation needs an owner, an integration that justifies it, and minimal scopes, and a client created outside this process is an access door that no one monitors.
+  view: numeric count by reference month, detailed in a list with Event Date, Actor, Target, After, and Result. The scopes granted at creation appear in After and allow checking whether they are the minimum necessary.
+
+- title: Total number of sensitive changes in the month
+  calculation: count of rows broken down by Change Type.
+  filters: null
+  reason: it is the baseline for the change indicators and shows the volume of changes to API clients, user roles, and uninstall protection, the three actions that most affect access control and the protection of the tenant. A spike in changes in a month calls for a batch review, because it usually accompanies an access reorganization or an intervention that needs to be checked.
+  view: numeric count by reference month and by Change Type, detailed in a list with Event Date, Change Type, Action, Actor, Target, and Result.
+last_reviewed: '2026-10-16'

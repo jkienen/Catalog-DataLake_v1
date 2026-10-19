@@ -1,0 +1,49 @@
+id: GOLD_HealthEDR-AssetsWindows
+layer: gold
+project: EDR Health Check Report
+sources_silver:
+- SILVER_HealthEDR-AssetsWindows
+sources_audit: []
+description: |-
+  The Gold layer consolidates the data from the Silver layer into indicators ready for analytical and executive consumption.
+
+  All indicators must be generated per client, department group, and/or department.
+
+  The generated indicators are:
+kpis:
+- title: Average Host Score
+  calculation: average Host Score across monitored Windows hosts.
+  filters: disregard hosts with Host Score equal to "-", that is, without a posture assessment.
+  reason: the Host Score summarizes the sensor's security configuration in a single number; tracking the average over time flags when the overall posture of the Windows fleet is declining before it turns into a concrete incident.
+  view: numeric average by reference month, detailed in a list with Host Name, Host Type, Host Score. This shows whether the drop is concentrated in a specific host type or widespread.
+
+- title: Most failed posture items
+  calculation: for each item column, percentage of hosts with value Attention over the hosts evaluated on that item, presented as a ranking from the most failed to the least failed.
+  filters: consider, for each item, only hosts with a value other than "-", that is, evaluated on that item.
+  reason: each failed item is a sensor configuration criterion that the host does not meet, such as a disabled machine learning model or execution block. Ranking the items by failure rate shows which failure is spread across the Windows fleet, and a widespread failure almost always has a single cause, the policy applied to the host group, which can be fixed in one go. Without this ranking, remediation turns into host-by-host handling and the most frequently missing criteria remain missing.
+  view: ranking by reference month, with the percentage and the number of hosts in Attention for each item, detailed in a list with Host Name, Host Type, Prevention Policy and the failed item. The policy next to each host shows whether the failure comes from a specific policy, which points to where to fix it.
+
+- title: Percentage of hosts with uninstall protection disabled
+  calculation: ratio of distinct Host Id values with Uninstall Protection other than Enabled over the total number of distinct Host Id values.
+  filters: disregard hosts with Uninstall Protection equal to "-", where the Sensor Update policy does not specify the protection.
+  reason: with uninstall protection disabled, the sensor can be removed from the host without the maintenance token, by a user with local privileges or by an attacker who has just gained access, and removing the sensor is precisely one of the first steps for anyone who wants to act without being detected. The expected value is zero, and each host in this condition points to a Sensor Update policy that needs to be fixed.
+  view: percentage by reference month, detailed in a list with Host Name, Host Type, Sensor Update Policy and Uninstall Protection. The policy next to each host shows which Sensor Update policy leaves the protection disabled.
+
+- title: Percentage of hosts in RFM (Reduced Functionality Mode)
+  calculation: ratio of hosts with RFM true over the total number of monitored Windows hosts.
+  filters: null
+  reason: a host in RFM has reduced sensor protection; each host in this condition is a blind spot that goes unnoticed if no one tracks the total.
+  view: percentage by reference month, detailed in a list with Host Name, OS Version. The system version helps identify whether the problem repeats on the same version.
+
+- title: Total number of hosts
+  calculation: count of distinct Host Id values.
+  filters: null
+  reason: it is the size of the Windows fleet monitored by the sensor and the denominator of all the other indicators in this file. Tracked month by month, it shows the growth or shrinkage of the installed base, and a sharp variation, up or down, indicates a deployment wave, a migration or hosts that stopped reporting, and needs to be explained before reading the percentages.
+  view: numeric count by reference month, as a historical series, broken down by Host Type and by OS Version. This shows where the variation in the total comes from.
+
+- title: Distribution of hosts by policy
+  calculation: count of distinct Host Id values grouped by Prevention Policy, by USB Device Policy, by Firewall Policy, by Sensor Update Policy and by Content Policy, each policy column separately.
+  filters: null
+  reason: each policy defines what the sensor does on the host, and the distribution shows how many sensors are in each one. It reveals hosts that were left on the platform's default policy instead of the policy designed for the group, test or temporary policies that accumulate hosts without anyone noticing, and hosts with no policy assigned. A change made to a policy has the exact reach of the number of hosts it carries, which makes this view the starting point for assessing the impact before changing a configuration.
+  view: a donut chart per policy type (Prevention, USB Device, Firewall, Sensor Update and Content), with one slice per policy and the number of sensors in each one, by reference month. Hosts with "-" form their own slice, with no policy, instead of being discarded. Each slice is detailed in a list with Host Name, Host Type and the policy.
+last_reviewed: '2026-10-16'

@@ -1,0 +1,42 @@
+id: RAW_Crowdstrike-UserRoles-SRV
+layer: raw
+platform: Crowdstrike
+endpoint: |-
+  (User Roles)
+  - GET /user-management/combined/user-roles/v2
+description: |-
+  Obtains the roles granted to each tenant user, including the role (custom ones included), the role name, and the grant type. The data comes from Client B's server tenant.
+load_type: Full
+frequency: Monthly
+volume_per_frequency: 2Kb
+execution_schedule: 1st of the month at 04:30 AM
+extraction_notes: |-
+  The Data Science team will be responsible for running the routine that queries the described endpoint, applying the necessary filters, and storing the data in the Raw layer of the Data Lake.
+
+  Note: one call per user, with the UUID obtained in the extraction of the tenant users.
+
+  Note: Client B has two tenants in CrowdStrike, one for desktops and one for servers, each with its own credential. This extraction uses the server tenant's credential; the same query is run on the other tenant in RAW_Crowdstrike-UserRoles-WS.
+filters: |-
+  Run the query with the following conditions:
+
+  - user_uuid: UUID of each user returned in RAW_Crowdstrike-Users
+  - limit: 500
+storage_notes: |-
+  Storage will be done in the Raw layer, containing the data extracted directly from the described API endpoint, without any type of transformation, fully preserving the data.
+
+  The data is organized following the standard naming convention. Additionally, temporal segregation must be maintained by collection period, using the YYYY-MM-DD naming convention, according to the frequency defined by the business. The following pattern must be followed:
+
+  CYBER/Client-B/Raw/CROWDSTRIKE/YYYY-MM-DD/UserRoles-SRV.json
+
+  This organization ensures temporal traceability, ingestion standardization, and ease of auditing the protected server inventory data.
+sample_output: |-
+  {
+    "uuid": "cccc3333-dd44-4ee5-8ff6-aaaaaa777777",
+    "cid": "2b3c4d5e6f7a48b9c0d1e2f3a4b5c6d7",
+    "role_id": "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6",
+    "role_name": "Custom - Device Control Manager",
+    "grant_type": "direct"
+  }
+owner: "Cyber Security Team"
+source_repo: "CYBER__FalconAudits"
+last_reviewed: '2026-10-16'

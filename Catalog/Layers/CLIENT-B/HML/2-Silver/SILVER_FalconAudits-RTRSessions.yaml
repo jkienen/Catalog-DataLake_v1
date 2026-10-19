@@ -1,0 +1,78 @@
+id: SILVER_FalconAudits-RTRSessions
+layer: silver
+project: Tenant Audit (CrowdStrike)
+sources_raw:
+- RAW_Crowdstrike-RTRSessions-WS
+- RAW_Crowdstrike-RTRSessions-SRV
+- RAW_Crowdstrike-Assets-WS
+- RAW_Crowdstrike-Assets-SRV
+sources_silver: []
+generates_audits: NA
+execution_schedule: 1st of the month at 06:00 AM
+filters: NA
+pipeline: |-
+  The Data Science team will be responsible for retrieving the raw data from the Raw layer and structuring it as shown in the next step.
+
+  Tenant:
+
+  Client B has two tenants in CrowdStrike, one for desktops and one for servers. The records of both are read from their respective Raws, processed by the same rules described below and merged into the same set. The Tenant column receives "Desktops" for the records coming from the desktop tenant's Raws and "Servers" for those coming from the server tenant's Raws.
+
+  Rows:
+
+  One row per command executed in the session, repeating the session data. A session without commands generates a single row, with "-" in the command columns.
+
+  Session Date / Session Time:
+
+  Date and time of the session creation, converted from the UTC time returned by the platform to America/Sao_Paulo (UTC-3), in the YYYY-MM-DD and HH:MM:SS formats.
+
+  User:
+
+  Who opened the session: the user's e-mail, or the API client identifier (api-client-<id>) in sessions opened by automation; "-" when empty.
+
+  Origin:
+
+  The session origin, read from the "source" part of the origin field: "API" for API calls, "Console - Host Card", "Console - Hosts", and "Console - Activity" for the console pages. Other origins are capitalized (for example, Discover).
+
+  Host Type:
+
+  Type of the session's host (Server, Domain Controller, Workstation), cross-referenced with the host inventory by the host identifier; "-" when the host no longer exists in the inventory.
+
+  Session Duration (s):
+
+  Session duration in seconds, rounded to one decimal place.
+
+  Command / Command Line / Command Time:
+
+  Base command, full command line (with spaces and line breaks collapsed into a single space), and command time converted from the UTC time returned by the platform to America/Sao_Paulo (UTC-3). Accented characters in the command line arrive corrupted from the source itself.
+structure_notes: |-
+  The data sources will be organized into the columns Session Date, Session Time, Session Id, User, Origin, Host Name, Host Id, Host Type, Session Duration (s), Command, Command Line, Command Time, Tenant, Reference Month, Reference Year, Reference Date, ensuring consistency, asset traceability, and data readiness for the indicators layer.
+storage_notes: |-
+  Storage will be done in the Silver layer; the structured data will be kept ready for queries feeding the indicator calculations.
+
+  The data is organized following the standard naming convention. Additionally, temporal segregation must be maintained by collection period, using the YYYY-MM-DD naming convention, according to the frequency defined by the business. The following pattern must be followed:
+
+  CYBER/Client-B/Silver/FalconAudits/YYYY-MM-DD/RTRSessions.json
+
+  This organization ensures temporal traceability, ingestion standardization, and ease of auditing the data.
+sample_output: |-
+  {
+    "Session Date": "2026-09-01",
+    "Session Time": "10:38:59",
+    "Session Id": "3a4b5c6d-7e8f-49a0-b1c2-d3e4f5a6b7c8",
+    "User": "api-client-1c2d3e4f5a6b47c8d9e0f1a2b3c4d5e6",
+    "Origin": "API",
+    "Host Name": "HOST-EXAMPLE-03",
+    "Host Id": "5c6d7e8f9a0b41c2d3e4f5a6b7c8d9e0",
+    "Host Type": "Server",
+    "Session Duration (s)": 2.0,
+    "Command": "pwd",
+    "Command Line": "pwd",
+    "Command Time": "10:38:59",
+    "Tenant": "Servers",
+    "Reference Month": "10",
+    "Reference Year": "2026",
+    "Reference Date": "2026-10-16"
+  }
+owner: "Cyber Security Team"
+source_repo: "CYBER__FalconAudits"
+last_reviewed: '2026-10-16'

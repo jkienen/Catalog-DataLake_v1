@@ -1,0 +1,66 @@
+id: SILVER_FalconAudits-Logins
+layer: silver
+project: Tenant Audit (CrowdStrike)
+sources_raw:
+- RAW_Crowdstrike-AuditEvents-WS
+- RAW_Crowdstrike-AuditEvents-SRV
+sources_silver: []
+generates_audits: NA
+execution_schedule: 2nd of the month at 02:00 AM
+filters: |-
+  Keeps only the audit events in the AuditLogV3Event format with the actions login (userAuthenticate), two-factor verification (twoFactorAuthenticate), SSO access (assert), and tenant switch (customer_switch); the same accesses in the old format (AuthActivityAuditEvent) are ignored to avoid duplication.
+  Keeps only the events whose action date falls in the calendar month prior to the run, from 00:00 (UTC-3) on the 1st of the previous month to 00:00 (UTC-3) on the 1st of the current month.
+pipeline: |-
+  The Data Science team will be responsible for retrieving the raw data from the Raw layer and structuring it as shown in the next step.
+
+  Tenant:
+
+  Client B has two tenants in CrowdStrike, one for desktops and one for servers. The records of both are read from their respective Raws, processed by the same rules described below and merged into the same set. The Tenant column receives "Desktops" for the records coming from the desktop tenant's Raws and "Servers" for those coming from the server tenant's Raws.
+
+  Event Date / Event Time:
+
+  Date and time of the action, converted from the UTC time returned by the platform to America/Sao_Paulo (UTC-3), in the YYYY-MM-DD and HH:MM:SS formats.
+
+  User:
+
+  The e-mail of the person who performed the access.
+
+  Action:
+
+  "Login" for userAuthenticate, "Two-Factor" for twoFactorAuthenticate, "SSO" for assert, and "Tenant Switch" for customer_switch.
+
+  Result:
+
+  "Success" when the event result is success (SUCCESS or true) and "Failed" when it is failure (FAILED or false); "-" otherwise.
+
+  Source IP / City / Country:
+
+  Source IP, city, and country of the access; "-" when empty.
+structure_notes: |-
+  The data sources will be organized into the columns Event Date, Event Time, User, Action, Result, Source IP, City, Country, Tenant, Reference Month, Reference Year, Reference Date, ensuring consistency, asset traceability, and data readiness for the indicators layer.
+storage_notes: |-
+  Storage will be done in the Silver layer; the structured data will be kept ready for queries feeding the indicator calculations.
+
+  The data is organized following the standard naming convention. Additionally, temporal segregation must be maintained by collection period, using the YYYY-MM-DD naming convention, according to the frequency defined by the business. The following pattern must be followed:
+
+  CYBER/Client-B/Silver/FalconAudits/YYYY-MM-DD/Logins.json
+
+  This organization ensures temporal traceability, ingestion standardization, and ease of auditing the data.
+sample_output: |-
+  {
+    "Event Date": "2026-09-12",
+    "Event Time": "14:37:31",
+    "User": "user.example@example.com.br",
+    "Action": "Tenant Switch",
+    "Result": "Success",
+    "Source IP": "203.0.113.204",
+    "City": "Example City",
+    "Country": "Brazil",
+    "Tenant": "Servers",
+    "Reference Month": "10",
+    "Reference Year": "2026",
+    "Reference Date": "2026-10-16"
+  }
+owner: "Cyber Security Team"
+source_repo: "CYBER__FalconAudits"
+last_reviewed: '2026-10-16'

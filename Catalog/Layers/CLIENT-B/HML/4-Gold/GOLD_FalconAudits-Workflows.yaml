@@ -1,0 +1,43 @@
+id: GOLD_FalconAudits-Workflows
+layer: gold
+project: Tenant Audit (CrowdStrike)
+sources_silver:
+- SILVER_FalconAudits-Workflows
+sources_audit: []
+description: |-
+  The Gold layer consolidates the data from the Silver layer into indicators ready for analytical and executive consumption.
+
+  All indicators must be generated per client, department group, and/or department.
+
+  The generated indicators are:
+kpis:
+- title: Disabled workflows
+  calculation: count of distinct pairs of Workflow Name and Tenant with Enabled false.
+  filters: null
+  reason: workflows automate the response to detections (ticket opening, containment, notification), and a disabled workflow stops executing that response without any warning. It may be a planned shutdown, for testing or replacement, or something forgotten after maintenance. The indicator supports the review of each shutdown and prevents a critical detection from going unhandled because of a stopped workflow.
+  view: numeric count by reference month, detailed in a list with Tenant, Workflow Name, Workflow Description, Trigger Event, Last Modified, and Last Execution. The last modification date indicates when the workflow was disabled, and the last execution shows how long it has been stopped.
+
+- title: Enabled workflows with no executions in the month
+  calculation: count of distinct pairs of Workflow Name and Tenant with Enabled true and Executions (Previous Month) equal to 0.
+  filters: null
+  reason: an enabled workflow that does not fire even once in the month may have a broken trigger or conditions, or depend on an event that no longer exists, and gives the impression that the response is automated when it is not. Some triggers are rare by nature, such as critical severity ones, so each case calls for a check and not necessarily a fix.
+  view: numeric count by reference month, detailed in a list with Tenant, Workflow Name, Trigger Type, Trigger Event, Last Modified, and Last Execution. The trigger type and event show whether the absence of firing is expected.
+
+- title: Workflows with validation errors
+  calculation: count of distinct pairs of Workflow Name and Tenant with the Validation item column equal to Attention.
+  filters: null
+  reason: a workflow with a validation error does not run, even when it appears as enabled in the console, and it is usually the result of an integration, an action, or a field that changed after the workflow was built. It is a silent failure of the response automation, and the expected value is zero.
+  view: numeric count by reference month, detailed in a list with Tenant, Workflow Name, Enabled, Trigger Event, Version, and Last Modified.
+
+- title: Volume of workflow executions in the month
+  calculation: sum of Executions (Previous Month), broken down by Workflow Name and Tenant.
+  filters: null
+  reason: shows the weight of automation in the operation, how many responses are no longer manual, and which workflows concentrate that volume. A sharp increase in a workflow usually indicates a trigger firing too often or a wave of detections, and a drop may indicate a trigger that stopped matching the events.
+  view: numeric sum by reference month and by Workflow Name, detailed in a list with Tenant, Workflow Name, Trigger Event, Executions (Previous Month), and Failed Executions (Previous Month).
+
+- title: Total number of workflows
+  calculation: count of distinct pairs of Workflow Name and Tenant, split between Enabled true and false.
+  filters: null
+  reason: it is the baseline for the other workflow indicators and tracks the growth of automation usage in the tenant. The split between enabled and disabled shows how much of the automation built is actually in use.
+  view: numeric count by reference month, split between enabled and disabled, detailed in a list with Tenant, Workflow Name, Enabled, Trigger Type, and Version.
+last_reviewed: '2026-10-16'
