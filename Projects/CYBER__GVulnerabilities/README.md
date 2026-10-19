@@ -1,9 +1,9 @@
 # Vulnerability Management
 
-> Attributes every vulnerability found by Tenable to the department that actually owns the affected server, and builds the risk and exploitability signals a manual export never carried.
+> Turns a raw Tenable export into vulnerability management: every finding with an owner, priority driven by real exploitability, and a monthly record of what was fixed.
 
 <p align="center">
-  <img src="../../Catalog/Files/concept-vulnmanage.png" alt="Catalog graph for Vulnerability Management: 4 Raw endpoints from Tenable and VCenter feed 3 Silver datasets — assets, active vulnerabilities, and vulnerabilities fixed last month — the asset dataset branches into an Audit of unmatched hosts, all three feed a matching Gold indicator file, and the audit feeds two Automations that delete unwatched assets and reassign asset tags in Tenable.">
+  <img src="../../Catalog/Files/concept-vulnmanage.png" alt="Catalog graph for Vulnerability Management: 4 Raw endpoints from Tenable and VCenter feed 3 Silver datasets - assets, active vulnerabilities and vulnerabilities fixed last month - the asset dataset branches into an Audit of unmatched hosts, the three Silver datasets and the Audit each feed a Gold indicator file, the Audit feeds an Automation that deletes unwatched assets in Tenable and the asset dataset feeds one that reassigns asset tags there.">
 </p>
 
 <table width="100%">
@@ -46,7 +46,23 @@
 </details>
 
 <details>
-<summary><strong>Usage</strong> (click to expand)</summary>
+<summary><strong>Setup and Usage</strong> (click to expand)</summary>
+
+**Windows**
+
+```
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+```
+
+**Linux**
+
+```
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+(Skip this step if `.venv` already exists.)
 
 ```
 cd Scripts
@@ -61,4 +77,14 @@ python './2. Tenable/2.1. Extract_Assets.py'
 python './2. Tenable/2.2. Extract_Vulns.py'
 ```
 
+```
+deactivate
+```
+
 </details>
+
+---
+
+## License
+
+Released under the MIT License, like the rest of this repository. Full terms in [LICENCE.md](../../LICENCE.md).

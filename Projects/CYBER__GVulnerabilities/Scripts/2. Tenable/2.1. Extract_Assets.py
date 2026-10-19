@@ -37,7 +37,7 @@ if not os.path.exists(parent_directory):
 
 # Check if comparison files exist, if so, they will be read
 dir_entry = os.path.join(current_dir, f"../../Datas/{formatted_date}/Entry/vcenter-assets_{formatted_date}.json")
-if os.path.exists(dir_entry):
+if os.path.exists(dir_entry): 
     with open(dir_entry, encoding="utf-8") as file: data_vcenter = json.load(file)
 else: print("Pending files!"); sys.exit(1)
 
@@ -141,7 +141,7 @@ if os.path.exists(env_path):
                 }) or i.get("mac_addresses") or [empty]
 
                 # Classification fields
-                department = next((d["value"] for d in i.get("tags", []) if d["key"] == "SETOR"), empty)
+                department = next((d["value"] for d in i.get("tags", []) if d["key"] == "DEPARTMENT"), empty)
                 server_type = next((d["value"] for d in i.get("tags", []) if d["key"] == "TYPE"), empty)
 
                 # Rating fields
@@ -196,7 +196,7 @@ if os.path.exists(env_path):
 
                 if vcenter:
                     old_dept = i["Department"]
-                    new_dept = vcenter.get("Setor", old_dept)
+                    new_dept = vcenter.get("Department", old_dept)
                     i["Last Department"] = old_dept if old_dept != new_dept else empty
                     i["Department Changed"] = old_dept != new_dept
                     i["Department"] = new_dept
@@ -215,6 +215,40 @@ if os.path.exists(env_path):
             df_unmatched.to_json(dir_to_save_json_unwatched, orient="records")
 
             # print(f"\nTotal: {len(hosts)} | Matched: {len(hosts) - len(unmatched_hosts)} | Unmatched: {len(unmatched_hosts)}")
+
+            # --------------------------------- ->
+
+
+            # --------------------------------- Part 5.2: Updating Tags in Tenable ->
+
+            # Build lookup: department value -> tag UUID
+            department_tag_uuid = {
+                tag["value"]: tag["uuid"]
+                for tag in tio.tags.list()
+                if tag.get("category_name") == "DEPARTMENT"
+            }
+
+            for i in assets:
+                if not i.get("Department Changed"):
+                    continue
+
+                new_tag_uuid = department_tag_uuid.get(i["Department"])
+
+                if not new_tag_uuid:
+                    print(f"[CREATE] {i['Server Name']} | Creating new DEPARTMENT tag '{i['Department']}'")
+                    #new_tag = tio.tags.create("DEPARTMENT", i["Department"])
+                    #new_tag_uuid = new_tag["uuid"]
+                    #department_tag_uuid[i["Department"]] = new_tag_uuid
+
+                old_tag_uuid = department_tag_uuid.get(i["Last Department"])
+
+                if old_tag_uuid:
+                    print(f"[TAG FIX] {i['Server Name']} | DEPARTMENT: '{i['Last Department']}' -> '{i['Department']}'")
+                    #tio.tags.unassign(assets=[i["Server Id"]], tags=[old_tag_uuid])
+                else:
+                    print(f"[TAG NEW] {i['Server Name']} | DEPARTMENT: assign '{i['Department']}'")
+
+                #tio.tags.assign(assets=[i["Server Id"]], tags=[new_tag_uuid])
 
             # --------------------------------- ->
 

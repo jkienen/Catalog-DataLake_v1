@@ -79,6 +79,10 @@ platform: Vendor
 # user or leaving a placeholder. State the path found and which call it maps
 # to, so the user can correct it. Only fall back to asking the user, and then
 # to /path/example, when the documentation does not resolve it either.
+# When the SDK is open source, its own endpoint map (for FalconPy, the
+# _endpoint module of the service collection) is the most reliable source:
+# a rendered documentation page or its summary can list other routes. When
+# the two disagree, the SDK source wins - it is what the code actually calls.
 # Never guess a path outright.
 # More than one bullet is expected when the extraction takes two calls
 # (one to trigger the export, one to fetch the result).
@@ -147,7 +151,8 @@ filters: |-
 #               under Layers/ is uppercase
 #   <PLATFORM>  uppercase
 #   <Endpoint>  the file name in the lake. It does NOT necessarily match the id
-#               token -- ask the user for the real name.
+#               token -- suggest one and let the user confirm it or give
+#               the real name. Never write a name the user did not confirm.
 # The closing sentence below is specific to Raw; Silver uses a different one.
 storage_notes: |-
   Storage will be done in the Raw layer, containing the data extracted directly from the described API endpoint, without any type of transformation, fully preserving the data.
@@ -159,11 +164,16 @@ storage_notes: |-
   This organization ensures temporal traceability, ingestion standardization, and ease of auditing the protected server inventory data.
 
 # sample_output -- ONE record only, exactly as the API returned it
-# (pre-normalization, before any treatment in code).
-# You add the print to the script yourself (indent of 4, right after the API
-# call and before any transformation), tell the user what you changed, and ask
-# them to run it and paste the result. Never open the project's data files
-# yourself when its CLAUDE.md or README restricts reading them.
+# (pre-normalization, before any treatment in code), without the envelope the
+# SDK or the HTTP response puts around the list. Choose the record with the
+# most fields filled in; when the dataset mixes record shapes, one per shape.
+# You add the capture to the script yourself, right after the API call and
+# before any transformation, in the same single edit that captures the Silver
+# records, writing to the shared catalog_samples.txt (see "Getting the output
+# sample and the volume" in Catalog.md). Tell the user what you changed and
+# ask for the one run - never ask them to paste console output. Never open
+# the project's data files yourself when its CLAUDE.md or README restricts
+# reading them.
 # If the sample is not available yet, leave "?" and the user fills it on review.
 #
 # TRIM REPEATED ELEMENTS BEFORE WRITING. An array whose entries repeat the
@@ -224,7 +234,10 @@ owner: "?"
 
 # source_repo -- business decision. Always the real repository of
 # origin, even when the business project carries a different name.
-# Example of what the user answers: github.com/<org>/<repo>
+# The default below is a pattern: replace `project_folder_name` with the
+# folder name of the dropped repository.
+# Example of what the user answers: CYBER__<Project> (the folder under
+# Projects/), or github.com/<org>/<repo> for a repository kept elsewhere
 source_repo: "project_folder_name"
 
 # last_reviewed -- the date the catalog was written. Stays "?" while the

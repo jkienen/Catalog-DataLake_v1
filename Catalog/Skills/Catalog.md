@@ -3,11 +3,15 @@ name: catalog-datalake-layers
 description: Read the extraction scripts the user dropped in Skills/Temp and document them in the Data Lake catalog - first the Raw layer, the API endpoints the code queries, then the Silver layer, the business rules the code applies, then the Audit layer, the records the pipeline sets apart for history, then the Gold layer, the indicators built on top of them, and finally the Automation layer, the routines that act back on the platform. Use when the user asks to document, catalog, or create the YAMLs for a project placed in Skills/Temp.
 ---
 
+```text
+Use the file 'Catalog/Skills/Catalog.md' to document the project inside 'Catalog/Skills/Temp/' in the Data Lake catalog.
+```
+
 # Document a project in the Data Lake catalog
 
 **Scope: the whole catalog - Raw, Silver, Audit, Gold and Automation.** The
 files are generated and reviewed in `Catalog/Skills/Temp/`; they only move into
-`Catalog/Layers/` at the very end, in Step 21, once the user gives the go-ahead.
+`Catalog/Layers/` at the very end, in Step 22, once the user gives the go-ahead.
 
 The work is a trail of five stages, run in this order:
 
@@ -68,8 +72,10 @@ checks reported one by one.
 **Quiet is never silence about a problem.** Whatever the setting, always say:
 
 - every question the step requires, with its format example
-- the confirmations the trail demands - the dataset list of Step 2 and Step 5,
-  and the crossing between stages
+- the confirmations the trail demands - the dataset lists of Step 2 and Step 5
+  with their names, the KPI choice of Step 13, the load types and schedules
+  of Step 19, the replication plan of Step 23, and the crossing between
+  stages
 - anything you had to assume to keep going, and the assumption itself
 - anything you found that the user has not seen: a rule that deletes data, a
   sample that diverges from the code, a source that does not resolve, a
@@ -108,29 +114,45 @@ only fixes the language, not the word choice.
 ### What may be written
 
 **Everything this skill writes goes inside `Catalog/Skills/Temp/`. Nothing outside it
-is created, edited, moved, renamed or deleted.**
+is created, edited, moved, renamed or deleted, except in the moments listed
+below.**
 
 Outside that folder the repository is REFERENCE ONLY - open it, read it, quote
-it, never change it:
+it, never change it outside the exceptions below:
 
 - `Catalog/Layers/` is the live catalog. The generated files land in `Catalog/Skills/Temp/` and
-  are reviewed there first. The one exception is Step 21: once the user gives
-  the explicit go-ahead after reviewing, move (never re-generate) the files
-  reviewed into `Catalog/Layers/`. Outside that one moment, never write there, and
-  never read it to overwrite a decision the user already made.
+  are reviewed there first. There are three exceptions. In Step 22, once the
+  user gives the explicit go-ahead after reviewing, move (never re-generate)
+  the files reviewed into `Catalog/Layers/`. In Step 23, once the user confirms a
+  replication plan, write the replicas into the other clients' folders. And
+  when a decision settled with the user requires changing a file that is
+  already there - a Raw widened to serve this project too, an id renamed so
+  the name fits both uses, a schedule shifted in Step 19 - edit it only after
+  the user's explicit go-ahead, changing nothing beyond what was settled. For
+  a rename, list every file that declares or names that id, in EVERY client
+  folder and not only the one at hand: rename the file, change `id` and the
+  path line of `storage_notes`, and update every `sources_*` that names it. A
+  rename that skips one client leaves that client's graph with broken edges.
+  Outside those moments, never write there, and never read it to
+  overwrite a decision the user already made.
 - `Catalog/Scripts/Generate-Graph_Pyvis.py` is the catalog's own tool, not the dropped
-  project's - see Step 22. It is read-only over `Catalog/Layers/` and writes
+  project's - see Step 24. It is read-only over `Catalog/Layers/` and writes
   `Catalog/DataLake-Graph_Pyvis.html`; running it carries none of the risk the
   rule below exists for.
 - `Catalog/Skills/Templates/` is read at every stage and followed field by field.
   Editing a template changes the standard for every future project, so it
   happens only when the user asks for it as its own task - never in the middle
   of cataloging, and never to make a file you are writing fit.
-- Everything else - scripts, generated HTML, documentation - is untouched.
+- This file, `Catalog/Skills/Catalog.md`, changes only when the user asks for
+  it as its own task - the lessons learned reviewed at the end of a trail are
+  the usual one. Write them generic: no client, source or tenant facts.
+- Everything else - scripts, documentation, and the generated HTML outside
+  the run of Step 24 - is untouched.
 
 Inside `Catalog/Skills/Temp/` the dropped repository may be edited, but only for the
-sample print, and it is put back exactly as it arrived (see "Getting the output
-sample"). Never delete anything in `Temp/` that you did not create there.
+sample and volume capture, and it is put back exactly as it arrived (see
+"Getting the output sample and the volume"). Never delete anything in `Temp/`
+that you did not create there.
 
 **Never run the project's scripts. Not once, for any reason** - not to test a
 change, not to see the output, not to check the syntax, and not because they
@@ -138,8 +160,8 @@ sit inside `Temp/`. They authenticate against production platforms with real
 credentials, pull real data, and in the Automation layer they act on it:
 deleting, tagging, revoking. A syntax check is the same command as a run.
 
-The only execution is the user's. You add the print, say what changed and
-where, and wait for them to run it and paste the output. If they cannot run
+The only execution is the user's. You add the capture, say what changed and
+where, and wait for them to run it and say it is done. If they cannot run
 it, the sample stays `"?"` - it never becomes a reason to run it yourself.
 
 The data files of the dropped project stay closed whenever its `CLAUDE.md` or
@@ -147,7 +169,8 @@ The data files of the dropped project stay closed whenever its `CLAUDE.md` or
 never from opening the file.
 
 When something outside `Temp/` genuinely needs to change, **say so and stop**.
-The user decides and does it.
+The user decides - and either does it, or gives the go-ahead that one of the
+exceptions above requires.
 
 ### The trail
 
@@ -157,7 +180,9 @@ are starting: the endpoints the code queries in Raw, the business rules it
 applies in Silver, the records it sets apart in Audit, the indicators built on
 top in Gold, and the routines that act back on the platform in Automation. Close the
 paragraph saying the trail ends with a pass over the whole set, where the
-catalog is reviewed together and signed.
+catalog is reviewed together, the load type of each Raw and the schedule of
+the chain are confirmed and the set is signed - and, once it is in the
+catalog, it can be replicated to other clients.
 
 From there on, every answer opens with the stage and the position inside it,
 followed by the file at hand and what is still missing from it:
@@ -173,12 +198,20 @@ followed by the file at hand and what is still missing from it:
 
 ## Step 1 - Read the project
 
-The user drops the repository in `Catalog/Skills/Temp/<RepositoryName>/`.
+The user drops the repository in `Catalog/Skills/Temp/<RepositoryName>/`, and
+the prompt does not name it - find it yourself. A folder in `Temp/` is a
+project when it holds code (scripts); the YAML files this skill writes sit in
+`Temp/` itself and are not a project.
+
+- **One project folder** - that is the one. Name it in the opening message,
+  so a wrong folder is caught before anything is read.
+- **More than one** - ask which one to document.
+- **None** - say so and stop: ask the user to drop the repository there.
 
 Start with the project's `README.md` and `CLAUDE.md`. When the `CLAUDE.md`
 restricts reading data files (`*.json`, `*.csv`, `*.db`, `*.env`), **respect
 it** - the output sample is obtained by running the script, never by opening
-the file (see "Getting the output sample").
+the file (see "Getting the output sample and the volume").
 
 Scripts come from different authors and do not share a layout. Do not rely on
 a fixed comment or folder structure: locate the phases by what the code does -
@@ -197,15 +230,35 @@ extracted dataset = one Raw file. It is not one per script, nor one per call:
   the first (trigger the export, then fetch the result in chunks).
 - **Auxiliary lookups** may be a Raw file of their own or just internal
   plumbing. When unsure, ask - do not decide silently.
+- **A dataset is the call, not its consumer.** When the endpoint is already
+  cataloged and this project reads a different part of the same record -
+  another score, another block of signals - it is the same Raw. Widen the
+  existing file (its `description`, and its id when the old name no longer
+  fits both uses) instead of writing a second one, and document what each
+  consumer keeps in the `filters` and `pipeline` of its own Silver.
+
+Run the check of "Checking for an existing file before generating" during
+this sweep, against the whole `Catalog/Layers/` tree, and flag every overlap
+it finds in the list itself. The decision on each overlap comes after the
+client is answered (Step 3), because a reuse is only valid inside the client
+that owns the data - see that section for when the decision is taken here
+and when it waits for the end.
 
 Present the list to the user and **confirm the count before writing any
-file**: it defines every `id`.
+file**: it defines every `id`. Present it with the suggested file name of each
+dataset beside it (see Step 3), so the list and the names are confirmed in the
+same answer.
+
+Once the list is confirmed, add the sample and volume capture to the scripts -
+Raw and Silver together, in one edit - and ask for the single run of the
+trail (see "Getting the output sample and the volume").
 
 ## Step 3 - Ask for whatever cannot be identified
 
 The code gives you the platform, what each dataset contains, and the literal
 filters of the call. Everything else is a business decision, and business is
-never inferred. Two answers are always required:
+never inferred. Two answers are always required - the client is asked, the
+file name is suggested and confirmed:
 
 - **Client** - the organization that owns the data. Never assume the client of
   the last project you looked at. It appears in the `storage_notes` path and
@@ -220,10 +273,28 @@ never inferred. Two answers are always required:
   and written as `Client`; the uppercase form is reserved for that one
   folder name.
 - **File name** - the `<Endpoint>` that closes the `storage_notes` path
-  (`CYBER/<Client>/Raw/<PLATFORM>/AAAA-MM-DD/<Endpoint>.json`). It does not
-  necessarily match the `id` token, so ask it per dataset instead of
-  transcribing the id. The path has no segment folder between the date and
-  the file.
+  (`CYBER/<Client>/Raw/<PLATFORM>/YYYY-MM-DD/<Endpoint>.json`). **Suggest one
+  per dataset without waiting to be asked** - the user confirms or replaces
+  it. Name what the data IS, not the SDK class or method, in English
+  CamelCase, and keep it distinct from the files the same platform folder
+  already holds under `Catalog/Layers/`: when another project already put an
+  `Assets` in that folder and the two are genuinely different datasets (see
+  "Checking for an existing file before generating" - a superset is reused,
+  not renamed), a prefix naming this project's product line keeps the two
+  apart. The path has no segment folder between the date and the
+  file.
+- **One client, more than one tenant** - when a client keeps one tenant of
+  the same platform per host class (one for workstations, one for servers),
+  the same call made in each tenant is one Raw per tenant. The tenant goes at
+  the end of the token as a short hyphenated suffix - `-WS` for workstations,
+  `-SRV` for servers - in the id and in the file name alike
+  (`RAW_Crowdstrike-RTRSessions-SRV`, `.../RTRSessions-SRV.json`), so the ids
+  stay short and readable. Each Raw says in `description` which tenant it
+  reads and, in a `Note:` of `extraction_notes`, which Raw holds the same call
+  for the other tenant. The Silver stays one file reading every tenant's Raw,
+  with a `Tenant` column telling the rows apart, while the tenants share the
+  same columns and rules; it splits per tenant only when the rules or the
+  indicators differ between them.
 
 Raw carries no `project` field - the graph falls back to `platform` - so do not
 ask for the business project name here. It is asked in Stage 2, where the field
@@ -237,7 +308,7 @@ class) or when the user volunteers a different value unprompted.
 ## Step 4 - Generate the files
 
 One file per dataset, named `RAW_<Platform>-<Endpoint>.yaml`, written to
-`Catalog/Skills/Temp/`. The user moves them into `Catalog/Layers/` manually afterwards.
+`Catalog/Skills/Temp/`. They move into `Catalog/Layers/` only in Step 22.
 
 Follow `Catalog/Skills/Templates/1 - RAW_[Platform]-[Endpoint].yaml`: it defines the
 field order, what to fill in from the code, what to leave as `"?"`, when to use
@@ -251,9 +322,11 @@ Before closing the stage, check:
 - [ ] `"?"` is quoted - without the quotes the parser breaks.
 - [ ] `NA` used only where the value does not exist, and `"?"` only where it
       exists and is pending.
-- [ ] No endpoint path was guessed: it either came from the user or stayed as
-      `/path/example`.
+- [ ] No endpoint path was guessed: it came from the vendor documentation or
+      the SDK source, from the user, or stayed as `/path/example`.
 - [ ] The output sample was anonymized before the file was written.
+- [ ] `volume_per_frequency` carries the size measured in the sample run, or
+      `"?"` when the run could not measure it.
 - [ ] The user confirmed the dataset list from Step 2.
 
 Then announce that Raw is finished, list the files, and ask whether to start
@@ -302,7 +375,8 @@ For each dataset, walk the transformation phase line by line and separate:
   too, naming the routine that fills them: that script is an enrichment, not
   a source, and never enters `sources_silver`.
 - **What it sets apart** - records written to a separate file because they did
-  not match. This is `generates_audits`, and the audit ids come from the user.
+  not match. This is `generates_audits`, and the audit ids are settled with
+  the user in Stage 3.
 - **What comes out** - the output columns, in the order the code writes them.
   This is `structure_notes`, and it must match the sample keys one to one.
 
@@ -317,12 +391,19 @@ it - the code shows the mechanics, the user owns the intent.
 
 Two answers are always required, on top of the ones Stage 1 already settled:
 
-- **Project** - a repository is not a project. Ask what business name the user
-  wants for it, and offer the possibility that the script belongs to an already
-  cataloged project despite the repository name. It fills `project`, the
-  `<Project>` token of the `id` and the project folder of the path.
+- **Project** - a repository is not a project. Suggest a business name and its
+  token - the README title is the usual source, shaped like the projects
+  already cataloged - and offer the possibility that the script belongs to an
+  already cataloged project despite the repository name. It fills `project`,
+  the `<Project>` token of the `id` and the project folder of the path.
 - **File name** - the `<Function>` that closes the `storage_notes` path
-  (`CYBER/<Client>/Silver/<Project>/AAAA-MM-DD/<Function>.json`).
+  (`CYBER/<Client>/Silver/<Project>/YYYY-MM-DD/<Function>.json`). Suggest one
+  per dataset, same rule as Raw, beside the Step 5 list. When the dataset
+  covers a single variant of a dimension - one OS, one platform, one
+  environment - the name carries the variant (`AssetsWindows`, not
+  `Assets`), even when the code produces no other variant: the name is read
+  beside other projects' files, where the unqualified name promises the whole
+  population. The same holds for the Raw `<Endpoint>`.
 
 The `<Function>` token of the `id` defaults to the file name just answered -
 do not ask it as a separate question, following the same rule as Raw. Do NOT
@@ -339,13 +420,20 @@ One file per dataset, named `SILVER_<Project>-<Function>.yaml`, written to
 Follow `Catalog/Skills/Templates/2 - SILVER_[Project]-[Function].yaml`: it defines the
 field order - what to fill in from the code, and what to leave as `"?"`.
 
+The samples and the volume measures come from the run already made in Stage
+1 - do not ask for another one unless Step 5 changed what the sweep found.
+Report the measured size of each Silver output with the files, since the
+template has no field for it.
+
 Before closing the stage, check:
 
 - [ ] The YAML parses and carries the template's 15 fields, in the same order.
 - [ ] Files written with CRLF line endings.
 - [ ] `"?"` is quoted, and `NA` used only where the value does not exist.
 - [ ] Every id in `sources_raw` and `sources_silver` exists as a file written
-      in this session, spelled identically - a typo breaks the graph edge.
+      in this session, or as a file already in the same client's folder under
+      `Catalog/Layers/` that the user chose to reuse, spelled identically - a
+      typo breaks the graph edge.
 - [ ] The `structure_notes` column list matches the `sample_output` keys, one
       to one and in the same order.
 - [ ] Every derived column has a block in `pipeline`, and no block names a
@@ -381,7 +469,9 @@ depends on understanding the purpose. Two paragraphs:
    why.
 
 Then list what the code already separates - every set of records Stage 2 sent
-to a file of its own - and confirm each one as an audit.
+to a file of its own - and confirm each one as an audit, with a suggested
+`<Audit>` name beside it: what was set apart, not the condition that set it
+apart (`Unwatched<Function>`, following the Silver it came from).
 
 ## Step 10 - Ask what else the user wants to register
 
@@ -396,7 +486,7 @@ from what a similar project used.
 
 If the answer is none and the code separates nothing, `generates_audits` stays
 `NA` in every Silver file and this stage produces no file - say so and close
-the trail.
+the stage.
 
 ## Step 11 - Generate the files
 
@@ -408,10 +498,11 @@ no `filters`, `pipeline` or `sample_output`: the only substance is which
 records were separated, and it goes in `description`.
 
 Then go back to the Silver files and replace the `"?"` in `generates_audits`
-with the ids just settled. The trail is not finished while the two ends of the
-edge disagree.
+with the ids just settled. The stage is not finished while the two ends of the
+edge disagree. Whether each audit gets a Gold of its own is decided in Stage 4
+(Step 12).
 
-Before closing the trail, check:
+Before closing the stage, check:
 
 - [ ] The YAML parses and carries the template's 9 fields, in the same order.
 - [ ] Files written with CRLF line endings.
@@ -419,7 +510,7 @@ Before closing the trail, check:
 - [ ] Every id in `sources_silver` exists as a Silver file, and that Silver
       declares this audit back in `generates_audits`.
 - [ ] `storage_notes` still says Silver, both in the sentence and in the path.
-- [ ] `description` carries the title line, the selection rule and the "Obs:"
+- [ ] `description` carries the title line, the selection rule and the "Note:"
       paragraph.
 - [ ] No threshold was invented: every number in the rule came from the code
       or from the user.
@@ -436,17 +527,64 @@ of the Silver files already written.
 
 ## Step 12 - Decide the Gold files
 
-One Gold per Silver is the default, and three KPIs per file is the starting
-point. Deviate only when the user says so.
+One Gold per Silver is the default. Deviate only when the user says so.
+
+**Every Audit is evaluated for a Gold of its own, too.** It is built on the
+records the audit set apart, and its columns are those of the Silver the audit
+came from: an audit carries that Silver's columns. Such a Gold lists the audit
+in `sources_audit` and leaves `sources_silver` as `[]`. An audit of records
+that did not match the inventory (unwatched) gets at least two KPIs:
+
+- the total of records set apart (distinct ids);
+- the ones inactive for more than 10 days, where Reference Date minus Last
+  Seen is greater than 10 days, leaving out the records whose Last Seen is
+  `-`. These are the records a removal automation deletes, so the KPI measures
+  that automation's queue. A different cutoff comes from the user.
+
+When the Gold of the Silver already carries the indicator the audit stands for
+- the queue of the records it sets apart - that KPI moves to the audit's Gold:
+the Silver's Gold drops it instead of repeating it, and the rule against
+repeating a KPI across two files below still holds. When the audit's own
+selection rule already is a cutoff (records inactive for N days or more), its
+total and its inactive count are the same number: write it once.
 
 A Silver whose columns answer nothing on their own may deserve no Gold at all.
 Say that instead of inventing indicators to fill the slot - a KPI nobody asked
 for still has to be maintained.
 
-## Step 13 - Design the KPIs from the sample
+The KPIs are not decided by you. They are chosen by the user, one Gold at a
+time, from a list of candidates you propose (Step 13). Work through the Gold
+files in the order of their Silver files, and do not propose the next Gold
+before the current one is written.
+
+## Step 13 - Propose the candidates, then let the user choose
 
 Open the source Silver and read its `sample_output` column by column, asking
-what each one lets somebody decide. Every KPI must survive two tests:
+what each one lets somebody decide. Then present **up to ten candidate KPIs** -
+the most important and most critical the columns support, ranked, most
+critical first - in one table: number, title, calculation with the exact
+column names, and why it matters in one line. Below the table, list apart the
+indicators that would need a cutoff, naming the column each one reads, and
+say the number has to come from the user.
+
+When the Silver is narrow and fewer than ten genuine candidates exist, stop at
+the real ones and say why - ten is a ceiling, not a quota.
+
+Then ask which to keep, by number, and whether any of the cutoff indicators
+should be added with a number of theirs. Before writing a cutoff indicator,
+settle what the number alone leaves open, one question at a time and with the
+reading you recommend: which column it applies to (a peak or an average), which
+population it counts (all accounts or only the enabled ones), and what happens
+to records whose value is `-`.
+
+The `-` question is not only for cutoff indicators. Every KPI that counts,
+averages or takes a proportion over a column that can hold `-` - a host never
+assessed, a field the source did not return - says in `filters` whether those
+records enter. Left in, a `-` can count as compliant or drag an average, and
+the number is wrong without anything looking wrong. State the reading you
+chose when you list the KPIs written, so the user can reverse it.
+
+Every candidate, and every indicator the user adds, must survive two tests:
 
 - **Computable** from the columns of the source Silver, with the values the
   sample actually shows. A KPI over a column nobody produces is a promise.
@@ -466,27 +604,39 @@ and the other file says something else.
 ## Step 14 - Generate the files
 
 One file per Gold, named `GOLD_<Project>-<Function>.yaml`, written to
-`Catalog/Skills/Temp/`.
+`Catalog/Skills/Temp/` only after the user picked its KPIs - with exactly the
+ones chosen, in the order of the candidate list, followed by the ones the user
+added.
 
-Follow `Catalog/Skills/Templates/4 - GOLD_[Project]-[Function].yaml`. It has 7 fields
+Follow `Catalog/Skills/Templates/4 - GOLD_[Project]-[Function].yaml`. It has 8 fields
 and no `storage_notes` - Gold produces no file in the lake.
 
-Then **present every KPI in the answer** - title, calculation and why it
-matters - so the user can reject one without opening the file.
+Then list the KPIs written, one title per line - the calculation and the
+reason were already in the candidate table - spell out how each cutoff
+indicator was settled, and move on to the next Gold with Step 13.
 
-Before closing the trail, check:
+Before closing the stage, check:
 
-- [ ] The YAML parses and carries the template's 7 fields, in the same order.
+- [ ] The YAML parses and carries the template's 8 fields, in the same order.
 - [ ] Files written with CRLF line endings.
 - [ ] `filters` is `null`, lowercase and unquoted, wherever the KPI filters
       nothing. This layer uses null where the others use NA.
 - [ ] No `": "` inside a KPI field - they are plain scalars and it breaks the
       parser.
 - [ ] Every column named in `calculation`, `filters` and `view` exists in the
-      `structure_notes` of the source Silver, spelled identically.
+      `structure_notes` of the source Silver - for a Gold built on an audit,
+      the Silver that audit came from - spelled identically. A column
+      whose own name carries `": "` - the `Item: <name>` columns - cannot be
+      written literally in a plain scalar: name it as the item column
+      `<name>`, in the language of the templates, and that counts as
+      spelled identically.
 - [ ] Every threshold in a KPI came from the user.
 - [ ] Every `reason` says why the number matters, not what it counts.
-- [ ] Every id in `sources_silver` exists as a Silver file.
+- [ ] Every id in `sources_silver` exists as a Silver file, and every id in
+      `sources_audit` as an Audit file. A Gold built on an audit has
+      `sources_silver: []`.
+- [ ] Every Audit of the project has a Gold of its own, or the user was told
+      why it has none.
 
 Then announce that Gold is finished and ask whether to start Automation.
 
@@ -515,7 +665,8 @@ Then ask for a short summary of the routine in the user's own words, and write
 `description` from that summary. A candidate you presented is a suggestion
 until the user describes it back.
 
-If there is no automation, the trail ends here with no file. Say so.
+If there is no automation, this stage produces no file - say so and go on to
+the closing.
 
 ## Step 16 - Ask what cannot be inferred
 
@@ -528,6 +679,8 @@ If there is no automation, the trail ends here with no file. Say so.
 - **safeguards** - anything the routine must guarantee before acting, such as
   a minimum history or an approval step. They go in `pipeline`, and they are
   the part that keeps the routine from acting on incomplete data.
+- **id** - suggest the `<Context>` token from the user's own summary, verb
+  first, and let them confirm it together with the target.
 
 Every threshold in the condition comes from the user. An automation with an
 invented number is an automation that deletes the wrong thing.
@@ -541,7 +694,7 @@ is two files - they run on different schedules and are approved separately.
 Follow `Catalog/Skills/Templates/5 - AUTOMATA_[Context]-in-[Target].yaml`: 13 fields, no
 `storage_notes` and no `owner`.
 
-Before closing the trail, check:
+Before closing the stage, check:
 
 - [ ] The YAML parses and carries the template's 13 fields, in the same order.
 - [ ] Files written with CRLF line endings.
@@ -559,8 +712,9 @@ Before closing the trail, check:
 # Closing - read the set as one, then sign it
 
 The five stages run file by file. This pass is the only moment the catalog is
-read as ONE THING, and it is where the two fields that are not a per-dataset
-decision get answered at once.
+read as ONE THING, and it is where the decisions that are not per dataset get
+answered at once: the load type of every Raw, the schedule of the chain, the
+signature, and whether the project is replicated to other clients.
 
 ## Step 18 - Read the set as a whole
 
@@ -568,20 +722,115 @@ Open every file written in the session together and check what only shows up
 side by side:
 
 - **Every declared source resolves.** Each id in `sources_raw`,
-  `sources_silver` and `sources_audit` exists as a file with that exact name.
+  `sources_silver` and `sources_audit` exists, with that exact name, among the
+  files of this session or in the same client's folder under
+  `Catalog/Layers/` - the graph resolves a source only inside the client that
+  declares it.
 - **The audit edge agrees on both ends.** Every id in a `generates_audits` has
   a file that declares that Silver back in its `sources_silver`.
 - **No `RAW_` or `GOLD_` inside a source list** of any automation.
 - **No orphan in the chain.** A Silver nobody consumes and that produces no
   Gold is either the end of a real chain or a file that lost its purpose - say
-  which one it is.
+  which one it is. An Audit with no Gold of its own needs the reason said too.
 - **What is still pending**, counted per field, so the user knows what the
   review will cost before opening the files.
+- **What changed in `Catalog/Layers/` holds too.** Every file this session
+  edited there through an exception is part of the pass: a renamed id no
+  longer appears in any client, and every `sources_*` that named it now
+  resolves in every client it was changed in.
 
 Report what this pass finds however quiet the verbosity is. A broken edge is
 not narration.
 
-## Step 19 - Sign the catalog
+## Step 19 - Review the load type and the schedule
+
+### The load type
+
+Every Raw was written with the template's `load_type` - usually `Full` - and
+no question was asked per file. Now, with every layer documented, review it
+once for the whole set: for each Raw, say what one run returns and recommend
+keeping `Full` or moving to `Incremental`, all in one table, and ask the user
+to confirm or name the ones that change. Change nothing they did not confirm.
+
+What decides the recommendation is what one run returns, not the time filter
+of the call:
+
+- **A snapshot of the current state** - an inventory, a configuration, the
+  accounts that exist today - is `Full`. The history comes from the dated
+  partitions of the lake, not from the load type.
+- **A summary over a window** - one row per entity aggregated over the last
+  days - is `Full` too, even with a time filter: consecutive runs overlap and
+  cannot be added up.
+- **An event log** is where `Incremental` is a real option, and only when an
+  event never changes after it is created. Say what it costs: a
+  deduplication key (does the payload carry a unique id?), a watermark of the
+  last event extracted, and a Silver that reads every accumulated partition
+  instead of the last one. Recommend `Full` when an event's state is updated
+  later - resolved, dismissed, a last-update time - because a cut by event
+  date never fetches the update, and when the Silver replays the whole
+  history.
+- **Retention tips the balance.** When the platform keeps the history for a
+  limited time, a `Full` re-read loses the old events without warning, and an
+  `Incremental` load is what keeps them. Ask when the retention is not known.
+- **The window must match the frequency.** A call that reads the last seven
+  days only covers the period when it runs weekly; say so when `frequency`
+  says otherwise.
+
+### The schedule
+
+Every Raw, Silver and Automation was written with the template's
+`execution_schedule`, so every file of a layer starts at the same time. The
+template value is the BASE SLOT of the layer, not the final answer. Once the
+load types are settled - a change of `frequency` changes the slots - review
+the schedule of the whole set the same way: one table, one confirmation.
+
+First confirm the client the files go to - the folder under
+`Catalog/Layers/` settled in Stage 1. The check runs against that folder only
+(HML and PRD together) plus the files of this session. Then apply, in order:
+
+- **Dependency comes first.** A file starts at least 30 minutes after every
+  file it depends on, even when both runs are quick - it needs the source
+  finished, not just started. The dependencies are the ids in `sources_raw`,
+  `sources_silver` and `sources_audit`, plus the one the source lists do not
+  show: a Raw that sends another Raw's output in its own call (the ids of an
+  inventory, one call per host) depends on that Raw. Read it from its
+  `filters` and the `Note:` of `extraction_notes`.
+- **No overlap on the same platform.** Two files overlap when they belong to
+  the same client and the same platform and start at the same time - they
+  share the API credential and its rate limit. The platform is `platform` in
+  a Raw and `target` in an Automation. A Silver reads the lake, not the API,
+  so it is placed by dependency alone. Different clients or different
+  platforms never overlap.
+- **30 minutes apart, unless both are quick.** Overlapping files are spaced
+  30 minutes apart. Two quick runs may share a slot. Quick is decided by the
+  shape of the call, never by a guess at its duration: a single call or a
+  plain paginated query is quick; a loop per host or per entity (one call per
+  host, ids sent in batches) or a two-step export that waits for the result
+  is not. Read it from the code and from the `Note:` of the Raw.
+- **The slots follow the frequency.** A weekly `frequency` takes a weekly
+  slot (one weekday, every seven days) plus the monthly one on the first day
+  of the month; a monthly `frequency` takes only the monthly slot, on the
+  first day of the month or another fixed day. A schedule that carries a
+  slot its frequency does not have, or lacks one it has, is a mismatch -
+  report it and propose the fix with the rest of the table. A Silver takes
+  the frequency of the sources it depends on. An Automation carries its own
+  `frequency` and may run less often than its sources (monthly over a weekly
+  Silver); its slot only has to fall after the latest run of every source.
+- **Each slot on its own.** A schedule with a weekly and a monthly slot is
+  checked slot by slot: a monthly-only file collides with the monthly slot of
+  a weekly-and-monthly one.
+- **Existing files move only with a go-ahead.** When the only free slot needs
+  a file already in `Catalog/Layers/` to shift, say which one and why; moving
+  it follows the exception in "What may be written".
+
+Present one table - file, current slot, proposed slot, and the reason
+(dependency, overlap, quick) - and write the confirmed slots in the wording of
+the template, changing only the hours. Change nothing the user did not
+confirm. Report the conflicts found among files already in the catalog even
+when this project does not touch them: an overlap nobody moved is still an
+overlap.
+
+## Step 20 - Sign the catalog
 
 Two fields close the work, and neither belongs to a single dataset:
 
@@ -593,13 +842,17 @@ Two fields close the work, and neither belongs to a single dataset:
   and ask for the form they want written, not just the name. The field exists
   in Raw, Silver and Audit only.
 - **`last_reviewed`** - the current date, single-quoted, in every file of
-  every layer. This is the date the catalog was written, not a date read from
-  the project README.
+  every layer written in this session. This is the date the catalog was
+  written, not a date read from the project README. A file already in
+  `Catalog/Layers/` that this session changed through an exception - a
+  rename, a widened description, a schedule shift - keeps its original
+  `last_reviewed` unless the user asks otherwise.
 
 Write both into every file that carries the field and report the counts. Then
-list what is still `"?"`: the trail is over, and everything left is review.
+list what is still `"?"`: the documentation is complete, and everything left
+is review.
 
-## Step 20 - Hand it over
+## Step 21 - Hand it over
 
 Close with a SHORT message. The user has just been through the whole trail:
 no recap of the stages, no summary of the decisions, no explanation of what a
@@ -608,20 +861,20 @@ layer is. Five things and nothing else:
 1. The files that were written, one per line, nothing after the name.
 2. Ask them to review the texts and the documented rules, and say that the
    move into `Catalog/Layers/<Client>/HML` happens as soon as they give the go-ahead.
-3. That the KPIs of the Gold files need validating in particular - nobody
-   asked for those indicators, they were proposed from the columns that
-   existed, so they are examples until the business confirms them.
+3. That the KPIs of the Gold files need validating in particular - the user
+   chose them from candidates proposed from the columns that existed, so they
+   are still examples until the business confirms them.
 4. That the move is followed by a commit, to sync with Git - the user's own
    step, this skill does not run git commands.
 5. That `PRD` comes later, only when the rules are in production.
 
-Keep the pending fields out of it - they were listed in Step 19 and repeating
+Keep the pending fields out of it - they were listed in Step 20 and repeating
 them buries the instruction. A handover that has to be read twice is a
 handover that gets skipped.
 
-## Step 21 - Move on confirmation, then offer to clear Temp
+## Step 22 - Move on confirmation, then offer to clear Temp
 
-Wait for the user's go-ahead on the review asked for in Step 20. Do not move
+Wait for the user's go-ahead on the review asked for in Step 21. Do not move
 anything before it arrives, and do not chase it - the user may take the files
 away to review offline.
 
@@ -635,14 +888,72 @@ When it arrives:
    differ from the spelling used inside the YAML paths. Do not touch the
    content while moving it, and do not move anything the user has not
    reviewed and approved.
-2. Report what moved, one line per file, in the same order as Step 20.
-3. **Then, and only then, ask** whether to clear `Catalog/Skills/Temp/` so it is ready
-   for the next project. Wait for a yes - do not clear it as part of the same
-   step, and do not clear anything the move in step 1 did not already relocate
-   (the dropped repository itself is the user's, never delete it without being
-   asked separately).
+2. Report what moved, one line per file, in the same order as Step 21.
+3. **Then, and only then, ask** whether to remove the dropped repository from
+   `Catalog/Skills/Temp/` so the folder is ready for the next project - after
+   the move it is the only thing left there. The repository is the user's:
+   wait for an explicit yes to this question, never delete it as part of the
+   same step, and never delete anything else in `Temp/` that you did not
+   create.
 
-## Step 22 - Render the graph
+## Step 23 - Offer to replicate the project to other clients
+
+Once the files are in `Catalog/Layers/`, ask whether this project's catalog
+should be replicated to other clients - the same routines often run for more
+than one client, and each client keeps its own catalog. If the answer is no,
+go to Step 24.
+
+If yes, settle the plan before writing anything, one question at a time:
+
+- **Which clients.** Present the folders already under `Catalog/Layers/` as
+  options. A new client gets a new folder, uppercase like the existing ones.
+  The name the graph shows for it comes from `CLIENT_LABELS` in
+  `Catalog/Scripts/Generate-Graph_Pyvis.py`, and falls back to the folder name
+  when it is not listed there - say so, since the script is the user's to
+  edit.
+- **Which layers.** A replica often leaves out the audits and the
+  automations, and with the audits the Golds built on them: they depend on a
+  cross-check or an approval that may exist only for the main client.
+- **Which sources stay, go or are added.** When a source goes - an inventory
+  the other client does not have - follow everything that depended on it: the
+  filters that matched against it, the audit it fed (`generates_audits`
+  becomes `NA`), the `pipeline` blocks and the columns it filled, the
+  `structure_notes`, the sample keys, and the Gold `calculation`, `filters`
+  and `view` that name those columns.
+- **Which columns stop existing.** Ask about each column the removed source
+  filled, and point out columns with the same name that come from somewhere
+  else - a column dropped in one dataset may have a different origin, and a
+  reason to stay, in another.
+- **`source_repo`** - the main client's repository, unless the user says the
+  replica runs from another one.
+
+Then present the plan - the files per client and what changes in each - and
+write only after it is confirmed, directly into `Catalog/Layers/<Client>/HML/`.
+
+- **The ids stay the same** as the main client's. The graph keys each node by
+  client + id and resolves every source inside the same client, so every
+  source a replica declares must be replicated into that client as well -
+  including a Raw that belongs to another project but feeds this one. A Raw
+  already replicated into that client by another project is not copied twice.
+- **In every file**, change the client in the `storage_notes` path, set
+  `last_reviewed` to the current date, and keep `owner`. The samples stay,
+  trimmed of the columns that no longer exist.
+- **Re-check the schedule in the target client.** The slots that were free in
+  the main client may be taken in the other one: run the schedule check of
+  Step 19 against the target client's folder and present its table with the
+  plan.
+
+Before closing, check:
+
+- [ ] Every source a replica declares resolves inside the same client.
+- [ ] No replica still names a removed source, a removed column, or an audit
+      that was not replicated.
+- [ ] The `structure_notes` of every changed Silver matches its sample keys.
+- [ ] Verbatim template text that no longer fits a replica - a line about
+      departments when the department column was dropped - is pointed out to
+      the user, not rewritten.
+
+## Step 24 - Render the graph
 
 Run `Catalog/Scripts/Generate-Graph_Pyvis.py` from the repository root. This is the
 catalog's own tool, not the dropped project's - it only reads the YAML files
@@ -651,13 +962,15 @@ It carries none of the risk the "never run the project's scripts" rule in
 Stage 1 exists for, and running it here is expected.
 
 Tell the user the path of the generated file - `Catalog/DataLake-Graph_Pyvis.html`
-- and ask them to open it and validate that what just moved renders correctly:
-the new nodes appear in the right layer and column, with edges reaching their
-declared sources.
+- and ask them to open it and validate that what just moved, and every
+replica, renders correctly: selecting each client in turn, the new nodes
+appear in the right layer and column, with edges reaching their declared
+sources.
 
 If something looks inconsistent - a node with no edge that should have one, a
-source that does not resolve, a project split across nodes that do not share
-its color - do not fix it yourself. Say what looks wrong and ask the user how
+source that does not resolve, a node in the wrong layer column, a project
+whose chain comes out incomplete when it is picked in the Projects filter - do
+not fix it yourself. Say what looks wrong and ask the user how
 they want it corrected: the fix would touch files already moved into
 `Catalog/Layers/`, which this skill does not edit unprompted.
 
@@ -676,15 +989,26 @@ and nothing after it: **Skill completed**.
   One exception: in Gold, the entries of `kpis` are separated by a blank line,
   because each KPI is a block of five fields and they run together without it.
 - **CRLF line endings**, in every file of every stage.
+- **Edit with a tool that keeps CRLF.** `sed -i` in Git Bash on Windows
+  rewrites the whole file with LF endings, and a pattern anchored on `\r`
+  silently stops matching. Edit through the Edit tool or a script that reads
+  and writes bytes, and check the endings with `file` after every edit - in
+  `Temp/` and in `Catalog/Layers/` alike.
 - **`last_reviewed` is the last field**, in every layer. The rest of the
   order comes from the template of the stage.
 - **The template carries the defaults.** A field whose template comment ends
   in "Example of what the user answers" is copied into the file exactly as the
   template leaves it. `"?"` means unanswered - carry it over and let the user
   fill it on review. Any other value is a standing answer for the whole
-  project: write it in and **do not ask the question**. Read those lines before
-  the first file of a stage, so you do not ask what the user already answered
-  by editing the template.
+  project: write it in and **do not ask the question**. A default that still
+  carries a placeholder segment is a pattern, not an answer: in `source_repo`,
+  `project_folder_name` is replaced by the folder name of the dropped
+  repository. Read those lines before the first file of a stage, so you do
+  not ask what the user already answered by editing the template. Two exceptions: a `"?"` in the Raw
+  `volume_per_frequency` is replaced by the size measured in the sample run -
+  that number is measured, not decided - and the Raw `load_type` and
+  `frequency` and every `execution_schedule`, written with the template
+  value, are reviewed once for the whole set in Step 19.
 - Everything else about format lives in the template of the stage - field order,
   when to use `"?"`, when to use `NA`, which text is verbatim. Read it before
   writing the first file, not after the user points at the difference.
@@ -698,9 +1022,22 @@ a duplicate does not show up until the graph is rendered.
 
 When a match exists:
 
-- **Finish documenting the current file anyway**, read from this project's own
-  code. Do not skip it, and do not copy the old file blind - the two may have
-  diverged.
+- **Decide in the sweep when only the call differs.** When the two files
+  return the same record and differ only in the parameters of the call - a
+  narrower filter, another id list or batch size, another pair of endpoints
+  serving the same entity - present the comparison in Step 2, field by field,
+  and let the user decide before anything is written. Waiting for the end
+  only produces a draft that is thrown away.
+- **Recommend the wider file.** When the existing Raw is a superset of the
+  new call - the same record over a wider population, every platform where
+  this code asks for one - recommend reusing it and moving the narrowing into
+  the `filters` of this project's Silver, which then lists the existing id in
+  `sources_raw`.
+- **Otherwise, finish documenting the current file anyway**, read from this
+  project's own code - when the record itself may differ (a field the code
+  adds or drops, another facet), that difference is what the comparison at
+  the end must show. Do not skip it, and do not copy the old file blind - the
+  two may have diverged.
 - **Skip re-collecting the output sample only when the match is exact** - same
   platform, same endpoint, same filters (Raw) or the same source columns
   (Silver). Reuse the `sample_output` already sitting in the old file instead
@@ -710,19 +1047,27 @@ When a match exists:
   comparison at the end needs to show.
 - **At the end, present the differences** between the two files to the user,
   field by field, and ask whether to keep both or drop the old one in favor of
-  the one just written.
+  the one just written - for every overlap that was not already decided in
+  the sweep.
 - **If the user keeps the new one, give it the same `id` as the old file** -
   it replaces it rather than sitting beside it under a different name, so
-  every edge already pointing at the old id keeps resolving.
+  every edge already pointing at the old id keeps resolving. When neither
+  name fits both uses, the way out is a new id for the one file that serves
+  both, applied through the rename exception of "What may be written": every
+  client that holds the old file and every `sources_*` that names it change
+  together.
 - **If the user keeps the old one instead, discard the draft written this
   session** - it never moves to `Catalog/Layers/`. From here on, reference the old
   file's id directly as the source in this project's own Silver/Audit files,
   exactly as if this project's own Raw stage had produced it.
 
 This runs per file, against the whole `Catalog/Layers/` tree, including other
-projects' folders. It is not the same check as Step 18's "every declared
-source resolves," which runs once at the end, over the files of the current
-session only.
+projects' folders. Only a match in the same client's folder can be reused as a
+source: the graph resolves a source inside the client that declares it, so a
+match in another client's folder is that client's own copy, not a source for
+this one. It is not the same check as Step 18's "every declared source
+resolves," which runs once at the end, over the sources the files of this
+session declare.
 
 ## Validating an audit or automation description
 
@@ -744,39 +1089,82 @@ own words, do not transcribe it straight into the file. Before writing:
 ## How to ask
 
 - **One question at a time**, waiting for the answer before the next one. No
-  numbered block of ten items, and no several questions in a single call: the
-  user answers part of it and the rest slips through as if it had been
-  confirmed.
-- **Show an example of the expected format** in every free-text question - an
-  example of the format, never a guess at this project's value presented as
-  though it were the answer.
+  numbered block of ten questions, and no several questions in a single call:
+  the user answers part of it and the rest slips through as if it had been
+  confirmed. A list of options answered in one go - the Gold candidates, a
+  table of suggested names - is one question, not ten.
+- **Names come with a suggestion, always.** Every file name and id token -
+  `<Endpoint>`, `<Function>`, `<Project>`, `<Audit>`, `<Context>` - is proposed,
+  not asked cold, and the user confirms or replaces it. A suggestion is never
+  applied on its own: nothing is written into a file with a name the user has
+  not answered, even when every earlier suggestion was accepted. When a stage names
+  several datasets, put all the suggestions in one table and confirm them in
+  one answer instead of one question per name. Gold needs no name question:
+  its `<Function>` repeats the Silver it reads.
+- **Show an example of the expected format** in every other free-text
+  question: an example of the format, never a guess at this project's value
+  presented as though it were the answer. Names are the exception above;
+  business values - the client, a threshold, a schedule - are never guessed.
+  A schedule slot proposed in Step 19 is not a guess: it is derived from the
+  template's base slot by the rules of that step, and confirmed by the user.
 - If the user picks an "other / I'll describe it" option and no text comes with
   it, **ask again**. A chosen option with no content is not an answer.
 - If the user does not know, **do not block**: use the template's placeholders
   (`/path/example` for an endpoint path, `"?"` for a business field) and move
   on. The user fills them in on review.
 
-## Getting the output sample (Raw and Silver only)
+## Getting the output sample and the volume (Raw and Silver only)
 
+- **One edit, one run.** The user runs each script once for the whole trail,
+  never once per stage. Right after the Step 2 list is confirmed, sweep the
+  write phase of every script the way Step 5 will - the Silver outputs are
+  captured before their list is confirmed - and add every capture point in a
+  single pass: Raw and Silver, in every script. Then ask for the run. The
+  Silver stage reads its samples from the same file later. A second run is
+  needed only when Step 5 changes what the sweep found - an output treated as
+  plumbing turns out to be a Silver - and then only for that output; say why.
 - **Do not rely on console output, and do not ask the user to write the print
   themselves.** A sample can be too large to paste without truncation. Edit
   the script and, instead of printing, append the record to one shared text
   file for the whole session: `<dropped repository root>/catalog_samples.txt`
   (append mode, `"a"`, `encoding="utf-8"`), preceded by a one-line English
-  comment saying it is for the catalog sample. Where the write goes depends on
-  the stage: Raw appends the record right after the API call and before any
-  transformation; Silver appends it after the record is assembled and before
-  it is written to disk.
+  comment saying it is a temporary catalog capture. Where the write goes
+  depends on the layer: Raw appends the record right after the API call and
+  before any transformation; Silver appends it after the record is assembled
+  and before it is written to disk.
 - One entry per dataset, one record each, preceded by a header line naming the
-  dataset (`=== <Endpoint or Function> ===`) so entries stay tell-apart when
-  several scripts write to the same file. In Raw it must carry the wrapper the
-  response puts around it; when the extraction is an SDK iterator, write the
-  first item of the iteration.
-- Then **tell the user the path of the file** and that every script that needs
-  a sample can be run in one pass, in any order - append mode means nothing
-  overwrites. Wait for them to say the run is done, then **read the file
-  yourself** with the Read tool. Do not write the catalog file with an
-  invented sample.
+  layer and the dataset (`=== RAW <Endpoint> ===`, `=== SILVER <Function> ===`,
+  or the call or output name the code uses while the names are not settled)
+  so entries stay tell-apart when several scripts write to the same file. The
+  record is the one with the most fields filled in - across the whole list or
+  iteration, not merely the first item - so the sample shows every key the
+  dataset can carry. In Raw it is the record as the API returned it, without
+  the envelope the SDK or the HTTP response puts around the list (status,
+  meta, pagination): the catalog documents the record, not the transport.
+- **One record per shape.** When one dataset carries more than one record
+  shape - configuration events and failure events in the same timeline - write
+  one record of each shape, and say so when presenting the sample.
+- **Accumulate, never hold.** Choosing the richest record must not keep the
+  dataset in memory: a paginated call can return gigabytes. Keep, per
+  dataset, only the best record so far, the record count and the byte total,
+  updated page by page, and write them once the last page is read.
+- **Measure the volume in the same write.** Beside the sample, write the size
+  of the WHOLE dataset that run produced: the record count and the total size
+  in bytes of every record serialized as JSON - all the pages of a paginated
+  call, every row of a Silver output - and no content beyond the one sample
+  record. In Raw it fills `volume_per_frequency` (one run is one frequency
+  period), in the unit notation of the template example, rounded to a
+  readable number and presented to the user as an estimate from a single run.
+  Silver has no volume field: report its numbers to the user with the Silver
+  files, without writing them into any file.
+- Then **tell the user the path of the file** and that every script can be run
+  in one pass, in any order - append mode means nothing overwrites - but one
+  after the other, never in parallel: the scripts share the capture file,
+  where two processes appending large records at once can interleave them,
+  and usually the same API credential, where parallel runs raise the
+  rate-limit errors that abort a run or blank its columns. Wait for
+  them to say the run is done, then **read the file yourself** with the Read
+  tool. Do not write the catalog file with an invented sample.
 - Anonymize the collected record before writing it into the YAML, following
   the template's rules.
 - **Trim what repeats before writing.** An array whose entries repeat the same
@@ -788,13 +1176,21 @@ own words, do not transcribe it straight into the file. Before writing:
   the code drops before saving, a field that no longer exists - correct the
   sample to match the code and say so. A sample collected from an older run is
   far more common than code that lies about its own output.
-- **Put the script back exactly as it arrived.** Once every sample is read and
-  the catalog files are written, remove every line added to reach it - the
-  write call, the comment, the blank line - and say that you removed them.
-  The script belongs to the project, not to the cataloging, and a leftover
-  write floods a shared file on every future run, inside a try/except that
-  hides the real cause. The same applies to anything else touched to get the
-  sample. Then **delete `catalog_samples.txt` itself** - it is scratch for
-  this cataloging session, not a project artifact, and a leftover copy is
-  stale the moment the next project reuses the same file name.
+- **Put the script back exactly as it arrived** as soon as the file is read -
+  every sample and every measure is in the text file by then, so the scripts
+  do not stay touched through the rest of the trail. Restore by copy, not by
+  hand: before adding the capture, copy every file you will touch to the
+  scratchpad directory; to put it back, confirm with a diff that the only
+  differences are the lines you added, copy the original over it, and
+  confirm with `cmp` that it is byte-identical - encoding, BOM and line
+  endings included. Only when no copy exists, remove by hand every line
+  added - the write call, the comment, the blank line, an added import. Either
+  way, say that the script is back as it arrived. The script belongs to the
+  project, not to the cataloging, and a leftover write floods a shared file
+  on every future run, inside a try/except that hides the real cause. The
+  same applies to anything else touched to get the sample. Once the last
+  Silver file is written, **delete `catalog_samples.txt` itself** - it is
+  scratch for this cataloging session, not a project artifact, and a
+  leftover copy is stale the moment the next project reuses the same file
+  name.
 - If the user cannot run the script, leave `"?"` and move on.

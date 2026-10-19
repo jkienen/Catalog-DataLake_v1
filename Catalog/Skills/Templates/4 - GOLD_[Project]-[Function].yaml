@@ -12,12 +12,16 @@
 # indicators are possible.
 #
 # STEP 0, BEFORE FILLING ANYTHING IN: one Gold per Silver is the default, and
-# three KPIs per file is the starting point. Deviate only when the user says so
-# - a Silver whose columns answer nothing on their own may have no Gold, and a
-# rich one may deserve more than three.
+# the KPIs are the user's choice, not yours. Propose up to ten candidates -
+# the most important and most critical the Silver columns support, ranked -
+# and write only the ones the user picks, plus any they add with a number of
+# their own. A Silver whose columns answer nothing on their own may have no
+# Gold at all. Every Audit is also evaluated for a Gold of its own - see
+# "Step 12" in Catalog.md.
 #
 # TWO RULES THAT DECIDE WHETHER A KPI IS VALID:
-#   - It must be COMPUTABLE from the columns of the Silver sources listed below.
+#   - It must be COMPUTABLE from the columns of the Silver sources listed below
+#     (for a Gold built on an audit, the Silver the audit came from).
 #     Open their structure_notes and sample_output and check the column exists,
 #     with the values it needs. A KPI over a column nobody produces is a
 #     promise, not an indicator.
@@ -29,7 +33,9 @@
 #   - Literal block |- for `description`. The KPI fields are plain scalars, as
 #     in the example below - one line each, however long. Because they are
 #     plain, they must not contain ": " anywhere: it turns the line into a
-#     mapping and the parser breaks. Rewrite the sentence instead.
+#     mapping and the parser breaks. Rewrite the sentence instead. A column
+#     whose own name carries ": " (the "Item: <name>" columns) is named as
+#     the item column <name>, in the language of the templates.
 #   - `filters: null` (lowercase, unquoted) when the KPI filters nothing. This
 #     layer uses null where the others use NA.
 #   - "?" means "a real value exists and the user fills it on review", always
@@ -70,6 +76,15 @@ project: EDR Health Check Report
 # Example:
 sources_silver:
 - SILVER_[Project]-[Function]
+
+# sources_audit -- YAML list of the Audit ids the indicators are computed from:
+# a Gold built on the records an audit set apart. Use [] when the Gold reads
+# Silver only, which is the common case. A Gold built on an audit lists it here
+# and leaves sources_silver as []. Its columns are those of the Silver the
+# audit came from, because an audit carries that Silver's columns. Every id
+# listed must exist as an Audit file with that exact name.
+# Example: [] or a list with one id per Audit consumed.
+sources_audit: []
 
 # description -- keep the three paragraphs below verbatim. The last line is a
 # lead-in to the kpis list and must stay the last line.

@@ -33,7 +33,7 @@ if not os.path.exists(dir_to_save_csv_unwatched):
 
 # Check if comparison files exist, if so, they will be read
 dir_entry = os.path.join(current_dir, f"../../Datas/{formatted_date}/Entry/vcenter-assets_{formatted_date}.json")
-if os.path.exists(dir_entry):
+if os.path.exists(dir_entry): 
     with open(dir_entry, encoding="utf-8") as file: data_vcenter = json.load(file)
 else: print("Pending files!"); sys.exit(1)
 
@@ -249,7 +249,7 @@ if os.path.exists(env_path):
                 vcenter = next((vcenter_by_mac[m.lower()] for m in macs if m.lower() in vcenter_by_mac), None)
 
                 if vcenter:
-                    item["Department"] = vcenter.get("Setor", empty)
+                    item["Department"] = vcenter.get("Department", empty)
                     item["Server VM"] = vcenter.get("Asset VM", empty)
                     matched_hosts.append(item)
                 else:

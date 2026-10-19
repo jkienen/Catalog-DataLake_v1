@@ -78,9 +78,10 @@ id: SILVER_[Project]-[Function]
 layer: silver
 
 # project -- the business project spelled out, accents and all. Unlike Raw,
-# Silver DOES carry this field. A repository is not a project: ask what business
-# name the user wants for it, and offer the possibility that the script belongs
-# to an already cataloged project despite the repository name.
+# Silver DOES carry this field. A repository is not a project: suggest a
+# business name and let the user confirm or correct it, and offer the
+# possibility that the script belongs to an already cataloged project
+# despite the repository name.
 # Example:
 project: EDR Health Check Report
 
@@ -109,7 +110,8 @@ sources_silver: []
 # generates_audits -- YAML list of the Audit ids this pipeline produces: the
 # records the code writes to a SEPARATE file because they did not match the
 # cross-reference (unmatched, unwatched, orphan). NA when it produces none.
-# Do not invent the id -- ask the user for the Audit name.
+# Never write an Audit id the user did not confirm -- suggest one (what was
+# set apart) and let the user agree or give the right name.
 # Example: NA, or a list with one id per audit produced.
 generates_audits: NA
 
@@ -123,7 +125,7 @@ execution_schedule: Sundays at 02:00 AM and on the 1st of the month at 02:00 AM
 # filters -- the filtering the code applies OVER the Raw data, which is exactly
 # what the Raw template refused to document: records dropped after the call,
 # date ranges trimmed in code, records kept only when they match another source.
-# Write it as prose, one bullet per condition.
+# Write it as prose, one sentence per condition.
 # NA (unquoted, no block) when the code keeps every record it read.
 # Do not use "?" for this -- NA means the filter does not exist.
 filters: NA
@@ -159,7 +161,8 @@ structure_notes: |-
 #               under Layers/ is uppercase
 #   <Project>   the project token, the same one used in the id
 #   <Function>  the file name in the lake. It does NOT necessarily match the id
-#               token -- ask the user for the real name.
+#               token -- suggest one and let the user confirm it or give
+#               the real name. Never write a name the user did not confirm.
 # Note the Silver path carries the PROJECT where Raw carries the PLATFORM, and
 # the closing sentence below is shorter than the Raw one.
 storage_notes: |-
@@ -174,10 +177,13 @@ storage_notes: |-
 # sample_output -- ONE record of the STRUCTURED output, after the transformation
 # -- not the Raw record. Its keys are the columns listed in structure_notes, in
 # the same order.
-# You add the print to the script yourself (indent of 4, right after the record
-# is assembled and before it is written to disk), tell the user what you
-# changed, and ask them to run it and paste the result. Never open the project's
-# data files yourself when its CLAUDE.md or README restricts reading them.
+# You add the capture to the script yourself, right after the record is
+# assembled and before it is written to disk, in the same single edit that
+# captures the Raw records (see "Getting the output sample and the volume"
+# in Catalog.md): the sample comes from the run already made for Raw. Choose
+# the record with the most columns filled in. Never ask the user to paste
+# console output, and never open the project's data files yourself when its
+# CLAUDE.md or README restricts reading them.
 # If the sample is not available yet, leave "?" and the user fills it on review.
 #
 # TRIM REPEATED ELEMENTS BEFORE WRITING. An array whose entries repeat the
@@ -210,8 +216,8 @@ sample_output: |-
     "Exception Name": "HOST01",
     "Exception Description": "process exclusion, apparently a false positive",
     "Exclusion Pattern": "LinWebshell",
-    "Exclusion Image": "/opt/cpanel/ea-php74/root/usr/sbin/php-fpm",
-    "Exclusion Commandline": "/opt/cpanel/ea-php74/root/usr/sbin/php-fpm\\s+--nodaemonize",
+    "Exclusion Image": "/opt/sampleapp/bin/sample-service",
+    "Exclusion Commandline": "/opt/sampleapp/bin/sample-service\\s+--nodaemonize",
     "Applied For": "host01.example.internal, host02.example.internal",
     "Applied Globally": false,
     "Created Date": "2025-10-10T14:22:45.714921672Z",
@@ -228,7 +234,10 @@ owner: "?"
 
 # source_repo -- business decision. Always the real repository of
 # origin, even when the business project carries a different name.
-# Example of what the user answers: github.com/<org>/<repo>
+# The default below is a pattern: replace `project_folder_name` with the
+# folder name of the dropped repository.
+# Example of what the user answers: CYBER__<Project> (the folder under
+# Projects/), or github.com/<org>/<repo> for a repository kept elsewhere
 source_repo: "project_folder_name"
 
 # last_reviewed -- the date the catalog was written. Stays "?" while the

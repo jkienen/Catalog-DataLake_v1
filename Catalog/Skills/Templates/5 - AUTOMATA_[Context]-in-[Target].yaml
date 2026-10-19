@@ -137,7 +137,8 @@ pipeline: |-
 # source_repo -- business decision. Always the real repository of
 # origin, including when the code lives there commented out waiting for
 # approval.
-# Example of what the user answers: github.com/<org>/<repo>
+# Example of what the user answers: CYBER__<Project> (the folder under
+# Projects/), or github.com/<org>/<repo> for a repository kept elsewhere
 source_repo: "?"
 
 # last_reviewed -- the date the catalog was written. Stays "?" while the

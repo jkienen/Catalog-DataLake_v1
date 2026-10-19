@@ -3,7 +3,7 @@
 > Turns a day of manual CrowdStrike auditing into an automated report — sensor health, policy coverage and exclusions, cross-referenced against the real server inventory.
 
 <p align="center">
-  <img src="../../Catalog/Files/concept-healthEDR.png" alt="Catalog graph for EDR Health Check: 11 Raw endpoints from Crowdstrike and VCenter feed 6 Silver datasets — assets per OS and exclusions per type — three of which branch into an Audit of unwatched hosts, all six feed a matching Gold indicator file, and the audits feed two Automations that delete unwatched assets and reassign asset tags in Crowdstrike.">
+  <img src="../../Catalog/Files/concept-healthEDR.png" alt="Catalog graph for EDR Health Check: 11 Raw endpoints from Crowdstrike and VCenter feed 6 Silver datasets - assets per OS and exclusions per type - the three asset datasets branch into an Audit of unwatched hosts per OS, every Silver dataset and every Audit feeds a Gold indicator file of its own (9 in total), the audits feed an Automation that deletes unwatched assets in Crowdstrike and the asset datasets feed one that reassigns asset tags there.">
 </p>
 
 <table width="100%">
@@ -46,7 +46,23 @@
 </details>
 
 <details>
-<summary><strong>Usage</strong> (click to expand)</summary>
+<summary><strong>Setup and Usage</strong> (click to expand)</summary>
+
+**Windows**
+
+```
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+```
+
+**Linux**
+
+```
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+(Skip this step if `.venv` already exists.)
 
 ```
 cd Scripts
@@ -61,4 +77,14 @@ python './2. EDR/2.1. Generate_Assets.py'
 python './2. EDR/2.2. Generate_Exclusions.py'
 ```
 
+```
+deactivate
+```
+
 </details>
+
+---
+
+## License
+
+Released under the MIT License, like the rest of this repository. Full terms in [LICENCE.md](../../LICENCE.md).

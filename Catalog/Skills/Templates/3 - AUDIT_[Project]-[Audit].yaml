@@ -97,14 +97,15 @@ description: |-
 
   Devices with "Usage History (Days)" greater than or equal to 90 days and with the "Is Active" column marked as True.
 
-  Note: these will be stored separately for later tracking and the possibility of automatic removal.
+  Note: they will be stored separately for later tracking and possible automatic removal.
 
 # storage_notes -- keep the text below, changing only the path line. Pattern:
 #   CYBER/<Client>/Silver/<Project>/YYYY-MM-DD/<Audit>.json
 #   <Client>    the organization. Title-case in the path
 #   <Project>   the project token, the same one used in the id
 #   <Audit>     the file name in the lake. It does NOT necessarily match the id
-#               token -- ask the user for the real name.
+#               token -- suggest one and let the user confirm it or give
+#               the real name. Never write a name the user did not confirm.
 # The path says Silver, and so does the opening sentence: the audit is stored
 # WITH the structured data it was separated from. Do not rewrite it to "Audit".
 # The "Note:" paragraph is optional -- keep it only when the date in the path is
@@ -130,7 +131,10 @@ owner: "?"
 # origin, even when the business project carries a different name. An audit the
 # user asked for but the code does not produce yet still points at the
 # repository that will produce it.
-# Example of what the user answers: github.com/<org>/<repo>
+# The default below is a pattern: replace `project_folder_name` with the
+# folder name of the dropped repository.
+# Example of what the user answers: CYBER__<Project> (the folder under
+# Projects/), or github.com/<org>/<repo> for a repository kept elsewhere
 source_repo: "project_folder_name"
 
 # last_reviewed -- the date the catalog was written. Stays "?" while the

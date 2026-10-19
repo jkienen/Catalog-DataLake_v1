@@ -135,24 +135,24 @@ if os.path.exists(env_path):
             hosts = [item["result"] for item in data]
 
             for id, host in enumerate(hosts):
-                setor = host["metadata"].get("setor") or empty
+                department = host["metadata"].get("department") or empty
                 tenant = host["tenant"] or empty
                 namevm = host["vmName"] or empty
                 mac = host["macAddress"] or empty
                 template = host["is_template"] or False
-                
+
                 # ----------------------------------------->
 
                 # Organize Departments
-                if setor in DEPTS: depart = setor
-                elif setor not in DEPTS and "CYBER" in tenant: depart = "CYBER"
+                if department in DEPTS: depart = department
+                elif department not in DEPTS and "CYBER" in tenant: depart = "CYBER"
                 else: depart = "TI-INFRA"
 
                 if not template:
                     assets.append({
-                        "Asset VM": namevm, 
+                        "Asset VM": namevm,
                         "Mac Address": mac,
-                        "Setor": depart,
+                        "Department": depart,
                     })
             
 
