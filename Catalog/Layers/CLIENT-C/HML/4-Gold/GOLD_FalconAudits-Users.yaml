@@ -1,0 +1,25 @@
+id: GOLD_FalconAudits-Users
+layer: gold
+project: Tenant Audit (CrowdStrike)
+sources_silver:
+- SILVER_FalconAudits-Users
+sources_audit: []
+description: |-
+  The Gold layer consolidates the data from the Silver layer into indicators ready for analytical and executive consumption.
+
+  All indicators must be generated per client, department group, and/or department.
+
+  The generated indicators are:
+kpis:
+- title: Inactive users
+  calculation: count of distinct User UUID with the Activity item column equal to Attention, split between those who have never logged in (Last Login equal to -) and those without access for more than 45 days.
+  filters: null
+  reason: each unused account is leftover access, whether from someone who changed roles, a contractor who finished their work, or an account created and never used, and a forgotten credential is precisely the one no one notices when it is compromised. The breakdown separates the account that was never activated, which is usually unnecessary provisioning, from the abandoned account, which calls for revocation. The number feeds the periodic access review and should drop with each cycle.
+  view: numeric count by reference month, split between never logged in and inactive for more than 45 days, detailed in a list with User Name, User Email, Created, Last Login, Days Since Last Login, Roles, and Falcon Administrator. The roles and the administrator flag alongside indicate which revocations are a priority.
+
+- title: New users in the month
+  calculation: count of User UUID present in the reference month partition and absent from the previous month partition.
+  filters: null
+  reason: every new console account must correspond to an approved request. Comparing the partitions month over month reveals accounts created outside the process, recorded with their roles from the first month in which they appear; only an account created and removed between two collections escapes. An unusual increase, especially of accounts with administrative roles, is the first sign of persistence by an attacker who obtained administrative access.
+  view: numeric count by reference month, detailed in a list with User Name, User Email, Created, Roles, Grant Type, and Falcon Administrator. This allows checking each new account against the access requests of the period.
+last_reviewed: '2026-10-16'

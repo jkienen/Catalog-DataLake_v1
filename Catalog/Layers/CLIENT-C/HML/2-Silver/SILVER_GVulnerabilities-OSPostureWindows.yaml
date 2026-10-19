@@ -1,0 +1,102 @@
+id: SILVER_GVulnerabilities-OSPostureWindows
+layer: silver
+project: Vulnerability Management
+sources_raw:
+- RAW_Crowdstrike-Assets
+- RAW_Crowdstrike-AssessmentHealth
+- RAW_Crowdstrike-InstalledPatches
+sources_silver: []
+generates_audits: NA
+execution_schedule: Sundays at 02:30 AM and on the 1st of the month at 02:30 AM
+filters: |-
+  Perform the structuring with the following conditions:
+
+  - Keep only the hosts with the Windows platform.
+pipeline: |-
+  The Data Science team will be responsible for retrieving the raw data from the Raw layer and structuring it as shown in the next step.
+
+  Host Id, Host Name, Host Ip, Host Type and Host System:
+
+  Copied from the host inventory; when the field does not exist, they receive "-".
+
+  Active Patches, Pending Patches and Last Patch Confirmed:
+
+  Taken from the host's installed patches summary, matching by the host id. Last Patch Confirmed is converted from UTC to local time (UTC-3) in the YYYY-MM-DD format. When the host has no patch summary, or its query failed, the columns receive "-".
+
+  Last Assessment and OS Score:
+
+  Taken from the host's security posture assessment (Zero Trust Assessment), matching by the host id. Only the operating system part of the assessment is used - the sensor score and signals, which the same Raw also brings, are left out. Last Assessment is the date of the assessment's last modification, converted from UTC to local time (UTC-3) in the YYYY-MM-DD format; OS Score is the operating system score. When the host has no assessment, or the assessments query failed, the columns receive "-".
+
+  Item: Reboot Pending:
+
+  Receives "Ok" when the patch summary indicates that there is no pending reboot and "Attention" when there is. When the host has no patch summary, it receives "-".
+
+  Item: <signal>:
+
+  One "Item: <signal name>" column is created per operating system signal found in the run's assessments, in alphabetical order, so that the set of columns follows the assessed signals. The value is "Ok" when the signal meets the criterion, "Attention" when it does not and "-" when the host was not assessed on that signal.
+
+  Reference Month, Reference Year and Reference Date:
+
+  Month, year and date of the routine's execution.
+structure_notes: |-
+  The data sources will be organized into the columns Host Id, Host Name, Host Ip, Host Type, Host System, Active Patches, Pending Patches, Last Patch Confirmed, Last Assessment, OS Score, Item: Reboot Pending, Item: Branch Target Injection Mitigation, Item: Branch Target Injection Mitigation Hardware Support, Item: Branch Target Injection Mitigation Patch, Item: Branch Target Injection Mitigation Registry Status, Item: Credential Guard, Item: Debug Mode, Item: Hardware Security Testability Specifications (HSTI), Item: Hypervisor Code Integrity, Item: Hypervisor Code Integrity (Strict Mode), Item: Input–output Memory Management Unit (IOMMU), Item: Input–output Memory Management Unit (IOMMU) is in use, Item: Kernel Mode Code Integrity (KMCI), Item: L1 Terminal Fault Mitigation, Item: Memory Access Protection, Item: Memory Overwrite Request Control, Item: Mode based execution control (MBEC), Item: Rogue Data Cache Load Mitigation, Item: Rogue Data Cache Load Patch, Item: Script Enforcement, Item: Secure Boot, Item: Secure Kernel, Item: Speculative Store Bypass Mitigation Available, Item: Speculative Store Bypass Mitigation Hardware Support, Item: System Management Mode (SMM) Protections, Item: Test Signing, Item: Undocumented Windows Beta, Item: Unified Extensible Firmware Interface (UEFI), Item: Unified Extensible Firmware Interface (UEFI) Memory Protection, Item: Virtual Secure Mode (VSM), Item: Windows Insider Program, Item: Windows Insider Program (Running), Item: Windows OS Build, Reference Month, Reference Year, Reference Date, ensuring consistency, asset traceability, and data readiness for the indicators layer.
+storage_notes: |-
+  Storage will be done in the Silver layer; the structured data will be kept ready for queries feeding the indicator calculations.
+
+  The data is organized following the standard naming convention. Additionally, temporal segregation must be maintained by collection period, using the YYYY-MM-DD naming convention, according to the frequency defined by the business. The following pattern must be followed:
+
+  CYBER/Client-C/Silver/GVulnerabilities/YYYY-MM-DD/OSPostureWindows.json
+
+  This organization ensures temporal traceability, ingestion standardization, and ease of auditing the data.
+sample_output: |-
+  {
+    "Host Id": "a7b8c9d0e1f2a3b4c5d6e7f8091a2b3c",
+    "Host Name": "WS002468",
+    "Host Ip": "172.16.0.12",
+    "Host Type": "Workstation",
+    "Host System": "Windows 11",
+    "Active Patches": 11,
+    "Pending Patches": 0,
+    "Last Patch Confirmed": "2026-09-27",
+    "Last Assessment": "2026-09-23",
+    "OS Score": 92,
+    "Item: Reboot Pending": "Ok",
+    "Item: Branch Target Injection Mitigation": "Ok",
+    "Item: Branch Target Injection Mitigation Hardware Support": "Ok",
+    "Item: Branch Target Injection Mitigation Patch": "Ok",
+    "Item: Branch Target Injection Mitigation Registry Status": "Ok",
+    "Item: Credential Guard": "Attention",
+    "Item: Debug Mode": "Ok",
+    "Item: Hardware Security Testability Specifications (HSTI)": "Ok",
+    "Item: Hypervisor Code Integrity": "Ok",
+    "Item: Hypervisor Code Integrity (Strict Mode)": "Ok",
+    "Item: Input–output Memory Management Unit (IOMMU)": "Ok",
+    "Item: Input–output Memory Management Unit (IOMMU) is in use": "Ok",
+    "Item: Kernel Mode Code Integrity (KMCI)": "Ok",
+    "Item: L1 Terminal Fault Mitigation": "Ok",
+    "Item: Memory Access Protection": "Ok",
+    "Item: Memory Overwrite Request Control": "Ok",
+    "Item: Mode based execution control (MBEC)": "Ok",
+    "Item: Rogue Data Cache Load Mitigation": "Ok",
+    "Item: Rogue Data Cache Load Patch": "Ok",
+    "Item: Script Enforcement": "Ok",
+    "Item: Secure Boot": "Attention",
+    "Item: Secure Kernel": "Ok",
+    "Item: Speculative Store Bypass Mitigation Available": "Ok",
+    "Item: Speculative Store Bypass Mitigation Hardware Support": "Ok",
+    "Item: System Management Mode (SMM) Protections": "Ok",
+    "Item: Test Signing": "Ok",
+    "Item: Undocumented Windows Beta": "Ok",
+    "Item: Unified Extensible Firmware Interface (UEFI)": "Ok",
+    "Item: Unified Extensible Firmware Interface (UEFI) Memory Protection": "Ok",
+    "Item: Virtual Secure Mode (VSM)": "Ok",
+    "Item: Windows Insider Program": "Ok",
+    "Item: Windows Insider Program (Running)": "Ok",
+    "Item: Windows OS Build": "Ok",
+    "Reference Month": "10",
+    "Reference Year": "2026",
+    "Reference Date": "2026-10-01"
+  }
+owner: "Cyber Security Team"
+source_repo: "CYBER__RVulnerabilities"
+last_reviewed: '2026-10-01'

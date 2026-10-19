@@ -1,0 +1,37 @@
+id: GOLD_HealthIDP-Exclusions
+layer: gold
+project: IDP Health Check Report
+sources_silver:
+- SILVER_HealthIDP-Exclusions
+sources_audit: []
+description: |-
+  The Gold layer consolidates the data from the Silver layer into indicators ready for analytical and executive consumption.
+
+  All indicators must be generated per client, department group, and/or department.
+
+  The generated indicators are:
+kpis:
+- title: Number of detections with configured exclusions
+  calculation: count of distinct Pattern Id values.
+  filters: null
+  reason: each exclusion in Identity Protection suspends an identity attack detection for certain users, machines or sources, creating a blind spot exactly where the attacker acts. Since the API does not expose the content of the exclusions, the total number of affected detections is the only measure of the size of this blind spot, and it serves as a baseline to track growth between periods. The number should only rise accompanied by a recorded justification.
+  view: numeric count by reference month, detailed in a list with Detection, Detection Type, Tactic, Changes, and Last Modified By. This shows which attack techniques have their detection suppressed and who is responsible for each one.
+
+- title: Detections with an exclusion changed in the reference month
+  calculation: count of distinct Pattern Id values whose Last Change month and year match Reference Month and Reference Year.
+  filters: null
+  reason: an exclusion change alters what Identity Protection stops alerting on, and without tracking it is only noticed when an incident goes undetected. Counting the month's changes turns the review into a routine, because each listed detection must have a corresponding approved change. An isolated spike usually indicates a mass adjustment after false positives, and warrants checking the scope.
+  view: numeric count by reference month, detailed in a list with Detection, Last Change, Last Modified By, and Changes. The person responsible and the date next to each detection allow cross-referencing the change with the change log.
+
+- title: Exclusion changes by person responsible
+  calculation: count of distinct Pattern Id values grouped by Last Modified By.
+  filters: null
+  reason: detection exclusions should go through few hands and through an approval process, because each change decides what Identity Protection stops alerting on. The distribution by person responsible shows whether this control is concentrated in a single person, which is a continuity and abuse risk, or spread across accounts that should not even have this permission. An unknown name or a service account in the list calls for immediate investigation, since changing exclusions is also an evasion technique for someone who has compromised an administrative account.
+  view: bar chart by Last Modified By in the reference month, detailed in a list with Last Modified By, Detection, Last Change, and Changes. The indicator considers only the last person responsible for each detection, so whoever changed it before and was overwritten does not appear, and the date next to it shows whether the concentration is recent or inherited.
+
+- title: Detections with an exclusion not reviewed for more than 90 days
+  calculation: count of distinct Pattern Id values where the difference between Reference Date and Last Change is greater than 90 days.
+  filters: null
+  reason: an exclusion usually originates to work around a false positive from a system, a service account or an ongoing project, and remains in effect after that reason no longer exists. Without periodic review, the blind spot becomes permanent through inertia and also ends up protecting the attacker who relies on that same source. The indicator lists the exclusions that went more than 90 days without any change, that is, those whose need must be reconfirmed or that must be removed.
+  view: numeric count by reference month, detailed in a list with Detection, Detection Type, Last Change, First Change, and Last Modified By. The first change next to it shows how long the exclusion has existed, and the last person responsible indicates whom to ask for revalidation.
+last_reviewed: '2026-09-28'

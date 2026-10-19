@@ -1,0 +1,140 @@
+id: RAW_Crowdstrike-VulnsExpired
+layer: raw
+platform: Crowdstrike
+endpoint: |-
+  (Vulnerabilities Expired)
+  - GET /spotlight/combined/vulnerabilities/v1
+description: |-
+  Obtains the vulnerabilities expired in the previous calendar month in Spotlight - closed because the host stopped reporting or was reinstalled -, one record per host × vulnerability pair, with the same structure as the active vulnerabilities, plus the last time the host was seen (host_last_seen_timestamp).
+load_type: Incremental
+frequency: Monthly
+volume_per_frequency: 12Mb
+execution_schedule: 1st of the month at 01:00 AM
+extraction_notes: |-
+  The Data Science team will be responsible for running the routine that queries the described endpoint, applying the necessary filters, and storing the data in the Raw layer of the Data Lake.
+
+  Note: the extraction is paginated by the after token, in pages of up to 5000 records. The window bounds are 00:00 (UTC-3) on the 1st day of the previous calendar month and of the current month, converted to UTC and computed at runtime. The same endpoint serves RAW_Crowdstrike-Vulns and RAW_Crowdstrike-VulnsFixed, with different filters. Incremental load: each run brings only the previous calendar month, and the deduplication key is the id, keeping the most recent record, since the updated_timestamp may change after the expiration and the same record may reappear in another month.
+filters: |-
+  Run the query with the following conditions:
+
+  - filter: "status:'expired'+updated_timestamp:>='<start of the previous month>'+updated_timestamp:<'<start of the current month>'"
+  - facet: ["cve", "host_info", "remediation"]
+  - limit: 5000
+storage_notes: |-
+  Storage will be done in the Raw layer, containing the data extracted directly from the described API endpoint, without any type of transformation, fully preserving the data.
+
+  The data is organized following the standard naming convention. Additionally, temporal segregation must be maintained by collection period, using the YYYY-MM-DD naming convention, according to the frequency defined by the business. The following pattern must be followed:
+
+  CYBER/Client-C/Raw/CROWDSTRIKE/YYYY-MM-DD/VulnsExpired.json
+
+  This organization ensures temporal traceability, ingestion standardization, and ease of auditing the protected server inventory data.
+sample_output: |-
+  {
+    "id": "c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8_2b3c4d5e6f708192a3b4c5d6e7f8091a",
+    "cid": "9f8e7d6c5b4a3928170615f4e3d2c1b0",
+    "aid": "c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8",
+    "vulnerability_id": "CVE-2025-7425",
+    "vulnerability_metadata_id": "CS-V25-5246999",
+    "data_providers": [
+      {
+        "provider": "Falcon sensor"
+      }
+    ],
+    "created_timestamp": "2026-07-08T21:28:06Z",
+    "updated_timestamp": "2026-09-28T06:47:49Z",
+    "status": "expired",
+    "apps": [
+      {
+        "vendor_normalized": "Ubuntu",
+        "product_name_version": "libxslt 1.1.39-0exp1ubuntu0.24.04.3",
+        "product_name_normalized": "libxslt",
+        "sub_status": "open",
+        "remediation": {
+          "ids": [
+            "3333bbbb4444cccc5555dddd6666eeee"
+          ]
+        },
+        "evaluation_logic": {
+          "id": "7777ffff8888aaaa9999bbbb0000cccc"
+        },
+        "remediation_info": {
+          "recommended_id": "3333bbbb4444cccc5555dddd6666eeee"
+        }
+      }
+    ],
+    "suppression_info": {
+      "is_suppressed": false
+    },
+    "confidence": "confirmed",
+    "host_info": {
+      "hostname": "SRV-ACME-AUTH-POC",
+      "local_ip": "172.16.0.11",
+      "machine_domain": "",
+      "os_version": "Ubuntu 24.04",
+      "ou": "",
+      "site_name": "",
+      "system_manufacturer": "VMware, Inc.",
+      "groups": [
+        {
+          "id": "aa11bb22cc33dd44ee55ff6600778899",
+          "name": "DYNAMIC - LINUX"
+        }
+      ],
+      "tags": [],
+      "platform": "Linux",
+      "product_type_desc": "Server",
+      "asset_criticality": "Unassigned",
+      "internet_exposure": "No",
+      "managed_by": "Falcon sensor",
+      "host_last_seen_timestamp": "2026-08-14T00:00:00Z"
+    },
+    "remediation": {
+      "entities": [
+        {
+          "id": "3333bbbb4444cccc5555dddd6666eeee",
+          "type": "LINUX_BASIC_NO_FIX",
+          "provider": "Falcon sensor",
+          "reference": "ubuntu libxslt",
+          "title": "No fix or vendor remediation available for ubuntu libxslt",
+          "action": "No fix or vendor remediation available for libxslt on ubuntu 24.04. Alternatives might include software removal, OS upgrade, or other mitigating controls",
+          "link": "",
+          "vendor_url": "",
+          "recommendation_type": "recommended",
+          "created_timestamp": "2025-08-28T01:29:04Z",
+          "updated_timestamp": "2025-08-28T01:29:04Z"
+        }
+      ]
+    },
+    "cve": {
+      "id": "CVE-2025-7425",
+      "base_score": 7.8,
+      "severity": "HIGH",
+      "exploit_status": 0,
+      "exprt_rating": "LOW",
+      "remediation_level": "U",
+      "cisa_info": {
+        "is_cisa_kev": false
+      },
+      "spotlight_published_date": "2025-09-04T02:04:00Z",
+      "types": [
+        "Vulnerability"
+      ],
+      "cwes": [
+        "CWE-416"
+      ],
+      "description": "A flaw was found in libxslt where the attribute type, atype, flags are modified in a way that corrupts internal memory management. When XSLT functions, such as the key() process, result in tree fragments, this corruption prevents the proper cleanup of ID attributes. As a result, the system may access freed memory, causing crashes or enabling attackers to trigger heap corruption.\n",
+      "published_date": "2025-07-10T14:15:00Z",
+      "vendor_advisory": [
+        "https://msrc.microsoft.com/update-guide/en-us/vulnerability/CVE-2025-7425"
+      ],
+      "references": [
+        "https://access.redhat.com/security/cve/CVE-2025-7425"
+      ],
+      "exploitability_score": 1.4,
+      "impact_score": 5.8,
+      "vector": "CVSS:3.1/AV:L/AC:H/PR:N/UI:N/S:C/C:N/I:H/A:H"
+    }
+  }
+owner: "Cyber Security Team"
+source_repo: "CYBER__RVulnerabilities"
+last_reviewed: '2026-10-01'

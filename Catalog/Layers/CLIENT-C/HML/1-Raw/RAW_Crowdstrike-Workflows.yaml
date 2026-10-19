@@ -1,0 +1,92 @@
+id: RAW_Crowdstrike-Workflows
+layer: raw
+platform: Crowdstrike
+endpoint: |-
+  (Workflows)
+  - GET /workflows/combined/definitions/v1
+description: |-
+  Obtains the tenant's workflow (Falcon Fusion) definitions, including name, description, trigger, actions, conditions, activation status, validation errors, version, and last modification date.
+load_type: Full
+frequency: Monthly
+volume_per_frequency: "?"
+execution_schedule: 1st of the month at 03:30 AM
+extraction_notes: |-
+  The Data Science team will be responsible for running the routine that queries the described endpoint, applying the necessary filters, and storing the data in the Raw layer of the Data Lake.
+
+  Note: a workflow's actions and conditions form a map with one entry per step; the sample keeps one of each and shortens the ticket's HTML body.
+filters: |-
+  Run the query with the following conditions:
+
+  - limit: 100
+  - offset: pagination offset (0, 100, 200...)
+storage_notes: |-
+  Storage will be done in the Raw layer, containing the data extracted directly from the described API endpoint, without any type of transformation, fully preserving the data.
+
+  The data is organized following the standard naming convention. Additionally, temporal segregation must be maintained by collection period, using the YYYY-MM-DD naming convention, according to the frequency defined by the business. The following pattern must be followed:
+
+  CYBER/Client-C/Raw/CROWDSTRIKE/YYYY-MM-DD/Workflows.json
+
+  This organization ensures temporal traceability, ingestion standardization, and ease of auditing the protected server inventory data.
+sample_output: |-
+  {
+    "id": "5e6f7a8b9c0d41e2f3a4b5c6d7e8f9a0",
+    "name": "IDP: Detections",
+    "description": "Ticket Integration > Ticketing Platform",
+    "trigger": {
+      "next": [
+        "severity_is_equal_to_informational"
+      ],
+      "event": "Investigatable/IDP",
+      "name": "Detection > Identity Detection",
+      "type": "Signal"
+    },
+    "actions": {
+      "activity_post___create_tickets_2d43b8d0": {
+        "id": "6f7a8b9c0d1e42f3a4b5c6d7e8f9a0b1~7a8b9c0d1e2f43a4b5c6d7e8f9a0b1c2",
+        "default_name": "POST - Create Tickets",
+        "name": "POST - Create Tickets - 7",
+        "next": [
+          "activity_add_comment_to_alert_f3c45118"
+        ],
+        "properties": {
+          "config_id": "8b9c0d1e2f3a44b5c6d7e8f9a0b1c2d3",
+          "json": {
+            "category": {
+              "categoryKey": "3201"
+            },
+            "description": "<html>(ticket HTML body, shortened in the sample)</html>",
+            "organization": {
+              "organizationKey": 1
+            },
+            "followers": [],
+            "priorityType": {
+              "priorityTypeKey": 148
+            },
+            "ticketType": {
+              "ticketTypeKey": 20
+            },
+            "title": "Incident from CrowdStrike | IDP: ${Trigger.Category.Investigatable.Product.IDP.DetectName}"
+          }
+        }
+      }
+    },
+    "conditions": {
+      "severity_is_equal_to_high": {
+        "next": [
+          "activity_post___create_tickets_2d43b8d0"
+        ],
+        "expression": "Trigger.Category.Investigatable.Severity:4",
+        "display": [
+          "Severity is equal to High"
+        ],
+        "else_if": "severity_is_equal_to_critical"
+      }
+    },
+    "enabled": true,
+    "has_validation_errors": false,
+    "last_modified_timestamp": "2026-07-21T18:54:50.617412479Z",
+    "version": 10
+  }
+owner: "Cyber Security Team"
+source_repo: "CYBER__FalconAudits"
+last_reviewed: '2026-10-16'

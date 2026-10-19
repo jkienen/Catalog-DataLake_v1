@@ -1,0 +1,153 @@
+id: RAW_Crowdstrike-IDPServiceHealth
+layer: raw
+platform: Crowdstrike
+endpoint: |-
+  (Identity Protection Service Health - NGSIEM)
+  - POST /humio/api/v1/repositories/{repository}/queryjobs
+  - GET /humio/api/v1/repositories/{repository}/queryjobs/{id}
+description: |-
+  Obtains the Identity Protection service health on each domain controller from NGSIEM, including cloud connectivity, traffic inspection state (configuration, status and enforcement), volume of inspected requests, installed and pending KBs, CPU, memory and disk usage, and the total of service health alerts.
+load_type: Full
+frequency: Weekly
+volume_per_frequency: "?"
+execution_schedule: Sundays at 02:30 AM and on the 1st of the month at 02:30 AM
+extraction_notes: |-
+  The Data Science team will be responsible for running the routine that queries the described endpoint, applying the necessary filters, and storing the data in the Raw layer of the Data Lake.
+
+  Note: the extraction happens in two calls - the first starts the search in NGSIEM, the second queries the status until the search is completed and returns the events. The query reproduces the "Domain controllers" widget of the Identity Protection - Service health dashboard: the search window is 7 days, except for the watchdog alerts table, which defines its own 30-day window.
+filters: |-
+  Run the query with the following conditions:
+
+  - repository: "search-all"
+  - start: "-7d"
+  - end: "0d"
+  - query_string:
+  "// Table to get dc connectivity
+  defineTable(query={
+  #repo=base_sensor #event_simpleName=/^IdpCloudHealthStatus|IdpCloudHealthCheck$/i
+  | case {
+    #event_simpleName=IdpCloudHealthStatus;
+    #event_simpleName=IdpCloudHealthCheck | "Cloud Connectivity.Last Checked":= @timestamp;
+  }
+  | groupBy([cid, aid],function=selectLast(IdpCloudConnectivityState,"Cloud Connectivity.Last Checked"), limit=5000)
+  | case{
+    test(getField("Cloud Connectivity.Last Checked") < now() - 10 * 60000) |  "Cloud Connectivity.IdP Service Status":="Disconnected";  // Not checked for more than 10min is considered Disconnected
+    IdpCloudConnectivityState=0 | "Cloud Connectivity.IdP Service Status":="Healthy";
+    IdpCloudConnectivityState=1 | "Cloud Connectivity.IdP Service Status":="Laggy";
+    IdpCloudConnectivityState=2 | "Cloud Connectivity.IdP Service Status":="Disconnected";
+    * | "Cloud Connectivity.IdP Service Status":="Healthy"
+  }
+  }, include=[cid, aid, "Cloud Connectivity.IdP Service Status", "Cloud Connectivity.Last Checked"], name="cloud_connectivity", start=7d)
+
+  // Table to get watchdog alerts: alert count and the traffic inspection state forced by remediations (branch filters kept as in the dashboard)
+  | defineTable(query={
+    #repo=base_sensor #event_simpleName=/^IdpWatchdog|HostInfo/i
+    | match(file="aid_master_main.csv", field=[cid, aid])
+    | ProductType=2
+    | case{
+        #event_simpleName=IdpWatchdogRemediationActionTaken* AND RemediationAction=0;
+        #event_simpleName=IdpWatchdogRemediationActionTaken* AND RemediationAction=1 | "Traffic Inspection.Enforcement":= "Forced Disabled";
+        #event_simpleName=IdpWatchdogRemediationActionTaken* AND RemediationAction=2 | "Traffic Inspection.Status":= "Forced Disabled";
+        #event_simpleName=IdpWatchdogRemediationActionTaken* AND RemediationAction=3 | "Traffic Inspection.Status":= "Limited";
+        #event_simpleName=IdpWatchdogReEnabled AND RemediationActionReverted=0 | "Traffic Inspection.Enforcement":= "Enabled";
+        #event_simpleName=IdpWatchdogReEnabled AND RemediationActionReverted=1 | "Traffic Inspection.Status":= "Enabled";
+        #event_simpleName=IdpWatchdogReEnabled AND RemediationActionReverted=2 | "Traffic Inspection.Status":= "Enabled";
+        #event_simpleName=HostInfo | "Traffic Inspection.Status":= "Enabled" | "Traffic Inspection.Enforcement":= "Enabled"; // HostInfo indicates a reboot or sensor upgrade which restarts idp services
+    }
+    | groupBy([aid, cid], function=[
+        selectLast(["Traffic Inspection.Enforcement", "Traffic Inspection.Status"]),
+        {#event_simpleName=IdpWatchdogRemediationActionTaken* | count(as="Service Health Alert.Total")}], limit=5000)
+    | "Service Health Alert.Total" > 0
+  }, include=["cid", "aid", "Traffic Inspection.Enforcement", "Traffic Inspection.Status", "Service Health Alert.Total"], name="watchdog_status", start=30d)
+
+  // Table to list all KBs installed on DCs (Raw layer only: latest and pending KB are fetched, not written to the report)
+  | defineTable(query={#repo=base_sensor #event_simpleName=InstalledUpdates
+  | match(file="aid_master_main.csv", field=[cid, aid])
+  | ProductType=2
+  | splitString(by=";", InstalledUpdateIds, as=InstalledUpdateIds)
+  | splitString(by=";", PendingUpdateIds, as=PendingUpdateIds)
+  | rename(field="InstalledUpdateIds[0]", as="MostRecentlyInstalledKB")
+  | rename(field="PendingUpdateIds[0]", as="MostRecentlyInstalledPendingKB")
+  | default(value="None", field=[MostRecentlyInstalledKB,MostRecentlyInstalledPendingKB], replaceEmpty=true)
+  | groupBy([cid, aid], function=selectLast([MostRecentlyInstalledKB, MostRecentlyInstalledPendingKB, InstalledUpdateIds, PendingUpdateIds]), limit=5000)}, include=[cid, aid, MostRecentlyInstalledKB, MostRecentlyInstalledPendingKB], name="installed_kbs", start=7d)
+
+  // Table to list DC inspected traffic in the last 7d
+  | defineTable(query={#repo=base_sensor #event_simpleName=/^ActiveDirectory(?:(?!Audit|Account).)*$/i | groupBy([cid, aid], function=sum("AggregationActivityCount", as="Traffic Inspection.Insp. Reqs (7d)"), limit=5000)
+  }, include=[cid, aid, "Traffic Inspection.Insp. Reqs (7d)"], name="inspected_traffic", start=7d)
+
+  // Table to list DC with traffic inspection ON by policy
+  | defineTable(query={#repo=base_sensor #event_simpleName=CurrentSystemTags | match(file="aid_master_main.csv", field=[cid, aid]) | ProductType=2
+  | groupBy([cid, aid], function=selectLast([Tags]), limit=5000)
+  | case {
+    Tags=/26388279067565/ | "Traffic Inspection.Configuration":="Forced Disabled"; // Has tag IdpKillSwitch
+    Tags=/26456998544302/ | "Traffic Inspection.Configuration":="Enabled"; // Has tag IdpEnabledDomainController
+    * | "Traffic Inspection.Configuration":="Disabled by policy";
+  }}, include=[cid, aid, "Traffic Inspection.Configuration"], name="ati_enabled", start=7d)
+
+  // Table to list DC Resource usage
+  | defineTable(query={
+  #repo=base_sensor #event_simpleName=/^SystemCapacity|ResourceUtilization$/i
+  | match(file="aid_master_main.csv", field=[cid, aid])
+  | ProductType=2
+  | groupBy([cid, aid], function=[max(MaxUsedRam, as=MaxUsedRam), max(MaxCpuUsage, as=MaxCpuUsage), avg(AverageUsedRam, as=AverageUsedRam), avg(AverageCpuUsage, as=AverageCpuUsage), selectLast([UsedDiskSpace, AvailableDiskSpace, LogicalCoreCount, MemoryTotal])], limit=5000)
+  | MemoryTotal := unit:convert(field=MemoryTotal, to=Gi)
+  | MaxUsedRam := unit:convert(field=MaxUsedRam, from=Mi, to=Gi)
+  | MaxPercentUsedRam := (MaxUsedRam/MemoryTotal)*100
+  | AverageUsedRam := unit:convert(field=AverageUsedRam, from=Mi, to=Gi)
+  | AveragePercentUsedRam := (AverageUsedRam/MemoryTotal)*100
+  | TotalDiskSpace:= (UsedDiskSpace + AvailableDiskSpace)
+  | default(value="-", field=[MemoryTotal, MaxPercentUsedRam, AveragePercentUsedRam, MaxCpuUsage, AverageCpuUsage, TotalDiskSpace, UsedDiskSpace, AvailableDiskSpace, LogicalCoreCount])
+  }, include=[cid, aid, MemoryTotal, MaxPercentUsedRam, AveragePercentUsedRam, MaxCpuUsage, AverageCpuUsage, TotalDiskSpace, UsedDiskSpace, AvailableDiskSpace, LogicalCoreCount], name="resources")
+
+  // Get the list of active DCs
+  | #repo=base_sensor #event_simpleName=SensorHeartbeat
+  | groupBy([cid, aid], function=[], limit=max)
+  | match(file="aid_master_main.csv", field=[cid, aid])
+  | ProductType=2
+  | match(file="cloud_connectivity", field=[cid, aid], strict=false)
+  | default(value="Disconnected", field=["Cloud Connectivity.IdP Service Status"]) // DCs that have not reported a cloud connectivity status or checked are considered disconnected
+  | match(file="ati_enabled", field=[cid, aid], strict=false)
+  | default(value="Disabled (unknown)", field=["Traffic Inspection.Configuration"])
+  | "Traffic Inspection.Status":=getField("Traffic Inspection.Configuration")
+  | "Traffic Inspection.Enforcement":=getField("Traffic Inspection.Configuration")
+  | match(file="inspected_traffic", field=[cid, aid], strict=false)
+  | default(value="0", field=["Traffic Inspection.Insp. Reqs (7d)"])
+  | match(file="installed_kbs", field=[cid, aid], strict=false)
+  | match(file="watchdog_status", field=[cid, aid], strict=false)
+  | default(value="0", field=["Service Health Alert.Total"])
+  | match(file="resources", field=[cid, aid], strict=false)
+  | rename([LogicalCoreCount, "CPU.Cores (Logical)"], [AverageCpuUsage, "CPU.Avg Usage (%)"], [MaxCpuUsage, "CPU.Max Usage (%)"], [MemoryTotal, "Memory.Total (GB)"], [MaxPercentUsedRam, "Memory.Max Usage (%)"], [AveragePercentUsedRam, "Memory.Avg Usage (%)"], [aid, "Domain Controller.Sensor Id"], [MostRecentlyInstalledKB, "Domain Controller.Latest KB"], [MostRecentlyInstalledPendingKB, "Domain Controller.Pending KB"],[UsedDiskSpace, "Storage.Used (GB)"], [TotalDiskSpace, "Storage.Total (GB)"], [AvailableDiskSpace, "Storage.Available (GB)"])
+  | table(["Domain Controller.Sensor Id", "Domain Controller.Latest KB", "Domain Controller.Pending KB", "Cloud Connectivity.IdP Service Status", "Cloud Connectivity.Last Checked", "Traffic Inspection.Status", "Traffic Inspection.Configuration", "Traffic Inspection.Enforcement", "Traffic Inspection.Insp. Reqs (7d)", "CPU.Cores (Logical)", "CPU.Avg Usage (%)", "CPU.Max Usage (%)", "Memory.Total (GB)", "Memory.Avg Usage (%)", "Memory.Max Usage (%)", "Storage.Total (GB)", "Storage.Used (GB)", "Storage.Available (GB)", "Service Health Alert.Total"], limit=5000)"
+storage_notes: |-
+  Storage will be done in the Raw layer, containing the data extracted directly from the described API endpoint, without any type of transformation, fully preserving the data.
+
+  The data is organized following the standard naming convention. Additionally, temporal segregation must be maintained by collection period, using the YYYY-MM-DD naming convention, according to the frequency defined by the business. The following pattern must be followed:
+
+  CYBER/Client-C/Raw/CROWDSTRIKE/YYYY-MM-DD/IDPServiceHealth.json
+
+  This organization ensures temporal traceability, ingestion standardization, and ease of auditing the protected server inventory data.
+sample_output: |-
+  {
+      "Memory.Avg Usage (%)": "42.853326881237535",
+      "Memory.Total (GB)": "31.999038696289062",
+      "CPU.Max Usage (%)": "34",
+      "Service Health Alert.Total": "0",
+      "Domain Controller.Sensor Id": "c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8",
+      "Memory.Max Usage (%)": "48.48473288448893",
+      "Domain Controller.Latest KB": "KB5078766",
+      "Traffic Inspection.Insp. Reqs (7d)": "104282950",
+      "Storage.Used (GB)": "110",
+      "Cloud Connectivity.Last Checked": "1790609902458",
+      "Storage.Available (GB)": "90",
+      "CPU.Cores (Logical)": "16",
+      "Domain Controller.Pending KB": "KB5120705",
+      "Traffic Inspection.Enforcement": "Enabled",
+      "Traffic Inspection.Status": "Enabled",
+      "CPU.Avg Usage (%)": "6.5200594353640415",
+      "Traffic Inspection.Configuration": "Enabled",
+      "Cloud Connectivity.IdP Service Status": "Healthy",
+      "Storage.Total (GB)": "200"
+  }
+owner: "Cyber Security Team"
+source_repo: "CYBER__HealthIDP"
+last_reviewed: '2026-09-28'

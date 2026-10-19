@@ -1,0 +1,73 @@
+id: GOLD_GVulnerabilities-Vulns
+layer: gold
+project: Vulnerability Management
+sources_silver:
+- SILVER_GVulnerabilities-Vulns
+sources_audit: []
+description: |-
+  The Gold layer consolidates the data from the Silver layer into indicators ready for analytical and executive consumption.
+
+  All indicators must be generated per client, department group, and/or department.
+
+  The generated indicators are:
+kpis:
+- title: KEV past the CISA due date
+  calculation: count of Vuln Id with the CISA Due Date item equal to Attention, grouped by Severity. Includes the CISA KEV CVEs with no due date provided, which the pipeline also flags as Attention.
+  filters: consider only Risk State equal to None, that is, vulnerabilities without suppression.
+  reason: the CISA KEV gathers vulnerabilities with confirmed exploitation in the wild, and the published due date is the limit that the agency itself considers acceptable for remediation. A vulnerability in this state has already passed the point where the risk was theoretical and the point where the deadline was reasonable. The number should tend to zero; when it grows, it indicates that the remediation process does not keep up even with the most evident threats, and each item is a case to be followed up individually with the person responsible for the host.
+  view: numeric count by reference month and by Severity, detailed in a list with Host Name, Host Type, Vuln CVEs, Vuln Name, CISA Due Date, Vuln Solution and Vuln Age-in-days. The list separates what has been overdue for months from what became overdue this week, and shows the recommended fix next to each item, ready to become a ticket.
+
+- title: Vulnerabilities with active exploitation
+  calculation: count of Vuln Id with Exploit Maturity equal to Actively Used, grouped by Severity.
+  filters: consider only Risk State equal to None, that is, vulnerabilities without suppression.
+  reason: the exploitation maturity indicates that the flaw is being used in real attacks, regardless of whether it has already entered the CISA list. This indicator reaches what the KEV does not yet cover and often reveals medium or low severity vulnerabilities that are more dangerous in practice than many critical ones without an exploit. When it grows, prioritization based only on CVSS is letting real risk slip through.
+  view: numeric count by reference month and by Severity, detailed in a list with Vuln CVEs, Vuln Name, Vuln Product, On CISA KEV, Adversaries and the number of affected hosts. The On CISA KEV column distinguishes what already has an official due date from what is exploited but outside the catalog.
+
+- title: Internet-exposed vulnerabilities with an available exploit
+  calculation: count of Vuln Id with Internet Exposure equal to Yes and Exploit Available equal to true.
+  filters: consider only Risk State equal to None, that is, vulnerabilities without suppression.
+  reason: a host exposed to the internet can be reached by any attacker without prior access to the network, and an available exploit eliminates the effort of developing the attack. The combination of the two conditions is the shortest path to an initial intrusion. A few items here weigh more than hundreds of internal vulnerabilities, and growth in the number indicates that the external surface is being expanded without remediation keeping up.
+  view: numeric count by reference month, detailed in a list with Host Name, Host Ip, Host Type, Vuln CVEs, Exploit Maturity, Severity and Vuln Solution. Exploit Maturity separates the exploit that has only been published from the one already used in attacks.
+
+- title: Vulnerabilities with critical ExPRT priority
+  calculation: count of Vuln Id with ExPRT Rating equal to Critical, grouped by Host Type.
+  filters: consider only Risk State equal to None, that is, vulnerabilities without suppression.
+  reason: ExPRT is CrowdStrike's prioritization, which combines the platform's own threat intelligence with severity and observed exploitation. It reorders the backlog by what is most likely to be exploited, rather than by theoretical severity. Splitting by host type shows whether the critical risk is concentrated on servers, where the impact is greater, or spread across workstations, where the volume is greater and remediation depends on mass distribution.
+  view: numeric count by reference month and by Host Type, detailed in a list with Host Name, Vuln CVEs, Vuln Name, Severity, CVSS Score and Vuln Solution. The list shows the cases in which ExPRT diverges from the CVSS severity, which are precisely the ones that traditional prioritization would leave for later.
+
+- title: Active vulnerabilities by severity
+  calculation: count of Vuln Id grouped by Severity.
+  filters: consider only Risk State equal to None, that is, vulnerabilities without suppression.
+  reason: it is the snapshot of the risk backlog at the time of the run and the baseline against which the other indicators are read. Compared month by month, it shows whether the volume at each severity falls, stabilizes or grows. A drop in active vulnerabilities is only progress when it comes with fixes in the same period, and not just from hosts that stopped reporting.
+  view: numeric count by reference month and by Severity, as a time series, detailed in a list with Host Name, Host Type, Vuln CVEs, Vuln Name and Vuln Age-in-days. The series allows reading the trend of each severity separately.
+
+- title: Age of active vulnerabilities
+  calculation: average, median and 90th percentile of Vuln Age-in-days, grouped by Severity.
+  filters: consider only Risk State equal to None, that is, vulnerabilities without suppression.
+  reason: the volume says how much risk exists, the age says how long it has been tolerated. A high age at high severities is a direct sign of failure in the remediation process, and the 90th percentile exposes the tail of forgotten vulnerabilities that the average hides. Tracked over time, it shows whether the team is closing what is old or only what has just appeared.
+  view: average, median and 90th percentile by reference month and by Severity, detailed in a list with Host Name, Vuln CVEs, Vuln Name, First Seen and Vuln Age-in-days, sorted from oldest to newest. The sorting brings to the top the vulnerabilities that have been open the longest.
+
+- title: Fixes with the widest reach
+  calculation: ranking of Vuln Solution by the count of Vuln Id, together with the number of distinct Host Id of each fix.
+  filters: consider only Risk State equal to None, that is, vulnerabilities without suppression.
+  reason: a single product update often closes dozens of CVEs on hundreds of hosts at the same time. Ordering the recommended fixes by the number of instances they resolve turns the backlog into patch campaigns, with the greatest gain per effort at the top. When the top positions do not change from one month to the next, the highest-impact fix is stalled.
+  view: ranking by reference month, detailed in a list with Vuln Solution, Solution Type, Vuln Product, the count of Vuln Id, the number of hosts and the highest Severity among the vulnerabilities that the fix closes. Solution Type separates the version update from the other forms of remediation.
+
+- title: Distinct CVEs versus instances
+  calculation: count of distinct Vuln CVEs compared to the count of Vuln Id, where each Vuln Id is a host and vulnerability pair.
+  filters: consider only Risk State equal to None, that is, vulnerabilities without suppression.
+  reason: the number of instances measures the size of the problem on the hosts, the number of distinct CVEs measures how many different flaws need to be addressed. The ratio between the two indicates whether the risk comes from a few flaws spread across many hosts, resolved by campaign, or from many isolated flaws, which require case-by-case treatment. Showing both numbers avoids overestimating the effort and guides the remediation strategy.
+  view: the two totals side by side by reference month and by Severity, detailed in a list with Vuln CVEs, Vuln Name and the number of affected hosts per CVE.
+
+- title: Suppressed vulnerabilities
+  calculation: count of Vuln Id with Risk State other than None, grouped by Risk State and by Severity.
+  filters: null
+  reason: suppression removes the vulnerability from the active risk views, which is correct when there is a formal decision behind it and dangerous when it becomes silent accumulation. The indicator provides visibility into accepted risk and allows auditing the exceptions, especially at high severities and in CVEs with active exploitation. Rapid growth here may be reducing the other indicators without any risk having been fixed.
+  view: numeric count by reference month, by Risk State and by Severity, detailed in a list with Host Name, Vuln CVEs, Vuln Name, Risk State, Exploit Maturity and On CISA KEV. The list highlights the suppressions that fall on exploited vulnerabilities, which are the ones that most deserve review.
+
+- title: Vulnerabilities linked to known adversaries
+  calculation: count of Vuln Id with Adversaries other than "-", counting each adversary in the list separately.
+  filters: consider only Risk State equal to None, that is, vulnerabilities without suppression.
+  reason: the association with an adversary indicates that threat groups tracked by CrowdStrike intelligence use the CVE in real campaigns. It is a sign of intent, not just of possibility, and allows cross-referencing the backlog with the adversaries that target the client's industry. When the number grows, the environment is accumulating exactly the doors that known attackers look for.
+  view: numeric count by reference month and by adversary, detailed in a list with Adversaries, Vuln CVEs, Vuln Name, Exploit Maturity, Severity and the number of affected hosts. Grouping by adversary shows which groups have the most entry points available in the environment.
+last_reviewed: '2026-10-01'

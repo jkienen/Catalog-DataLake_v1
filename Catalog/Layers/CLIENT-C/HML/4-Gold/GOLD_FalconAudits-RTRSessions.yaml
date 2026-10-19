@@ -1,0 +1,55 @@
+id: GOLD_FalconAudits-RTRSessions
+layer: gold
+project: Tenant Audit (CrowdStrike)
+sources_silver:
+- SILVER_FalconAudits-RTRSessions
+sources_audit: []
+description: |-
+  The Gold layer consolidates the data from the Silver layer into indicators ready for analytical and executive consumption.
+
+  All indicators must be generated per client, department group, and/or department.
+
+  The generated indicators are:
+kpis:
+- title: Manual RTR sessions
+  calculation: count of distinct Session Id with Origin starting with Console.
+  filters: null
+  reason: a Real Time Response session opened from the console is a person with a remote shell on a host, the most powerful and most sensitive access on the platform. Separating these sessions from those opened by automation reduces the volume to review to what was done by someone, and each one must correspond to an investigation or a ticket. An increase with no incident to explain it deserves verification.
+  view: numeric count by reference month, detailed in a list with Session Date, User, Host Name, Host Type, Session Duration (s), and Command. This shows who accessed which host, for how long, and to do what.
+
+- title: RTR sessions on servers and domain controllers
+  calculation: count of distinct Session Id with Host Type equal to Server or Domain Controller, broken down by Origin.
+  filters: null
+  reason: servers and domain controllers concentrate the critical systems and data, and a command executed on them has a much greater impact than on a workstation. The breakdown by origin separates automation, which runs in volume and predictably, from manual sessions, which are the ones that call for justification.
+  view: numeric count by reference month, split by Host Type and by Origin, detailed in a list with Session Date, User, Host Name, Host Type, Origin, and Command.
+
+- title: Files collected from hosts via RTR
+  calculation: count of rows with Command equal to get.
+  filters: null
+  reason: the get command pulls files from the host and makes them available in the console, which is legitimate in an investigation but is also the most direct way to extract a client's data through the security tool itself. Each collection needs to be tied to an investigation, and the indicator makes visible a use that would otherwise go unnoticed.
+  view: numeric count by reference month, detailed in a list with Session Date, Command Time, User, Host Name, and Command Line. The command line shows which file was collected.
+
+- title: RTR commands executed by type
+  calculation: count of rows broken down by Command, disregarding the rows with Command equal to -.
+  filters: null
+  reason: shows what is actually done through RTR, whether it is used only for reading and gathering context or for actions that change the host, such as removing files, running scripts, and sending files. A change in the command profile between months, such as the appearance of change commands where before there was only reading, is a sign of unusual use.
+  view: numeric count by reference month and by Command, detailed in a list with Command, Origin, and the number of distinct hosts by Host Name.
+
+- title: Users who opened the most manual RTR sessions
+  calculation: count of distinct Session Id broken down by User.
+  filters: only rows with Origin starting with Console.
+  reason: focuses the review of remote access on the people who use it most and shows whether the use is restricted to the response team. A user outside this team with frequent sessions, or an account that suddenly starts opening sessions, is the case to check first.
+  view: ranking by number of sessions in the reference month, detailed in a list with User, Host Name, Host Type, and Session Date.
+
+- title: Hosts most accessed via RTR
+  calculation: count of distinct Session Id broken down by Host Name.
+  filters: null
+  reason: a host that receives repeated sessions may be an ongoing incident, a chronic problem being worked around through remote access instead of fixed, or the target of an automation. Seeing the most accessed hosts directs the investigation and shows where it is worth fixing the cause instead of repeating the access.
+  view: ranking by number of sessions in the reference month, detailed in a list with Host Name, Host Type, Origin, User, and Command.
+
+- title: Total number of RTR sessions in the month
+  calculation: count of distinct Session Id, split between Origin equal to API and Origin starting with Console.
+  filters: null
+  reason: it is the baseline for the other RTR indicators and shows how much of the Real Time Response usage is automated and how much is manual. An automation that starts opening many more sessions than usual or a growing manual volume are behavior changes that call for an explanation.
+  view: numeric count by reference month, split between automation and console, detailed in a list with Session Date, Origin, User, and Host Type.
+last_reviewed: '2026-10-16'

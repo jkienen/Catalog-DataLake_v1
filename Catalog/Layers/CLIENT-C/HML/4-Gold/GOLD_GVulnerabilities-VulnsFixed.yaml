@@ -1,0 +1,56 @@
+id: GOLD_GVulnerabilities-VulnsFixed
+layer: gold
+project: Vulnerability Management
+sources_silver:
+- SILVER_GVulnerabilities-VulnsFixed
+- SILVER_GVulnerabilities-Vulns
+sources_audit: []
+description: |-
+  The Gold layer consolidates the data from the Silver layer into indicators ready for analytical and executive consumption.
+
+  All indicators must be generated per client, department group, and/or department.
+
+  The generated indicators are:
+kpis:
+- title: Remediation time by severity
+  calculation: average, median and 90th percentile of the difference in days between Last Fixed and First Seen, grouped by Severity.
+  filters: null
+  reason: remediation time is the main measure of the efficiency of the vulnerability management process, because it shows how long each flaw was available to an attacker before being closed. The median shows the team's typical pace and the 90th percentile exposes the fixes that dragged on, which are the ones that really carry risk. When the time rises at high severities, the process is treating all vulnerabilities with the same urgency, or leaving the serious ones for later.
+  view: average, median and 90th percentile by fix month (Last Fixed) and by Severity, as a time series, detailed in a list with Host Name, Host Type, Vuln CVEs, Vuln Name, First Seen and Last Fixed, sorted from the slowest fix to the fastest. The sorting brings to the top the cases that push the 90th percentile up.
+
+- title: KEV fixed within the CISA due date
+  calculation: percentage of the records with On CISA KEV equal to true whose Last Fixed is less than or equal to CISA Due Date, over the total of records with On CISA KEV equal to true. The records with CISA Due Date equal to "-" are counted separately.
+  filters: null
+  reason: the CISA due date is the published limit for fixing vulnerabilities with confirmed exploitation, which makes the indicator objective and comparable without depending on an internal SLA. It measures deadline discipline precisely where delay is most costly. A low percentage indicates that not even proven threats are being treated with urgency, and counting the records without a due date separately keeps them from distorting the result.
+  view: percentage by fix month (Last Fixed), detailed in a list with Host Name, Vuln CVEs, Vuln Name, CISA Due Date, Last Fixed and the number of days of delay or of slack. The list separates the fixes made within the due date from those closed after it expired, and shows the size of the delay of each one.
+
+- title: Remediation time by exploitation maturity
+  calculation: average, median and 90th percentile of the difference in days between Last Fixed and First Seen, grouped by Exploit Maturity.
+  filters: null
+  reason: a vulnerability already exploited in attacks should be fixed faster than one with no known exploit. Comparing remediation time across maturity levels tests whether prioritization happens in practice or whether everything goes into the same queue. When the exploited ones take as long as the others, the process is ignoring the strongest risk signal available.
+  view: average, median and 90th percentile by fix month (Last Fixed) and by Exploit Maturity, side by side, detailed in a list with Vuln CVEs, Vuln Name, Exploit Maturity, On CISA KEV, Severity and the remediation time. The side-by-side comparison shows whether the time curve falls as the exploit maturity rises.
+
+- title: Remediation rate for the month
+  calculation: count of Vuln Id from SILVER_GVulnerabilities-VulnsFixed divided by the sum of that count and the count of Vuln Id from SILVER_GVulnerabilities-Vulns on the same Reference Date, grouped by Severity. It is the only indicator in this file that cross-references the two Silvers.
+  filters: null
+  reason: the volume of fixes only has meaning against the size of the backlog. The rate shows what fraction of the known risk was eliminated in the month, and separates the team that is beating the backlog from the one that only keeps up with the emergence of new vulnerabilities. A stable rate with growing active vulnerabilities indicates that the remediation pace does not keep up with the inflow of risk.
+  view: percentage by reference month and by Severity, as a time series, alongside the absolute counts of fixed and active vulnerabilities. The counts alongside the percentage avoid reading a high rate over a small backlog as progress.
+
+- title: Vulnerabilities fixed in the month by severity
+  calculation: count of Vuln Id grouped by Severity.
+  filters: null
+  reason: it is the throughput of the remediation process, how much risk was effectively eliminated in the month. Read together with the active vulnerabilities, it explains where a change in the backlog comes from, separating the drop due to fixes from the drop due to hosts that stopped reporting, recorded in the expired ones. A month with few fixes at high severities is a warning even when the total looks healthy.
+  view: numeric count by fix month (Last Fixed) and by Severity, as a time series, detailed in a list with Host Name, Host Type, Vuln CVEs, Vuln Name and Last Fixed.
+
+- title: Remediation time by host type
+  calculation: average, median and 90th percentile of the difference in days between Last Fixed and First Seen, grouped by Host Type.
+  filters: null
+  reason: servers and workstations have different maintenance windows, owners and update mechanisms, and the overall average hides this difference. Splitting remediation time by host type shows where the process gets stuck, and usually points to the servers, where remediation depends on a window and the impact of an intrusion is greater. Without this breakdown, the speed of the workstations masks the slowness on the servers.
+  view: average, median and 90th percentile by fix month (Last Fixed) and by Host Type, detailed in a list with Host Name, Host System, Vuln CVEs, Severity and the remediation time. Host System makes it possible to see whether the slowness is concentrated in a particular operating system version.
+
+- title: Fixes by vendor
+  calculation: count of Vuln Id and average of the difference in days between Last Fixed and First Seen, grouped by Vuln Vendor.
+  filters: null
+  reason: some of the fixes happen on their own, through the automatic update of browsers and applications, and some depend on action by the team. Splitting by vendor distinguishes the two, prevents the volume of automatic fixes from inflating the perception of performance and shows which vendors concentrate the slow fixes. It is the starting point for deciding where to automate patch distribution.
+  view: numeric count and average time by fix month (Last Fixed) and by Vuln Vendor, sorted by the count, detailed in a list with Vuln Vendor, Vuln Product, Vuln CVEs and the number of hosts. The list reveals the products that add up many quick fixes, typical of automatic updates, and those that accumulate few, slow fixes.
+last_reviewed: '2026-10-01'

@@ -1,0 +1,37 @@
+id: GOLD_FalconAudits-UninstallTokens
+layer: gold
+project: Tenant Audit (CrowdStrike)
+sources_silver:
+- SILVER_FalconAudits-UninstallTokens
+sources_audit: []
+description: |-
+  The Gold layer consolidates the data from the Silver layer into indicators ready for analytical and executive consumption.
+
+  All indicators must be generated per client, department group, and/or department.
+
+  The generated indicators are:
+kpis:
+- title: Uninstall tokens revealed in the month
+  calculation: count of rows.
+  filters: null
+  reason: each revealed token allows removing the sensor from a host, leaving it without protection and without visibility, which is why revealing a token is one of the most sensitive actions in the console. The number tracks how often this happens and supports checking each reveal against a maintenance, reinstallation, or machine replacement ticket. An increase with no maintenance to explain it calls for investigation.
+  view: numeric count by reference month, detailed in a list with Event Date, Event Time, User, Host Name, Host Type, and Message.
+
+- title: Tokens revealed without justification
+  calculation: count of rows with Message equal to -.
+  filters: null
+  reason: the justification recorded when revealing the token is what allows checking later whether the sensor removal was legitimate. A token revealed without a reason leaves the action with no trace of intent and prevents auditing, so the expected value is zero and each case must be followed up with whoever revealed it.
+  view: numeric count by reference month, detailed in a list with Event Date, User, Host Name, and Host Type.
+
+- title: Tokens revealed by user
+  calculation: count of rows broken down by User.
+  filters: null
+  reason: shows whether token reveals are restricted to the team that should perform them and who concentrates them. A person outside this team revealing tokens, or a user who starts revealing many at once, is the case to check first, because it is the simplest way to remove the protection of several hosts using the tool itself.
+  view: ranking by number of tokens in the reference month, detailed in a list with User, Host Name, Host Type, Event Date, and Message.
+
+- title: Tokens revealed via API
+  calculation: count of rows whose User is not an e-mail address, that is, reveals made by an API client.
+  filters: null
+  reason: an API client capable of revealing uninstall tokens has the power to unprotect hosts without human intervention, which only makes sense for a known and controlled integration. A reveal via API that does not correspond to a mapped integration indicates a credential with excessive scope or used improperly, and needs to be investigated together with the review of the API clients' scopes.
+  view: numeric count by reference month, detailed in a list with User, Event Date, Host Name, and Message. The API client identifier allows locating the responsible integration.
+last_reviewed: '2026-10-16'

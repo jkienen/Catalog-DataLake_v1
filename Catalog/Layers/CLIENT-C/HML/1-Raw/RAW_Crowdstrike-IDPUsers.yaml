@@ -1,0 +1,128 @@
+id: RAW_Crowdstrike-IDPUsers
+layer: raw
+platform: Crowdstrike
+endpoint: |-
+  (Identity Protection Users - GraphQL)
+  - POST /identity-protection/combined/graphql/v1
+description: |-
+  Obtains the Identity Protection user accounts, joining the Active Directory account and the Entra ID account, including identification and email, department, job title and OU, roles and privileges, account state and password attributes, groups it belongs to, associated machines, last activity, risk score and risk factors.
+load_type: Full
+frequency: Weekly
+volume_per_frequency: "?"
+execution_schedule: Sundays at 01:00 AM and on the 1st of the month at 01:00 AM
+extraction_notes: |-
+  The Data Science team will be responsible for running the routine that queries the described endpoint, applying the necessary filters, and storing the data in the Raw layer of the Data Lake.
+
+  Note: the query is made via GraphQL and paginated by cursor - each page returns up to 1000 entities, and the cursor of the last entity (endCursor) is sent in the next call while there is a next page (hasNextPage).
+filters: |-
+  Run the query with the following conditions:
+
+  - query:
+  "query ($after: Cursor) {
+    entities(types: [USER], archived: false, first: 1000, after: $after) {
+      nodes {
+        entityId primaryDisplayName riskScore riskScoreSeverity watched riskFactors { type score }
+        roles { type }
+        privileged: hasRole(type: AdminAccountRole)
+        ... on UserEntity { emailAddresses mostRecentActivity }
+        associations { bindingType ... on OriginAssociation { entity { primaryDisplayName ... on EndpointEntity { hostName } } } }
+        accounts {
+          __typename
+          ... on ActiveDirectoryAccountDescriptor { domain ou department title enabled lockoutTime expirationTime samAccountName upn passwordAttributes { lastChange mayExpire } containingGroupIds flattenedContainingGroupIds }
+          ... on AzureSsoUserAccountDescriptor { department title enabled dataSourceLoginIdentifier }
+        }
+      }
+      pageInfo { hasNextPage endCursor }
+    }
+  }"
+  - variables: {"after": endCursor of the previous page, null on the first call}
+storage_notes: |-
+  Storage will be done in the Raw layer, containing the data extracted directly from the described API endpoint, without any type of transformation, fully preserving the data.
+
+  The data is organized following the standard naming convention. Additionally, temporal segregation must be maintained by collection period, using the YYYY-MM-DD naming convention, according to the frequency defined by the business. The following pattern must be followed:
+
+  CYBER/Client-C/Raw/CROWDSTRIKE/YYYY-MM-DD/IDPUsers.json
+
+  This organization ensures temporal traceability, ingestion standardization, and ease of auditing the protected server inventory data.
+sample_output: |-
+  {
+      "entityId": "2b3c4d5e-6f7a-4b8c-9d0e-1f2a3b4c5d6e",
+      "primaryDisplayName": "JOHN DOE",
+      "riskScore": 0.4,
+      "riskScoreSeverity": "NORMAL",
+      "watched": true,
+      "riskFactors": [
+          {
+              "type": "WATCHED",
+              "score": 0.4
+          }
+      ],
+      "roles": [
+          {
+              "type": "AzureApplicationPrivilegesRole"
+          },
+          {
+              "type": "AzureGlobalPrivilegesRole"
+          },
+          {
+              "type": "AzureAccessPrivilegesRole"
+          },
+          {
+              "type": "AzureCredentialsPrivilegesRole"
+          },
+          {
+              "type": "HumanUserAccountRole"
+          }
+      ],
+      "privileged": true,
+      "emailAddresses": [
+          "john.doe@companyx.com.br"
+      ],
+      "mostRecentActivity": "2026-09-28T13:02:40.562Z",
+      "associations": [
+          {
+              "bindingType": "MANAGE"
+          },
+          {
+              "bindingType": "OWNERSHIP",
+              "entity": {
+                  "primaryDisplayName": "ABC-1XY23Z4",
+                  "hostName": "abc-1xy23z4.corp-companyx.com.br"
+              }
+          }
+      ],
+      "accounts": [
+          {
+              "__typename": "ActiveDirectoryAccountDescriptor",
+              "domain": "CORP-COMPANYX.COM.BR",
+              "ou": "corp-companyx.com.br/COMPANYX/UNITS/STATE/CITY/DIGITAL INNOVATION DIRECTORATE/TECHNOLOGY SOLUTIONS DEPARTMENT/IT INFRASTRUCTURE DEPARTMENT/USER",
+              "department": "IT USER SUPPORT",
+              "title": "IT SERVICE AND SUPPORT COORDINATOR",
+              "enabled": true,
+              "lockoutTime": null,
+              "expirationTime": null,
+              "samAccountName": "john.doe",
+              "upn": "john.doe@companyx.com.br",
+              "passwordAttributes": {
+                  "lastChange": "2026-09-25T12:52:47.116Z",
+                  "mayExpire": true
+              },
+              "containingGroupIds": [
+                  "3c4d5e6f-7a8b-4c9d-8e0f-1a2b3c4d5e6f"
+              ],
+              "flattenedContainingGroupIds": [
+                  "3c4d5e6f-7a8b-4c9d-8e0f-1a2b3c4d5e6f"
+              ]
+          },
+          {
+              "__typename": "AzureSsoUserAccountDescriptor",
+              "department": "IT USER SUPPORT",
+              "title": "IT SERVICE AND SUPPORT COORDINATOR",
+              "enabled": true,
+              "dataSourceLoginIdentifier": "john.doe@companyx.com.br"
+          }
+      ]
+  }
+owner: "Cyber Security Team"
+source_repo: "CYBER__HealthIDP"
+last_reviewed: '2026-09-28'

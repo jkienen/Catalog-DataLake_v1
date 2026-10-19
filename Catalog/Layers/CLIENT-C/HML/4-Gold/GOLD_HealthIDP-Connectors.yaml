@@ -1,0 +1,19 @@
+id: GOLD_HealthIDP-Connectors
+layer: gold
+project: IDP Health Check Report
+sources_silver:
+- SILVER_HealthIDP-Connectors
+sources_audit: []
+description: |-
+  The Gold layer consolidates the data from the Silver layer into indicators ready for analytical and executive consumption.
+
+  All indicators must be generated per client, department group, and/or department.
+
+  The generated indicators are:
+kpis:
+- title: Number of connectors in error
+  calculation: count of distinct Connector values with Status equal to Error.
+  filters: null
+  reason: a connector in error cuts the integration between Identity Protection and the identity or MFA provider. Without it, cloud accounts stop being synchronized, or the policy rules that require MFA cannot challenge the user. It is the kind of failure the console does not highlight, such as an expired application credential, and it can last for months. The expected value is zero, and each connector in this list is an immediate action.
+  view: numeric count by reference month, detailed in a list with Connector, Category, Error Status, Error Message, and Error Last Seen. The error message already indicates the fix, for example an expired secret or a revoked permission.
+last_reviewed: '2026-09-28'

@@ -1,0 +1,46 @@
+id: RAW_Crowdstrike-IDPExclusionChanges
+layer: raw
+platform: Crowdstrike
+endpoint: |-
+  (Identity Protection Exclusion Changes - GraphQL Timeline)
+  - POST /identity-protection/combined/graphql/v1
+description: |-
+  Obtains the history of changes to Identity Protection detection exclusions recorded in the timeline, including the affected detection pattern, the date of each change and the user who made it.
+load_type: Full
+frequency: Weekly
+volume_per_frequency: "?"
+execution_schedule: Sundays at 01:00 AM and on the 1st of the month at 01:00 AM
+extraction_notes: |-
+  The Data Science team will be responsible for running the routine that queries the described endpoint, applying the necessary filters, and storing the data in the Raw layer of the Data Lake.
+
+  Note: the API does not expose the content of the detection exclusions, only the change events - that is why the query reads the entire timeline since 2020-01-01, via GraphQL, paginated by cursor in batches of 1000 events, from newest to oldest.
+filters: |-
+  Run the query with the following conditions:
+
+  - query:
+  "query ($start: DateTimeInput, $after: Cursor) {
+    timeline(types: [ALERT_EXCEPTION_MODIFIED], startTime: $start, first: 1000, after: $after, sortOrder: DESCENDING) {
+      nodes { timestamp ... on TimelineAlertExceptionModifiedEvent { patternId systemUser { displayName } } }
+      pageInfo { hasNextPage endCursor }
+    }
+  }"
+  - variables: {"start": "2020-01-01T00:00:00Z", "after": endCursor of the previous page, null on the first call}
+storage_notes: |-
+  Storage will be done in the Raw layer, containing the data extracted directly from the described API endpoint, without any type of transformation, fully preserving the data.
+
+  The data is organized following the standard naming convention. Additionally, temporal segregation must be maintained by collection period, using the YYYY-MM-DD naming convention, according to the frequency defined by the business. The following pattern must be followed:
+
+  CYBER/Client-C/Raw/CROWDSTRIKE/YYYY-MM-DD/IDPExclusionChanges.json
+
+  This organization ensures temporal traceability, ingestion standardization, and ease of auditing the protected server inventory data.
+sample_output: |-
+  {
+      "timestamp": "2026-09-16T13:20:27.493Z",
+      "patternId": 51127,
+      "systemUser": {
+          "displayName": "user1.exampledemo@corp-companyx.com.br"
+      }
+  }
+owner: "Cyber Security Team"
+source_repo: "CYBER__HealthIDP"
+last_reviewed: '2026-09-28'

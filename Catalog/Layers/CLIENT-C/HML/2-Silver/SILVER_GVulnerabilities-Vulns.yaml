@@ -1,0 +1,125 @@
+id: SILVER_GVulnerabilities-Vulns
+layer: silver
+project: Vulnerability Management
+sources_raw:
+- RAW_Crowdstrike-Vulns
+sources_silver: []
+generates_audits: NA
+execution_schedule: Sundays at 02:00 AM and on the 1st of the month at 02:00 AM
+filters: NA
+pipeline: |-
+  The Data Science team will be responsible for retrieving the raw data from the Raw layer and structuring it as shown in the next step.
+
+  Severity, ExPRT Rating, Vuln State and Solution Type:
+
+  API enumerated values converted into readable text: the words are separated by spaces and written with an initial capital letter, keeping the acronyms KB and CPE in uppercase (for example, VERSION_BASED becomes Version Based).
+
+  Vuln Age-in-days:
+
+  Number of days between the First Seen date and the routine's execution date.
+
+  Vuln Family, Vuln Vendor, Vuln Source and Adversaries:
+
+  Distinct values of the source list - CVE types, vendors of the affected applications, data providers and associated adversaries -, joined by "; ". When the list is empty, the column receives "-".
+
+  Vuln Resume:
+
+  CVE description with the line breaks and repeated spaces replaced by a single space.
+
+  Vuln Solution, Solution Type and Solution Reference:
+
+  Obtained from the remediations marked as recommended for each affected application - the action, type and reference of each one -, with the distinct values joined by "; ". The minimum remediations are not included. Within the file, Vuln Solution and Solution Reference values that differ only in letter case are unified into the spelling with the most uppercase letters. When there is no recommended remediation, the column receives "-".
+
+  Vuln Product:
+
+  Product and version of each affected application, with the distinct values joined by "; ". Within the file, values that differ only in letter case are unified into the spelling with the most uppercase letters.
+
+  Risk State:
+
+  Receives "None" when the vulnerability is not suppressed; otherwise, the suppression reason converted into readable text.
+
+  First Seen:
+
+  Date of the vulnerability's first detection, converted from UTC to local time (UTC-3) in the YYYY-MM-DD format.
+
+  CVE Published and CISA Due Date:
+
+  CVE publication day and CISA KEV remediation due date, in the YYYY-MM-DD format, without time zone conversion. When they do not exist, they receive "-".
+
+  Remediation Level:
+
+  CVSS remediation level translated: O becomes Official Fix, T becomes Temporary Fix, W becomes Workaround and U becomes Unavailable. Other values receive "-".
+
+  Exploit Available and Exploit Maturity:
+
+  Derived from the Spotlight exploitation status. Exploit Maturity translates 0 into Unproven, 30 into Available, 60 into Easily Accessible and 90 into Actively Used (other values receive "-"); Exploit Available is true when the status is 30 or higher.
+
+  On CISA KEV:
+
+  Indicates whether the CVE is on the CISA KEV list; false when the information does not exist.
+
+  Item: CISA Due Date:
+
+  Receives "-" when the CVE is not on the CISA KEV. For those that are, it receives "Attention" when the CISA due date is earlier than the execution date - or when no due date is provided - and "Ok" otherwise.
+
+  Reference Month, Reference Year and Reference Date:
+
+  Month, year and date of the routine's execution.
+
+  Other columns:
+
+  Copied from the source record; when the field does not exist, they receive "-".
+structure_notes: |-
+  The data sources will be organized into the columns Severity, Host Id, Host Name, Host Ip, Host Type, Host Platform, Host System, Internet Exposure, Vuln Age-in-days, Vuln Group, Vuln Id, Vuln Name, Vuln Family, Vuln Resume, Vuln Solution, Solution Type, Solution Reference, Vuln Product, Vuln Vendor, Vuln CVEs, Vuln Source, Vuln State, Risk State, First Seen, CVE Published, CVSS Score, ExPRT Rating, Remediation Level, Exploit Available, Exploit Maturity, Exploitability Score, Adversaries, On CISA KEV, CISA Due Date, Item: CISA Due Date, Reference Month, Reference Year, Reference Date, ensuring consistency, asset traceability, and data readiness for the indicators layer.
+storage_notes: |-
+  Storage will be done in the Silver layer; the structured data will be kept ready for queries feeding the indicator calculations.
+
+  The data is organized following the standard naming convention. Additionally, temporal segregation must be maintained by collection period, using the YYYY-MM-DD naming convention, according to the frequency defined by the business. The following pattern must be followed:
+
+  CYBER/Client-C/Silver/GVulnerabilities/YYYY-MM-DD/Vulns.json
+
+  This organization ensures temporal traceability, ingestion standardization, and ease of auditing the data.
+sample_output: |-
+  {
+    "Severity": "High",
+    "Host Id": "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6",
+    "Host Name": "SRV-ACME-APP0001",
+    "Host Ip": "172.16.0.10",
+    "Host Type": "Server",
+    "Host Platform": "Linux",
+    "Host System": "Oracle Linux 9.6",
+    "Internet Exposure": "No",
+    "Vuln Age-in-days": 149,
+    "Vuln Group": "CVE-2026-31431",
+    "Vuln Id": "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6_0f1e2d3c4b5a69788796a5b4c3d2e1f0",
+    "Vuln Name": "Copy Fail",
+    "Vuln Family": "Vulnerability",
+    "Vuln Resume": "In the Linux kernel, the following vulnerability has been resolved: crypto: algif_aead - Revert to operating out-of-place This mostly reverts commit 72548b093ee3 except for the copying of the associated data. There is no benefit in operating in-place in algif_aead since the source and destination come from different mappings. Get rid of all the complexity added for in-place operation and just copy the AD directly.",
+    "Vuln Solution": "Update oracle kernel-uek to version 0:6.12.0-206.104.4.4.el9uek or newer",
+    "Solution Type": "Version Based",
+    "Solution Reference": "0:6.12.0-206.104.4.4.el9uek",
+    "Vuln Product": "kernel-uek 5.15.0-312.187.5.el9uek",
+    "Vuln Vendor": "Oracle Linux",
+    "Vuln CVEs": "CVE-2026-31431",
+    "Vuln Source": "Falcon sensor",
+    "Vuln State": "Open",
+    "Risk State": "None",
+    "First Seen": "2026-05-05",
+    "CVE Published": "2026-04-22",
+    "CVSS Score": 7.8,
+    "ExPRT Rating": "Critical",
+    "Remediation Level": "Official Fix",
+    "Exploit Available": true,
+    "Exploit Maturity": "Actively Used",
+    "Exploitability Score": 1.8,
+    "Adversaries": "UMBRAL BISON",
+    "On CISA KEV": true,
+    "CISA Due Date": "2026-05-15",
+    "Item: CISA Due Date": "Attention",
+    "Reference Month": "10",
+    "Reference Year": "2026",
+    "Reference Date": "2026-10-01"
+  }
+owner: "Cyber Security Team"
+source_repo: "CYBER__RVulnerabilities"
+last_reviewed: '2026-10-01'

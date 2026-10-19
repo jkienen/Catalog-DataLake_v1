@@ -1,0 +1,113 @@
+id: SILVER_GVulnerabilities-VulnsExpired
+layer: silver
+project: Vulnerability Management
+sources_raw:
+- RAW_Crowdstrike-VulnsExpired
+sources_silver: []
+generates_audits: NA
+execution_schedule: 1st of the month at 02:00 AM
+filters: NA
+pipeline: |-
+  The Data Science team will be responsible for retrieving the raw data from the Raw layer and structuring it as shown in the next step.
+
+  Severity, ExPRT Rating and Vuln State:
+
+  API enumerated values converted into readable text: the words are separated by spaces and written with an initial capital letter, keeping the acronyms KB and CPE in uppercase (for example, VERSION_BASED becomes Version Based).
+
+  Vuln Family, Vuln Vendor, Vuln Source and Adversaries:
+
+  Distinct values of the source list - CVE types, vendors of the affected applications, data providers and associated adversaries -, joined by "; ". When the list is empty, the column receives "-".
+
+  Vuln Resume:
+
+  CVE description with the line breaks and repeated spaces replaced by a single space.
+
+  Vuln Product:
+
+  Product and version of each affected application, with the distinct values joined by "; ". Within the file, values that differ only in letter case are unified into the spelling with the most uppercase letters.
+
+  First Seen:
+
+  Date of the vulnerability's first detection, converted from UTC to local time (UTC-3) in the YYYY-MM-DD format.
+
+  Last Expired:
+
+  Date of the record's last update, taken as the expiration date, converted from UTC to local time (UTC-3) in the YYYY-MM-DD format.
+
+  Host Last Seen:
+
+  Last time the host was seen, converted from UTC to local time (UTC-3) in the YYYY-MM-DD format.
+
+  CVE Published and CISA Due Date:
+
+  CVE publication day and CISA KEV remediation due date, in the YYYY-MM-DD format, without time zone conversion. When they do not exist, they receive "-".
+
+  Remediation Level:
+
+  CVSS remediation level translated: O becomes Official Fix, T becomes Temporary Fix, W becomes Workaround and U becomes Unavailable. Other values receive "-".
+
+  Exploit Available and Exploit Maturity:
+
+  Derived from the Spotlight exploitation status. Exploit Maturity translates 0 into Unproven, 30 into Available, 60 into Easily Accessible and 90 into Actively Used (other values receive "-"); Exploit Available is true when the status is 30 or higher.
+
+  On CISA KEV:
+
+  Indicates whether the CVE is on the CISA KEV list; false when the information does not exist.
+
+  Reference Month, Reference Year and Reference Date:
+
+  Month, year and date of the routine's execution.
+
+  Other columns:
+
+  Copied from the source record; when the field does not exist, they receive "-".
+structure_notes: |-
+  The data sources will be organized into the columns Severity, Host Id, Host Name, Host Ip, Host Type, Host Platform, Host System, Internet Exposure, Vuln Group, Vuln Id, Vuln Name, Vuln Family, Vuln Resume, Vuln Product, Vuln Vendor, Vuln CVEs, Vuln Source, Vuln State, First Seen, Last Expired, Host Last Seen, CVE Published, CVSS Score, ExPRT Rating, Remediation Level, Exploit Available, Exploit Maturity, Exploitability Score, Adversaries, On CISA KEV, CISA Due Date, Reference Month, Reference Year, Reference Date, ensuring consistency, asset traceability, and data readiness for the indicators layer.
+storage_notes: |-
+  Storage will be done in the Silver layer; the structured data will be kept ready for queries feeding the indicator calculations.
+
+  The data is organized following the standard naming convention. Additionally, temporal segregation must be maintained by collection period, using the YYYY-MM-DD naming convention, according to the frequency defined by the business. The following pattern must be followed:
+
+  CYBER/Client-C/Silver/GVulnerabilities/YYYY-MM-DD/VulnsExpired.json
+
+  This organization ensures temporal traceability, ingestion standardization, and ease of auditing the data.
+sample_output: |-
+  {
+    "Severity": "High",
+    "Host Id": "0a1b2c3d4e5f60718293a4b5c6d7e8f9",
+    "Host Name": "WS001357",
+    "Host Ip": "172.16.0.13",
+    "Host Type": "Workstation",
+    "Host Platform": "Windows",
+    "Host System": "Windows 11",
+    "Internet Exposure": "No",
+    "Vuln Group": "CVE-2026-68820",
+    "Vuln Id": "0a1b2c3d4e5f60718293a4b5c6d7e8f9_4d5e6f708192a3b4c5d6e7f8091a2b3c",
+    "Vuln Name": "-",
+    "Vuln Family": "Vulnerability",
+    "Vuln Resume": "Use after free in Windows Ancillary Function Driver for WinSock allows an authorized attacker to elevate privileges locally.",
+    "Vuln Product": "Windows 11 25H2",
+    "Vuln Vendor": "Microsoft",
+    "Vuln CVEs": "CVE-2026-68820",
+    "Vuln Source": "Falcon sensor",
+    "Vuln State": "Expired",
+    "First Seen": "2026-08-13",
+    "Last Expired": "2026-09-25",
+    "Host Last Seen": "2026-08-10",
+    "CVE Published": "2026-08-11",
+    "CVSS Score": 7.0,
+    "ExPRT Rating": "Critical",
+    "Remediation Level": "Official Fix",
+    "Exploit Available": true,
+    "Exploit Maturity": "Actively Used",
+    "Exploitability Score": 1.0,
+    "Adversaries": "LABYRINTH CHOLLIMA",
+    "On CISA KEV": true,
+    "CISA Due Date": "2026-08-25",
+    "Reference Month": "10",
+    "Reference Year": "2026",
+    "Reference Date": "2026-10-01"
+  }
+owner: "Cyber Security Team"
+source_repo: "CYBER__RVulnerabilities"
+last_reviewed: '2026-10-01'

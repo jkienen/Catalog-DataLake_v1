@@ -1,0 +1,38 @@
+id: GOLD_GVulnerabilities-VulnsExpired
+layer: gold
+project: Vulnerability Management
+sources_silver:
+- SILVER_GVulnerabilities-VulnsExpired
+- SILVER_GVulnerabilities-VulnsFixed
+sources_audit: []
+description: |-
+  The Gold layer consolidates the data from the Silver layer into indicators ready for analytical and executive consumption.
+
+  All indicators must be generated per client, department group, and/or department.
+
+  The generated indicators are:
+kpis:
+- title: Exploitable vulnerabilities that expired without a fix
+  calculation: count of Vuln Id with On CISA KEV equal to true or Exploit Available equal to true, grouped by Severity.
+  filters: null
+  reason: an expired vulnerability left the active count without having been fixed, only because the host stopped reporting or was reinstalled. When it has an available exploit or is on the CISA KEV, the risk was real at the moment it disappeared from the reports. If the host still exists without a sensor, the flaw remains open and is now invisible, and each item here is a host that needs to be located before someone else finds it first.
+  view: numeric count by expiration month (Last Expired) and by Severity, detailed in a list with Host Name, Host Type, Host Last Seen, Vuln CVEs, Vuln Name, Exploit Maturity and On CISA KEV. Host Last Seen shows how long the host has been silent, and separates what has just disappeared from what should already have been investigated.
+
+- title: Hosts that stopped reporting
+  calculation: count of distinct Host Id, grouped by Host Type and by Host Platform.
+  filters: null
+  reason: each host that takes vulnerabilities with it when it expires was either decommissioned, which is legitimate, or lost its sensor, which is a blind spot for detection and for vulnerability management at the same time. The indicator highlights these hosts so that the difference between the two cases can be verified. Servers weigh more than workstations, because a server without a sensor usually remains in production and exposed.
+  view: numeric count by expiration month (Last Expired), by Host Type and by Host Platform, detailed in a list with Host Name, Host Ip, Host System, Host Last Seen and the number of expired vulnerabilities of each host. The number per host shows which machines left carrying the most risk.
+
+- title: Proportion of expired over fixed
+  calculation: count of Vuln Id from SILVER_GVulnerabilities-VulnsExpired divided by the sum of that count and the count of Vuln Id from SILVER_GVulnerabilities-VulnsFixed on the same Reference Date, grouped by Severity. It is the only indicator in this file that cross-references the two Silvers.
+  filters: null
+  reason: active vulnerabilities fall for two reasons, fix or expiration, and only the first one actually reduces the risk. The proportion shows how much of the month's reduction came from hosts that disappeared instead of fixed vulnerabilities. A high proportion at high severities means that the apparent improvement in the backlog does not correspond to remediation work, and that the active numbers need to be read with this caveat.
+  view: percentage by reference month and by Severity, as a time series, alongside the absolute counts of expired and fixed vulnerabilities. The counts alongside the percentage avoid reading a high proportion over few records as a problem.
+
+- title: Vulnerabilities expired in the month by severity
+  calculation: count of Vuln Id grouped by Severity.
+  filters: null
+  reason: it is the outflow without a fix, which completes the reading of the active and fixed vulnerabilities. Without it, a drop in active vulnerabilities may be attributed to the remediation team when it actually came from reinstalled or shut-down hosts. A volume that grows from one month to the next indicates a change in the fleet, such as a migration or a mass loss of sensors, that needs to be explained.
+  view: numeric count by expiration month (Last Expired) and by Severity, as a time series, detailed in a list with Host Name, Host Type, Vuln CVEs, Vuln Name, Last Expired and Host Last Seen.
+last_reviewed: '2026-10-01'

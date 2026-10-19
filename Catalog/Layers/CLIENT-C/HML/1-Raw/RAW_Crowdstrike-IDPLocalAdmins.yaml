@@ -1,0 +1,59 @@
+id: RAW_Crowdstrike-IDPLocalAdmins
+layer: raw
+platform: Crowdstrike
+endpoint: |-
+  (Identity Protection Local Admins - GraphQL)
+  - POST /identity-protection/combined/graphql/v1
+description: |-
+  Obtains the endpoints that have domain local administrators registered by the Falcon sensor, including the machine identification and its local administrator associations with the domain user or group that holds the privilege.
+load_type: Full
+frequency: Weekly
+volume_per_frequency: "?"
+execution_schedule: Sundays at 01:00 AM and on the 1st of the month at 01:00 AM
+extraction_notes: |-
+  The Data Science team will be responsible for running the routine that queries the described endpoint, applying the necessary filters, and storing the data in the Raw layer of the Data Lake.
+
+  Note: the query is made via GraphQL and paginated by cursor - each page returns up to 500 entities, and the cursor of the last entity (endCursor) is sent in the next call while there is a next page (hasNextPage).
+filters: |-
+  Run the query with the following conditions:
+
+  - query:
+  "query ($after: Cursor) {
+    entities(types: [ENDPOINT], archived: false, associationBindingTypes: [LOCAL_ADMINISTRATOR], first: 500, after: $after) {
+      nodes {
+        primaryDisplayName ... on EndpointEntity { hostName }
+        associations { bindingType ... on LocalAdminDomainEntityAssociation { entity { entityId type primaryDisplayName } } }
+      }
+      pageInfo { hasNextPage endCursor }
+    }
+  }"
+  - variables: {"after": endCursor of the previous page, null on the first call}
+storage_notes: |-
+  Storage will be done in the Raw layer, containing the data extracted directly from the described API endpoint, without any type of transformation, fully preserving the data.
+
+  The data is organized following the standard naming convention. Additionally, temporal segregation must be maintained by collection period, using the YYYY-MM-DD naming convention, according to the frequency defined by the business. The following pattern must be followed:
+
+  CYBER/Client-C/Raw/CROWDSTRIKE/YYYY-MM-DD/IDPLocalAdmins.json
+
+  This organization ensures temporal traceability, ingestion standardization, and ease of auditing the protected server inventory data.
+sample_output: |-
+  {
+      "primaryDisplayName": "SRV-APP-ABC-GP2",
+      "hostName": "srv-app-abc-gp2.corp-companyx.com.br",
+      "associations": [
+          {
+              "bindingType": "LOCAL_ADMINISTRATOR",
+              "entity": {
+                  "entityId": "4d5e6f7a-8b9c-4d0e-9f1a-2b3c4d5e6f7a",
+                  "type": "ENTITY_CONTAINER",
+                  "primaryDisplayName": "Domain Admins"
+              }
+          },
+          {
+              "bindingType": "LDAP_AUTHENTICATION"
+          }
+      ]
+  }
+owner: "Cyber Security Team"
+source_repo: "CYBER__HealthIDP"
+last_reviewed: '2026-09-28'

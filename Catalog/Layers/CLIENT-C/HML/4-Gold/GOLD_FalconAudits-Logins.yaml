@@ -1,0 +1,31 @@
+id: GOLD_FalconAudits-Logins
+layer: gold
+project: Tenant Audit (CrowdStrike)
+sources_silver:
+- SILVER_FalconAudits-Logins
+sources_audit: []
+description: |-
+  The Gold layer consolidates the data from the Silver layer into indicators ready for analytical and executive consumption.
+
+  All indicators must be generated per client, department group, and/or department.
+
+  The generated indicators are:
+kpis:
+- title: Total number of console accesses in the month
+  calculation: count of rows with Result equal to Success, broken down by Action.
+  filters: null
+  reason: it is the baseline for the access indicators and shows how the console is used, how many accesses come in through password and two-factor, how many through SSO, and how many times the MSSP team switches to the client's tenant. A sharp change in the volume or in the proportion between access types, such as password logins growing where the standard is SSO, points to an account outside the expected authentication flow.
+  view: numeric count by reference month and by Action, detailed in a list with Event Date, User, Action, Source IP, and City.
+
+- title: Users who accessed the console in the month
+  calculation: count of distinct User with Action equal to Login or SSO and Result equal to Success.
+  filters: null
+  reason: shows how many people actually use the console, and cross-referenced with the total number of registered users it reveals the extent of the access that exists without use. It is the complement of the inactive users indicator, measured by the month's behavior and not by the last login date.
+  view: numeric count by reference month, detailed in a list with User, the number of accesses in the month, and the date of the most recent access by Event Date.
+
+- title: Accesses from outside the expected country
+  calculation: count of rows with Country different from Brazil, broken down by Result.
+  filters: disregard the rows with Country equal to -, where the country was not identified.
+  reason: the team and the clients served operate in Brazil, so an access coming from another country is the most direct sign of a credential used by someone else, of a VPN outside the policy, or of a legitimate access while traveling that needs to be confirmed. A failed attempt counts as much as a successful one, because it also indicates someone from outside trying to get in, and the breakdown by result separates the completed access from the attempt. The expected value is zero, and each occurrence calls for confirmation with the user.
+  view: numeric count by reference month, split by Result, detailed in a list with Event Date, Event Time, User, Action, Result, Source IP, City, and Country.
+last_reviewed: '2026-10-16'

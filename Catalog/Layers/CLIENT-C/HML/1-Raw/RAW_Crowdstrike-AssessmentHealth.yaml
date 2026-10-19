@@ -1,0 +1,67 @@
+id: RAW_Crowdstrike-AssessmentHealth
+layer: raw
+platform: Crowdstrike
+endpoint: |-
+  (Zero Trust Assessment)
+  - GET /zero-trust-assessment/entities/assessments/v1
+description: |-
+  Obtains the security posture assessment (Zero Trust Assessment) of each host, including the sensor configuration, operating system, and overall scores, and the individual result of each sensor and operating system criterion evaluated.
+load_type: Full
+frequency: Weekly
+volume_per_frequency: "?"
+execution_schedule: Sundays at 01:30 AM and on the 1st of the month at 01:30 AM
+extraction_notes: |-
+  The Data Science team will be responsible for running the routine that queries the described endpoint, applying the necessary filters, and storing the data in the Raw layer of the Data Lake.
+
+  Note: the extraction happens in batches - the host ids (aid) obtained from the Devices dataset are sent in groups of up to 1000 per call.
+filters: |-
+  Run the query with the following conditions:
+
+  - ids: list of "Host Id" obtained from the Devices dataset, in batches of up to 1000
+storage_notes: |-
+  Storage will be done in the Raw layer, containing the data extracted directly from the described API endpoint, without any type of transformation, fully preserving the data.
+
+  The data is organized following the standard naming convention. Additionally, temporal segregation must be maintained by collection period, using the YYYY-MM-DD naming convention, according to the frequency defined by the business. The following pattern must be followed:
+
+  CYBER/Client-C/Raw/CROWDSTRIKE/YYYY-MM-DD/AssessmentHealth.json
+
+  This organization ensures temporal traceability, ingestion standardization, and ease of auditing the protected server inventory data.
+sample_output: |-
+  {
+      "aid": "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6",
+      "cid": "9f8e7d6c5b4a3928170615f4e3d2c1b0",
+      "system_serial_number": "AVNB12345678",
+      "event_platform": "Win",
+      "product_type_desc": "Workstation",
+      "modified_time": "2026-09-23T12:06:52Z",
+      "sensor_file_status": "not deployed",
+      "assessment": {
+          "sensor_config": 97,
+          "os": 92,
+          "overall": 96,
+          "version": "4.0.7"
+      },
+      "assessment_items": {
+          "os_signals": [
+              {
+                  "signal_id": "secure_boot_enabled",
+                  "signal_name": "Secure Boot",
+                  "group_name": "Windows 10",
+                  "criteria": "Secure boot: enabled",
+                  "meets_criteria": "no"
+              }
+          ],
+          "sensor_signals": [
+              {
+                  "signal_id": "in_full_functionality",
+                  "signal_name": "Reduced Functionality Mode",
+                  "group_name": "Sensor",
+                  "criteria": "Reduced Functionality Mode: disabled",
+                  "meets_criteria": "no"
+              }
+          ]
+      }
+  }
+owner: "Cyber Security Team"
+source_repo: "CYBER__HealthEDR"
+last_reviewed: '2026-09-28'

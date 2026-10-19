@@ -1,0 +1,214 @@
+id: RAW_Crowdstrike-IDPPolicyRules
+layer: raw
+platform: Crowdstrike
+endpoint: |-
+  (Identity Protection Policy Rules)
+  - GET /identity-protection/queries/policy-rules/v1
+  - GET /identity-protection/entities/policy-rules/v1
+description: |-
+  Obtains the Identity Protection policy rules (conditional access), including name, enablement and simulation state, the applied action (block, MFA and others) with its settings, the source, destination and activity conditions with the included and excluded options of each one, and the indicator and email notifications.
+load_type: Full
+frequency: Weekly
+volume_per_frequency: 38Kb
+execution_schedule: Sundays at 01:00 AM and on the 1st of the month at 01:00 AM
+extraction_notes: |-
+  The Data Science team will be responsible for running the routine that queries the described endpoint, applying the necessary filters, and storing the data in the Raw layer of the Data Lake.
+
+  Note: the extraction happens in two calls - the first returns, all at once, the ids of all registered rules, the second queries the full detail of each rule from those ids, in batches of up to 100.
+filters: |-
+  Run the query with the following conditions:
+
+  - ids: list of rule ids returned by the first call, in batches of up to 100
+storage_notes: |-
+  Storage will be done in the Raw layer, containing the data extracted directly from the described API endpoint, without any type of transformation, fully preserving the data.
+
+  The data is organized following the standard naming convention. Additionally, temporal segregation must be maintained by collection period, using the YYYY-MM-DD naming convention, according to the frequency defined by the business. The following pattern must be followed:
+
+  CYBER/Client-C/Raw/CROWDSTRIKE/YYYY-MM-DD/IDPPolicyRules.json
+
+  This organization ensures temporal traceability, ingestion standardization, and ease of auditing the protected server inventory data.
+sample_output: |-
+  {
+      "_id": "9e8d7c6b-5a4f-4e3d-8c2b-1a0f9e8d7c6b",
+      "name": "BLOCK - Access to the ADs of corp-companyx.com.br",
+      "templateId": null,
+      "enabled": false,
+      "simulationMode": true,
+      "ruleAction": {
+          "action": "BLOCK",
+          "globalProperties": {
+              "default": {
+                  "gracePeriodDuration": 120000,
+                  "gracePeriodScope": [
+                      "SOURCE_ENTITY",
+                      "SOURCE_ENDPOINT",
+                      "TARGET_ENTITY"
+                  ],
+                  "periodicityConfiguration": {
+                      "type": "ONCE_PER_SESSION",
+                      "duration": null
+                  },
+                  "external": false
+              },
+              "ALLOW": {
+                  "gracePeriodDuration": 60000,
+                  "gracePeriodScope": [
+                      "RULE",
+                      "SOURCE_ENTITY",
+                      "SOURCE_ENDPOINT",
+                      "TARGET_ENTITY"
+                  ]
+              },
+              "BLOCK": {
+                  "gracePeriodDuration": 60000,
+                  "gracePeriodScope": [
+                      "RULE",
+                      "SOURCE_ENTITY",
+                      "SOURCE_ENDPOINT",
+                      "TARGET_ENTITY"
+                  ]
+              },
+              "MFA": {
+                  "messageTemplates": {
+                      "sourceOnlyAuthentication": {
+                          "message": "It looks like you or a program on your behalf requested access to:\n\n${Source_Endpoint_Display_Name}\nIP Address: ${Source_Endpoint_IP}\n",
+                          "authorizerAdjustedMessage": "It looks like ${Source_Entity_Display_Name} or a program on their behalf requested access to:\n\n${Source_Endpoint_Display_Name}\nIP Address: ${Source_Endpoint_IP}\n"
+                      },
+                      "sourceAndTarget": {
+                          "message": "It looks like you or a program on your behalf requested access to ${Target_Service_Display_Name}\nFrom:\n\n${Source_Endpoint_Display_Name}\nIP Address: ${Source_Endpoint_IP}\n",
+                          "authorizerAdjustedMessage": "It looks like ${Source_Entity_Display_Name} or a program on their behalf requested access to ${Target_Service_Display_Name}\nFrom:\n\n${Source_Endpoint_Display_Name}\nIP Address: ${Source_Endpoint_IP}\n"
+                      },
+                      "federatedAuthentication": {
+                          "message": "${Source_Entity_Display_Name}'s credentials were used on:\n\n${Source_Endpoint_Display_Name}\nIP Address: ${Source_Endpoint_IP}\n",
+                          "authorizerAdjustedMessage": "You're the authorizer of ${SOURCE_ENTITY_DISPLAY_NAME}. ${Source_Entity_Display_Name}'s credentials were used on:\n\n${Source_Endpoint_Display_Name}\nIP Address: ${Source_Endpoint_IP}\n"
+                      }
+                  },
+                  "failModeConfiguration": null,
+                  "mfaConnectorDescriptors": [
+                      {
+                          "connectorType": "GOOGLE_AUTH"
+                      }
+                  ],
+                  "mfaFactorTypes": [
+                      "OTP"
+                  ],
+                  "mfaAssuranceLevel": null,
+                  "showMfaUi": true,
+                  "messageApplication": null,
+                  "sendMfaUiLink": false
+              },
+              "FORCE_PASSWORD_CHANGE": {
+                  "gracePeriodDuration": 120000,
+                  "gracePeriodScope": [
+                      "SOURCE_ENTITY"
+                  ]
+              },
+              "ADD_TO_WATCH_LIST": {
+                  "entityType": "SourceEntityIdValueProvider",
+                  "gracePeriodDuration": 120000,
+                  "gracePeriodScope": [
+                      "SOURCE_ENTITY"
+                  ]
+              },
+              "APPLY_SSO_POLICY": {
+                  "connectorType": null,
+                  "oktaGroupId": null,
+                  "unapplyWhenResolved": false,
+                  "gracePeriodDuration": 1800000,
+                  "gracePeriodScope": [
+                      "SOURCE_ENTITY"
+                  ]
+              }
+          }
+      },
+      "ruleConditions": [
+          {
+              "trigger": {
+                  "access": true
+              }
+          },
+          {
+              "destination": {
+                  "entityId": {
+                      "includedMode": "ANY",
+                      "excludedMode": "ANY",
+                      "options": {
+                          "4a5b6c7d-8e9f-4a0b-9c1d-2e3f4a5b6c7d": "INCLUDED",
+                          "5b6c7d8e-9f0a-4b1c-8d2e-3f4a5b6c7d8e": "INCLUDED"
+                      }
+                  }
+              }
+          },
+          {
+              "sourceUser": {
+                  "groupMembership": {
+                      "includedMode": "ANY",
+                      "excludedMode": "ANY",
+                      "options": {
+                          "6c7d8e9f-0a1b-4c2d-9e3f-4a5b6c7d8e9f": "EXCLUDED"
+                      }
+                  }
+              }
+          },
+          {
+              "activity": {
+                  "accessType": {
+                      "includedMode": "ANY",
+                      "excludedMode": "ANY",
+                      "options": {
+                          "REMOTE_DESKTOP": "INCLUDED"
+                      }
+                  }
+              }
+          },
+          {
+              "sourceUser": {
+                  "accountType": {
+                      "includedMode": "ANY",
+                      "excludedMode": "ANY",
+                      "options": {
+                          "HUMAN": "INCLUDED",
+                          "PROGRAMMATIC": "INCLUDED"
+                      }
+                  }
+              }
+          },
+          {
+              "sourceUser": {
+                  "attributes": {
+                      "includedMode": "ANY",
+                      "excludedMode": "ANY",
+                      "options": {
+                          "IN_LEARNING": "EXCLUDED"
+                      }
+                  }
+              }
+          }
+      ],
+      "indicatorNotification": {
+          "enabled": false,
+          "type": "INDICATOR",
+          "properties": {
+              "severity": "LOW"
+          }
+      },
+      "emailNotification": {
+          "enabled": false,
+          "type": "EMAIL",
+          "properties": {
+              "subject": "CrowdStrike Identity Protection Policy Notification - Rule '${rule_name}' matched",
+              "messageTemplate": "<html>\nA security rule matched. Here are the details:<br><br>\n&ensp;<b>Time:</b> &nbsp; ${TIMESTAMP} <br>\n&ensp;<b>Rule:</b> &nbsp; ${rule_name} <br>\n&ensp;<b>Action:</b> &nbsp; ${action_name} <br>\n&ensp;<b>Status:</b> &nbsp; ${action_result} <br>\n&ensp;<b>User:</b>&nbsp; ${SOURCE_ENTITY_DISPLAY_NAME} <br>\n&ensp;<b>Source:</b>&nbsp; ${SOURCE_ENDPOINT_DISPLAY_NAME} <br>\n&ensp;<b>Source IP Address:</b>&nbsp; ${SOURCE_ENDPOINT_IP} <br>\n&ensp;<b>Destination:</b> &nbsp; ${TARGET_SERVICE_DISPLAY_NAME} <br>\n\n<br><br>\nIf you no longer want to receive rule match email notifications, from Enforce go to Policy rules>Edit rule>Advanced. Deselect notify from the rule receiving notifications.\n</html>\n",
+              "gracePeriodDuration": 120000,
+              "gracePeriodScope": [
+                  "RULE",
+                  "SOURCE_ENTITY",
+                  "SOURCE_ENDPOINT",
+                  "TARGET_ENTITY"
+              ]
+          }
+      },
+      "recommendationId": null
+  }
+owner: "Cyber Security Team"
+source_repo: "CYBER__HealthIDP"
+last_reviewed: '2026-10-06'

@@ -1,0 +1,61 @@
+id: RAW_Crowdstrike-IDPSensors
+layer: raw
+platform: Crowdstrike
+endpoint: |-
+  (Identity Protection Sensors)
+  - GET /identity-protection/queries/devices/v1
+  - POST /identity-protection/entities/devices/GET/v1
+description: |-
+  Obtains the Identity Protection sensors installed on the domain controllers, including host and domain identification, operating system and agent versions, applied IDP policy, configuration mode of each protocol (Kerberos, NTLM, LDAP, LDAPS, SMB and RDP), sensor status with its causes and the last heartbeat.
+load_type: Full
+frequency: Weekly
+volume_per_frequency: "?"
+execution_schedule: Sundays at 01:00 AM and on the 1st of the month at 01:00 AM
+extraction_notes: |-
+  The Data Science team will be responsible for running the routine that queries the described endpoint, applying the necessary filters, and storing the data in the Raw layer of the Data Lake.
+
+  Note: the extraction happens in two calls - the first returns only the ids of the sensors, paginated in batches of 200, the second queries the full detail of each sensor from those ids.
+filters: |-
+  Run the query with the following conditions:
+
+  - limit: 200
+  - offset: number of ids already obtained in the previous pages (pagination)
+  - ids: list of sensor ids returned by the first call
+storage_notes: |-
+  Storage will be done in the Raw layer, containing the data extracted directly from the described API endpoint, without any type of transformation, fully preserving the data.
+
+  The data is organized following the standard naming convention. Additionally, temporal segregation must be maintained by collection period, using the YYYY-MM-DD naming convention, according to the frequency defined by the business. The following pattern must be followed:
+
+  CYBER/Client-C/Raw/CROWDSTRIKE/YYYY-MM-DD/IDPSensors.json
+
+  This organization ensures temporal traceability, ingestion standardization, and ease of auditing the protected server inventory data.
+sample_output: |-
+  {
+      "device_id": "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6",
+      "cid": "9f8e7d6c5b4a3928170615f4e3d2c1b0",
+      "hostname": "AD-ST1-XYZ-DC01",
+      "local_ip": "10.20.30.4",
+      "os_version": "Windows Server 2025",
+      "machine_domain": "COMPANYX.CLOUD",
+      "agent_version": "7.39.21113.0",
+      "idp_policy_id": "0a1b2c3d4e5f60718293a4b5c6d7e8f9",
+      "idp_policy_name": "Custom: Detection and Enforcement",
+      "ti_enabled": "true",
+      "new_enforcement_mode": "false",
+      "kerberos_config": "enforcement",
+      "ntlm_config": "enforcement",
+      "rdp_to_dc_config": "on",
+      "ldap_config": "enforcement",
+      "ldaps_config": "on",
+      "smb_to_dc_config": "enforcement",
+      "directory_auditing": "true",
+      "group_policy_object": "false",
+      "status": "status.limited-func",
+      "status_causes": [
+          "vmware-tools-nsx"
+      ],
+      "heartbeat_time": 1790609175000
+  }
+owner: "Cyber Security Team"
+source_repo: "CYBER__HealthIDP"
+last_reviewed: '2026-09-28'

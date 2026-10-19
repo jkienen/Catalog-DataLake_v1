@@ -1,0 +1,37 @@
+id: GOLD_HealthIDP-PolicyRules
+layer: gold
+project: IDP Health Check Report
+sources_silver:
+- SILVER_HealthIDP-PolicyRules
+sources_audit: []
+description: |-
+  The Gold layer consolidates the data from the Silver layer into indicators ready for analytical and executive consumption.
+
+  All indicators must be generated per client, department group, and/or department.
+
+  The generated indicators are:
+kpis:
+- title: Total number of active rules
+  calculation: count of distinct Rule Id values with Enabled true and Simulation Mode false.
+  filters: null
+  reason: these are the rules that actually act on access, blocking or requiring MFA at the moment of authentication. It is the real size of the domain's conditional access protection, not the number of registered rules, because a rule only starts protecting when it is active and out of simulation. A drop between periods indicates a rule that was disabled or returned to simulation, which reopens the path it closed and needs a recorded justification.
+  view: numeric count by reference month, detailed in a list with Rule Name, Action, Access Type, Source User Type, and Destination Roles. This shows what each rule in effect blocks or challenges, and for whom.
+
+- title: Total number of active rules in simulation
+  calculation: count of distinct Rule Id values with Enabled true and Simulation Mode true.
+  filters: null
+  reason: a rule in simulation records what it would do, but does not block or require MFA. It is the right stage to measure the impact before enforcing, but a rule that remains in simulation gives the impression of control without protecting anything. The number shows how many rules are in this intermediate state and need to be reviewed to move to enforcement mode or be discarded.
+  view: numeric count by reference month, detailed in a list with Rule Name, Action, Access Type, Source User Type, and Indicator Notification. Tracked month by month, it shows whether the same rules remain in simulation for several cycles.
+
+- title: Total number of inactive rules
+  calculation: count of distinct Rule Id values with Enabled false.
+  filters: null
+  reason: an inactive rule does not act even in simulation, so it produces no block, MFA or record for analysis. Inactive rules accumulate forgotten configuration, such as a policy tested and abandoned or a control turned off during an incident and never turned back on. The total supports the periodic review that decides which should be reactivated and which should be removed.
+  view: numeric count by reference month, detailed in a list with Rule Name, Action, Access Type, Source User Type, and Simulation Mode. The simulation column shows in which mode the rule would work again if it were reactivated.
+
+- title: Matches in the last 30 days by rule
+  calculation: sum of Matches (30d) grouped by Rule Name.
+  filters: disregard rules with Matches (30d) equal to "-", where the match history query failed.
+  reason: the number of matches shows which rules are actually acting on access and with what intensity. A rule that fires a lot may be stopping a real abuse attempt, such as a service account being used for remote access, or hindering a legitimate operation that needs an exception, while a rule that never fires may be misconfigured. Tracked month by month, it reveals spikes that deserve investigation and confirms whether each rule created fulfills the role it was designed for.
+  view: bar chart by Rule Name on the reference date, detailed in a list with Rule Name, Action, Simulation Mode, Matches (30d), Matches, and Last Match. The simulation column separates what was actually blocked or challenged from what merely would have been, and the historical total next to it shows whether the volume of the last 30 days is usual or out of the ordinary.
+last_reviewed: '2026-10-06'

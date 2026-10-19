@@ -1,0 +1,88 @@
+id: SILVER_HealthIDP-Connectors
+layer: silver
+project: IDP Health Check Report
+sources_raw:
+- RAW_Crowdstrike-IDPConnectorEvents
+sources_silver: []
+generates_audits: NA
+execution_schedule: Sundays at 02:00 AM and on the 1st of the month at 02:00 AM
+filters: |-
+  Keeps only the current connectors. The configuration events are replayed in chronological order: a connector is active when its last addition or removal event is an addition. Removed connectors, and those that only appear in changes with no addition in the history, are discarded.
+  A connector outside this list is included anyway when it has an open failure (not resolved and not dismissed), so that a current error never disappears from the report.
+pipeline: |-
+  The Data Science team will be responsible for retrieving the raw data from the Raw layer and structuring it as shown in the next step.
+
+  Connector:
+
+  Name of the connector in the configuration events. The failure events carry only the technical type of the connector, and are assigned to it through an equivalence table: AZURE corresponds to Entra and OIDC corresponds to Microsoft MFA (OIDC). Types without an equivalence keep their own name and form a separate connector.
+
+  Category:
+
+  Category reported in the connector's first configuration event, with the code IDAAS displayed as IDaaS. Falls back to "-" for connectors that are included only because they have an open failure.
+
+  Status:
+
+  "Error" when the connector has an open failure (not resolved and not dismissed); "Active" otherwise.
+
+  Error Status / Error Message / Error Last Seen:
+
+  Come from the connector's most recent open failure. Error Status is the failure status converted into a readable label (AUTHENTICATION_ERROR becomes Authentication Error). Error Message keeps only the meaningful part of the error: when there is an Azure AADSTS code, the excerpt from the code up to just before the Trace ID; otherwise, the text after the last "Exception: ". The message is limited to 300 characters. Error Last Seen is the date of the last update of the open failure. All three fall back to "-" when there is no open failure.
+
+  New Failures (30d):
+
+  Number of connector failures opened in the last 30 days, counted from the run. An ongoing failure counts by the date it was opened, not by its last update - an error opened more than 30 days ago and still current is not included in the count.
+
+  Last Failure:
+
+  Date of the connector's most recent failure occurrence: for the open failure, the date of its last update, since it keeps being updated while the error persists; for the others, the opening date. Falls back to "-" when the connector has no failures.
+
+  Added At:
+
+  Date of the connector's last addition.
+
+  Last Modified / Last Modified By:
+
+  Date and user of the connector's last configuration event, whether an addition, change or removal; "-" when not reported.
+
+  Item: Connector Active:
+
+  "Attention" when the connector has an open failure; "Ok" otherwise.
+
+  Dates:
+
+  All date columns are converted from the UTC time returned by the platform to America/Sao_Paulo (UTC-3) and formatted as YYYY-MM-DD.
+
+  Reference Month / Reference Year / Reference Date:
+
+  Month (MM), year (YYYY) and date (YYYY-MM-DD) of the run, added as the last columns.
+structure_notes: |-
+  The data sources will be organized into the columns Connector, Category, Status, Error Status, Error Message, Error Last Seen, New Failures (30d), Last Failure, Added At, Last Modified, Last Modified By, Item: Connector Active, Reference Month, Reference Year, Reference Date, ensuring consistency, asset traceability, and data readiness for the indicators layer.
+storage_notes: |-
+  Storage will be done in the Silver layer; the structured data will be kept ready for queries feeding the indicator calculations.
+
+  The data is organized following the standard naming convention. Additionally, temporal segregation must be maintained by collection period, using the YYYY-MM-DD naming convention, according to the frequency defined by the business. The following pattern must be followed:
+
+  CYBER/Client-C/Silver/HealthIDP/YYYY-MM-DD/Connectors.json
+
+  This organization ensures temporal traceability, ingestion standardization, and ease of auditing the data.
+sample_output: |-
+  {
+    "Connector": "Entra",
+    "Category": "IDaaS",
+    "Status": "Error",
+    "Error Status": "Authentication Error",
+    "Error Message": "AADSTS7000222: The provided client secret keys for app '5e6f7a8b-9c0d-4e1f-8a2b-3c4d5e6f7a8b' are expired. Visit the Azure portal to create new keys for your app: https://aka.ms/NewClientSecret, or consider using certificate credentials for added security: https://aka.ms/certCreds.",
+    "Error Last Seen": "2026-09-28",
+    "New Failures (30d)": 0,
+    "Last Failure": "2026-09-28",
+    "Added At": "2024-09-08",
+    "Last Modified": "2024-09-08",
+    "Last Modified By": "user2.example@corp-companyx.com.br",
+    "Item: Connector Active": "Attention",
+    "Reference Month": "09",
+    "Reference Year": "2026",
+    "Reference Date": "2026-09-28"
+  }
+owner: "Cyber Security Team"
+source_repo: "CYBER__HealthIDP"
+last_reviewed: '2026-09-28'

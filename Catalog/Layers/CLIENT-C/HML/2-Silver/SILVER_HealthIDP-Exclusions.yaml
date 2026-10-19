@@ -1,0 +1,67 @@
+id: SILVER_HealthIDP-Exclusions
+layer: silver
+project: IDP Health Check Report
+sources_raw:
+- RAW_Crowdstrike-IDPExclusionChanges
+sources_silver: []
+generates_audits: NA
+execution_schedule: Sundays at 02:00 AM and on the 1st of the month at 02:00 AM
+filters: NA
+pipeline: |-
+  The Data Science team will be responsible for retrieving the raw data from the Raw layer and structuring it as shown in the next step.
+
+  Pattern Id:
+
+  The exclusion change events are grouped by detection pattern: each pattern with at least one change becomes a row. The rows are sorted by the date of the last change, from the most recent to the oldest.
+
+  Detection / Detection Type:
+
+  Obtained by querying, for each detection pattern, a past Identity Protection alert in the timeline, since 2020-01-01. Detection receives the alert's event label. Detection Type receives the alert type converted into a readable label, without the "Alert" suffix (for example, PassTheHashAlert becomes Pass The Hash), with acronyms such as DC, NTLM, LDAP and SMB kept in uppercase. Both fall back to "-" when the pattern has never generated an alert.
+
+  Tactic / Technique:
+
+  MITRE tactic and technique of the detection pattern's most recent alert, queried in the Alerts API filtering by the Identity Protection product. They fall back to "-" when there is no retained alert for the pattern - the alert history has limited retention, so old patterns tend to be left without these columns.
+
+  Changes:
+
+  Number of exclusion change events recorded for the detection pattern.
+
+  First Change / Last Change:
+
+  Dates of the pattern's oldest and most recent changes, converted from the UTC time returned by the platform to America/Sao_Paulo (UTC-3) and formatted as YYYY-MM-DD.
+
+  Last Modified By:
+
+  User responsible for the pattern's most recent change; "-" when not reported.
+
+  Reference Month / Reference Year / Reference Date:
+
+  Month (MM), year (YYYY) and date (YYYY-MM-DD) of the run, added as the last columns.
+structure_notes: |-
+  The data sources will be organized into the columns Pattern Id, Detection, Detection Type, Tactic, Technique, Changes, First Change, Last Change, Last Modified By, Reference Month, Reference Year, Reference Date, ensuring consistency, asset traceability, and data readiness for the indicators layer.
+storage_notes: |-
+  Storage will be done in the Silver layer; the structured data will be kept ready for queries feeding the indicator calculations.
+
+  The data is organized following the standard naming convention. Additionally, temporal segregation must be maintained by collection period, using the YYYY-MM-DD naming convention, according to the frequency defined by the business. The following pattern must be followed:
+
+  CYBER/Client-C/Silver/HealthIDP/YYYY-MM-DD/Exclusions.json
+
+  This organization ensures temporal traceability, ingestion standardization, and ease of auditing the data.
+sample_output: |-
+  {
+    "Pattern Id": 51127,
+    "Detection": "Access from multiple locations concurrently",
+    "Detection Type": "Geo Location Velocity Anomaly",
+    "Tactic": "Initial Access",
+    "Technique": "Valid Accounts",
+    "Changes": 4,
+    "First Change": "2025-02-04",
+    "Last Change": "2026-09-16",
+    "Last Modified By": "user1.exampledemo@corp-companyx.com.br",
+    "Reference Month": "09",
+    "Reference Year": "2026",
+    "Reference Date": "2026-09-28"
+  }
+owner: "Cyber Security Team"
+source_repo: "CYBER__HealthIDP"
+last_reviewed: '2026-09-28'

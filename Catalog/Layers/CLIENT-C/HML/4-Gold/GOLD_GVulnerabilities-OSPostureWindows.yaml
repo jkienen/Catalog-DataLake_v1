@@ -1,0 +1,43 @@
+id: GOLD_GVulnerabilities-OSPostureWindows
+layer: gold
+project: Vulnerability Management
+sources_silver:
+- SILVER_GVulnerabilities-OSPostureWindows
+sources_audit: []
+description: |-
+  The Gold layer consolidates the data from the Silver layer into indicators ready for analytical and executive consumption.
+
+  All indicators must be generated per client, department group, and/or department.
+
+  The generated indicators are:
+kpis:
+- title: Most failed operating system checks
+  calculation: for each operating system check item, except the Reboot Pending item, percentage of hosts with Attention over the hosts assessed on that item, presented as a ranking from the most failed to the least failed.
+  filters: consider, in each item, only the hosts with a value other than "-", that is, assessed in that check.
+  reason: each failed check is an operating system protection control that is disabled or unavailable, such as Credential Guard, Secure Boot or kernel code integrity. Ordering the controls by failure rate shows which failure is widespread across the fleet, and a widespread failure usually has a single cause, such as a group policy or an installation image, fixable all at once. Without this ranking, remediation becomes host-by-host treatment and the most absent controls remain absent.
+  view: ranking by reference month, with the percentage and number of hosts in Attention for each item, detailed in a list with Host Name, Host Type, Host System and the failed item. Host System shows whether the failure is concentrated in a particular Windows version, which separates a configuration problem from a limitation of the version.
+
+- title: Hosts with pending patches
+  calculation: count of distinct Host Id with Pending Patches greater than zero and sum of Pending Patches, grouped by Host Type.
+  filters: null
+  reason: a pending patch is a fix that is already available and not yet applied, which makes this the cheapest delay to eliminate in the whole vulnerability management process. The host count shows the reach of the problem and the sum of patches shows the size of the backlog. When it grows, patch distribution is failing even before reaching the prioritization stage.
+  view: host count and sum of patches by reference month and by Host Type, detailed in a list with Host Name, Host System, Pending Patches, Active Patches and Last Patch Confirmed, sorted by the number of pending patches. Last Patch Confirmed separates the host that has just received patches from the one that has been stalled for a long time.
+
+- title: Hosts with a pending reboot
+  calculation: count of distinct Host Id with the Reboot Pending item equal to Attention, grouped by Host Type.
+  filters: null
+  reason: a large share of Windows patches only take effect after the reboot, and until then the host remains vulnerable even with the update installed. These hosts appear as fixed in the patch reports without actually being protected. The indicator is especially relevant on servers, where the reboot depends on a maintenance window and is often postponed.
+  view: numeric count by reference month and by Host Type, detailed in a list with Host Name, Host System, Last Patch Confirmed and Pending Patches. Last Patch Confirmed shows how long the reboot has been pending since the last applied patch.
+
+- title: Fully compliant hosts
+  calculation: percentage of hosts with no item in Attention, including the Reboot Pending item, over the total of assessed hosts.
+  filters: consider only the hosts with OS Score other than "-", that is, with a posture assessment.
+  reason: it is the executive number for operating system posture, the fraction of the Windows fleet that meets all the assessed controls at the same time. A single failed control already opens a door, which is why full compliance is more demanding and more honest than the average of the scores. Tracked month by month, it shows whether the remediation campaigns are actually closing hosts completely or only improving isolated controls.
+  view: percentage by reference month, as a time series, by Host Type, detailed in a list of the non-compliant hosts with Host Name, Host System, OS Score and the number of items in Attention. The number of items separates the host that fails one control from the one that fails several.
+
+- title: Operating system score
+  calculation: average and median of OS Score, grouped by Host Type and by Host System.
+  filters: consider only the hosts with OS Score other than "-", that is, with a posture assessment.
+  reason: the Zero Trust Assessment score summarizes operating system posture in a number that is comparable across months and across host groups. Splitting by host type and by Windows version shows which combinations pull the average down and where a configuration or migration campaign would have the most effect. A drop in the score without a drop in compliance indicates widespread degradation in controls that have not yet failed.
+  view: average and median by reference month, by Host Type and by Host System, as a time series, detailed in a list with Host Name, Host System, OS Score and Last Assessment. Last Assessment shows whether each host's score is recent or comes from an old assessment.
+last_reviewed: '2026-10-01'

@@ -1,0 +1,118 @@
+id: RAW_Crowdstrike-VulnsFixed
+layer: raw
+platform: Crowdstrike
+endpoint: |-
+  (Vulnerabilities Fixed)
+  - GET /spotlight/combined/vulnerabilities/v1
+description: |-
+  Obtains the vulnerabilities fixed in the previous calendar month in Spotlight, one record per host × vulnerability pair, with the same structure as the active vulnerabilities - host identification and context, affected applications and CVE data - plus the fix date (closed_timestamp).
+load_type: Incremental
+frequency: Monthly
+volume_per_frequency: 1.2Gb
+execution_schedule: 1st of the month at 01:00 AM
+extraction_notes: |-
+  The Data Science team will be responsible for running the routine that queries the described endpoint, applying the necessary filters, and storing the data in the Raw layer of the Data Lake.
+
+  Note: the extraction is paginated by the after token, in pages of up to 5000 records. The window bounds are 00:00 (UTC-3) on the 1st day of the previous calendar month and of the current month, converted to UTC and computed at runtime. The same endpoint serves RAW_Crowdstrike-Vulns and RAW_Crowdstrike-VulnsExpired, with different filters. Incremental load: each run brings only the previous calendar month, and the deduplication key is id + closed_timestamp, since a vulnerability may be closed, reopened and closed again in another month.
+filters: |-
+  Run the query with the following conditions:
+
+  - filter: "status:'closed'+closed_timestamp:>='<start of the previous month>'+closed_timestamp:<'<start of the current month>'"
+  - facet: ["cve", "host_info", "remediation"]
+  - limit: 5000
+storage_notes: |-
+  Storage will be done in the Raw layer, containing the data extracted directly from the described API endpoint, without any type of transformation, fully preserving the data.
+
+  The data is organized following the standard naming convention. Additionally, temporal segregation must be maintained by collection period, using the YYYY-MM-DD naming convention, according to the frequency defined by the business. The following pattern must be followed:
+
+  CYBER/Client-C/Raw/CROWDSTRIKE/YYYY-MM-DD/VulnsFixed.json
+
+  This organization ensures temporal traceability, ingestion standardization, and ease of auditing the protected server inventory data.
+sample_output: |-
+  {
+    "id": "b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7_1a2b3c4d5e6f708192a3b4c5d6e7f809",
+    "cid": "9f8e7d6c5b4a3928170615f4e3d2c1b0",
+    "aid": "b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7",
+    "vulnerability_id": "CVE-2026-95356",
+    "vulnerability_metadata_id": "CS-V26-6535899",
+    "data_providers": [
+      {
+        "provider": "Falcon sensor"
+      }
+    ],
+    "created_timestamp": "2026-09-24T13:15:37Z",
+    "closed_timestamp": "2026-09-24T21:34:58Z",
+    "updated_timestamp": "2026-09-25T00:15:48Z",
+    "status": "closed",
+    "apps": [
+      {
+        "vendor_normalized": "Google",
+        "product_name_version": "Chrome",
+        "product_name_normalized": "Chrome",
+        "sub_status": "closed",
+        "remediation": {},
+        "evaluation_logic": {
+          "id": ""
+        }
+      }
+    ],
+    "suppression_info": {
+      "is_suppressed": false
+    },
+    "confidence": "confirmed",
+    "host_info": {
+      "hostname": "WS009876",
+      "local_ip": "10.0.0.10",
+      "machine_domain": "corpx.com.br",
+      "os_version": "Windows 11",
+      "ou": "0. Active_Workstations,Corpx",
+      "site_name": "Site-ABC",
+      "system_manufacturer": "Dell Inc.",
+      "groups": [
+        {
+          "id": "bb22cc33dd44ee55ff66007788990011",
+          "name": "DYNAMIC - WORKSTATIONS WINDOWS"
+        }
+      ],
+      "tags": [],
+      "platform": "Windows",
+      "os_build": "26200",
+      "product_type_desc": "Workstation",
+      "asset_criticality": "Unassigned",
+      "internet_exposure": "No",
+      "managed_by": "Falcon sensor"
+    },
+    "remediation": {},
+    "cve": {
+      "id": "CVE-2026-95356",
+      "base_score": 4.3,
+      "severity": "MEDIUM",
+      "exploit_status": 0,
+      "exprt_rating": "LOW",
+      "remediation_level": "O",
+      "cisa_info": {
+        "is_cisa_kev": false
+      },
+      "spotlight_published_date": "2026-09-23T23:23:00Z",
+      "types": [
+        "Vulnerability"
+      ],
+      "cwes": [
+        "CWE-416"
+      ],
+      "description": "Use after free in WindowDialog in Google Chrome prior to 154.0.8037.57 allowed a remote attacker leveraging social engineering to potentially execute arbitrary code outside the sandbox via a crafted HTML page. (Chromium security severity: Critical)\n",
+      "published_date": "2026-09-29T18:17:00Z",
+      "vendor_advisory": [
+        "https://chromereleases.googleblog.com/2026/09/stable-channel-update-for-desktop_0856730748.html"
+      ],
+      "references": [
+        "https://nvd.nist.gov/vuln/detail/CVE-2026-95356"
+      ],
+      "exploitability_score": 2.8,
+      "impact_score": 6,
+      "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:H/I:H/A:H"
+    }
+  }
+owner: "Cyber Security Team"
+source_repo: "CYBER__RVulnerabilities"
+last_reviewed: '2026-10-01'

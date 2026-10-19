@@ -1,0 +1,163 @@
+id: RAW_Crowdstrike-Vulns
+layer: raw
+platform: Crowdstrike
+endpoint: |-
+  (Vulnerabilities)
+  - GET /spotlight/combined/vulnerabilities/v1
+description: |-
+  Obtains the open and reopened vulnerabilities detected by Spotlight at the time of the run, one record per host × vulnerability pair, including host identification and context, affected applications, recommended remediations and the CVE data - severity, CVSS and ExPRT scores, exploitation status, CISA KEV flag and due date, and associated adversaries.
+load_type: Full
+frequency: Weekly
+volume_per_frequency: 200Mb
+execution_schedule: Sundays at 01:00 AM and on the 1st of the month at 01:00 AM
+extraction_notes: |-
+  The Data Science team will be responsible for running the routine that queries the described endpoint, applying the necessary filters, and storing the data in the Raw layer of the Data Lake.
+
+  Note: the extraction is paginated by the after token, in pages of up to 5000 records. The same endpoint serves RAW_Crowdstrike-VulnsFixed and RAW_Crowdstrike-VulnsExpired, with different filters.
+filters: |-
+  Run the query with the following conditions:
+
+  - filter: "status:['open','reopen']"
+  - facet: ["cve", "host_info", "remediation"]
+  - limit: 5000
+storage_notes: |-
+  Storage will be done in the Raw layer, containing the data extracted directly from the described API endpoint, without any type of transformation, fully preserving the data.
+
+  The data is organized following the standard naming convention. Additionally, temporal segregation must be maintained by collection period, using the YYYY-MM-DD naming convention, according to the frequency defined by the business. The following pattern must be followed:
+
+  CYBER/Client-C/Raw/CROWDSTRIKE/YYYY-MM-DD/Vulns.json
+
+  This organization ensures temporal traceability, ingestion standardization, and ease of auditing the protected server inventory data.
+sample_output: |-
+  {
+    "id": "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6_0f1e2d3c4b5a69788796a5b4c3d2e1f0",
+    "cid": "9f8e7d6c5b4a3928170615f4e3d2c1b0",
+    "aid": "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6",
+    "vulnerability_id": "CVE-2026-31431",
+    "vulnerability_metadata_id": "CS-V26-1341299",
+    "data_providers": [
+      {
+        "provider": "Falcon sensor"
+      }
+    ],
+    "created_timestamp": "2026-05-05T13:30:58Z",
+    "updated_timestamp": "2026-09-17T13:01:41Z",
+    "status": "open",
+    "apps": [
+      {
+        "vendor_normalized": "Oracle Linux",
+        "product_name_version": "kernel-uek 5.15.0-312.187.5.el9uek",
+        "product_name_normalized": "kernel-uek",
+        "sub_status": "open",
+        "remediation": {
+          "ids": [
+            "1111aaaa2222bbbb3333cccc4444dddd"
+          ]
+        },
+        "evaluation_logic": {
+          "id": "9999cccc0000dddd1111eeee2222ffff"
+        },
+        "remediation_info": {
+          "recommended_id": "1111aaaa2222bbbb3333cccc4444dddd",
+          "minimum_id": "5555eeee6666ffff7777aaaa8888bbbb"
+        }
+      }
+    ],
+    "suppression_info": {
+      "is_suppressed": false
+    },
+    "confidence": "confirmed",
+    "host_info": {
+      "hostname": "SRV-ACME-APP0001",
+      "local_ip": "172.16.0.10",
+      "machine_domain": "",
+      "os_version": "Oracle Linux 9.6",
+      "ou": "",
+      "site_name": "",
+      "system_manufacturer": "VMware, Inc.",
+      "groups": [
+        {
+          "id": "aa11bb22cc33dd44ee55ff6600778899",
+          "name": "DYNAMIC - LINUX"
+        }
+      ],
+      "tags": [],
+      "platform": "Linux",
+      "product_type_desc": "Server",
+      "asset_criticality": "Unassigned",
+      "internet_exposure": "No",
+      "managed_by": "Falcon sensor",
+      "has_run_container": true
+    },
+    "remediation": {
+      "entities": [
+        {
+          "id": "1111aaaa2222bbbb3333cccc4444dddd",
+          "type": "VERSION_BASED",
+          "provider": "Falcon sensor",
+          "reference": "0:6.12.0-206.104.4.4.el9uek",
+          "title": "Update oracle kernel-uek",
+          "action": "Update oracle kernel-uek to version 0:6.12.0-206.104.4.4.el9uek or newer",
+          "link": "",
+          "vendor_url": "",
+          "recommendation_type": "recommended",
+          "created_timestamp": "2026-07-20T01:48:50Z",
+          "updated_timestamp": "2026-09-22T19:26:45Z"
+        },
+        {
+          "id": "5555eeee6666ffff7777aaaa8888bbbb",
+          "type": "VERSION_BASED",
+          "provider": "Falcon sensor",
+          "reference": "0:6.12.0-204.92.4.2.el9uek",
+          "title": "Update oracle kernel-uek",
+          "action": "Update oracle kernel-uek to version 0:6.12.0-204.92.4.2.el9uek or newer",
+          "link": "",
+          "vendor_url": "",
+          "recommendation_type": "minimum",
+          "created_timestamp": "2026-07-07T09:26:34Z",
+          "updated_timestamp": "2026-07-07T09:26:34Z"
+        }
+      ]
+    },
+    "cve": {
+      "id": "CVE-2026-31431",
+      "base_score": 7.8,
+      "severity": "HIGH",
+      "exploit_status": 90,
+      "exprt_rating": "CRITICAL",
+      "remediation_level": "O",
+      "cisa_info": {
+        "is_cisa_kev": true,
+        "due_date": "2026-05-15T00:00:00Z",
+        "ssvc": {
+          "automatable": "no",
+          "technical_impact": "total"
+        }
+      },
+      "spotlight_published_date": "2026-04-23T12:59:00Z",
+      "actors": [
+        "UMBRAL BISON"
+      ],
+      "name": "Copy Fail",
+      "types": [
+        "Vulnerability"
+      ],
+      "cwes": [
+        "CWE-669"
+      ],
+      "description": "In the Linux kernel, the following vulnerability has been resolved:\n\ncrypto: algif_aead - Revert to operating out-of-place\n\nThis mostly reverts commit 72548b093ee3 except for the copying of\nthe associated data.\n\nThere is no benefit in operating in-place in algif_aead since the\nsource and destination come from different mappings.  Get rid of\nall the complexity added for in-place operation and just copy the\nAD directly.\n",
+      "published_date": "2026-04-22T09:16:00Z",
+      "vendor_advisory": [
+        "https://msrc.microsoft.com/update-guide/en-us/vulnerability/CVE-2026-31431"
+      ],
+      "references": [
+        "https://www.cisa.gov/known-exploited-vulnerabilities-catalog?field_cve=CVE-2026-31431"
+      ],
+      "exploitability_score": 1.8,
+      "impact_score": 5.9,
+      "vector": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
+    }
+  }
+owner: "Cyber Security Team"
+source_repo: "CYBER__RVulnerabilities"
+last_reviewed: '2026-10-01'
