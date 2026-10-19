@@ -1,0 +1,47 @@
+id: RAW_Crowdstrike-TenantsParent
+layer: raw
+platform: Crowdstrike
+endpoint: |-
+  (Tenants Parent)
+  - GET /mssp/queries/children/v1
+  - GET /mssp/entities/children/v1
+description: |-
+  Obtains the tenants (child CIDs) linked through Flight Control, starting from the global CID and from each parent, including CID identification, source CID (parent), name, status and enabled domains.
+load_type: Full
+frequency: Weekly
+volume_per_frequency: 12Kb
+execution_schedule: Sundays at 03:00 AM and on the 1st of the month at 03:00 AM
+extraction_notes: |-
+  The Data Science team will be responsible for running the routine that queries the described endpoint, applying the necessary filters, and storing the data in the Raw layer of the Data Lake.
+
+  Note: the extraction has two steps: the first call returns the child CIDs and the second returns the record of each one. It is done in the global CID and repeated within each parent, authenticating with the member_cid parameter, to reach the second level of the hierarchy (global > parents > final CIDs).
+filters: |-
+  Run the query with the following conditions:
+
+  - limit: 100
+  - offset: pagination offset (0, 100, 200...)
+  - ids: CIDs returned by the first call, in batches of 100
+storage_notes: |-
+  Storage will be done in the Raw layer, containing the data extracted directly from the described API endpoint, without any type of transformation, fully preserving the data.
+
+  The data is organized following the standard naming convention. Additionally, temporal segregation must be maintained by collection period, using the YYYY-MM-DD naming convention, according to the frequency defined by the business. The following pattern must be followed:
+
+  CYBER/Client-A/Raw/CROWDSTRIKE/YYYY-MM-DD/TenantsParent.json
+
+  This organization ensures temporal traceability, ingestion standardization, and ease of auditing the protected server inventory data.
+sample_output: |-
+  {
+    "child_cid": "1a2b3c4d5e6f47a8b9c0d1e2f3a4b5c6",
+    "child_gcid": "g04000aa1bb2cc3dd4ee5ff6gg7hh8ii",
+    "child_of": "9f8e7d6c5b4a49382716051a2b3c4d5e",
+    "name": "MDR | Example Client Inc. - Servers",
+    "checksum": "fa",
+    "domains": [
+      "exampleclient.com.br",
+      "example.com.br"
+    ],
+    "status": "active"
+  }
+owner: "Cyber Security Team"
+source_repo: "CYBER__FlightTenants"
+last_reviewed: '2026-10-16'

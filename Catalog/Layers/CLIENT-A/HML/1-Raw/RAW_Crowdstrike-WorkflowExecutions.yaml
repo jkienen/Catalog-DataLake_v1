@@ -1,0 +1,102 @@
+id: RAW_Crowdstrike-WorkflowExecutions
+layer: raw
+platform: Crowdstrike
+endpoint: |-
+  (Workflow Executions)
+  - GET /workflows/combined/executions/v1
+description: |-
+  Obtains the executions of the tenant's workflows, including status, start and end times, executed activities with their results, and the event that triggered each execution.
+load_type: Full
+frequency: Monthly
+volume_per_frequency: 394Kb
+execution_schedule: 1st of the month at 04:30 AM
+extraction_notes: |-
+  The Data Science team will be responsible for running the routine that queries the described endpoint, applying the necessary filters, and storing the data in the Raw layer of the Data Lake.
+
+  Note: three calls per workflow: the total number of executions started in the previous calendar month, the total of those that finished successfully (status Succeeded), and the most recent execution. Of the first two, only the pagination total matters. The result of each activity and the trigger event were reduced in the sample to a few representative fields.
+filters: |-
+  Run the query with the following conditions, for each workflow:
+
+  - filter: "definition_id:'<workflow id>'+started_timestamp:>='<1st day of the previous month, 00:00 (UTC-3)>'+started_timestamp:<'<1st day of the current month, 00:00 (UTC-3)>'"
+  - filter: "definition_id:'<workflow id>'+started_timestamp:>='<1st day of the previous month, 00:00 (UTC-3)>'+started_timestamp:<'<1st day of the current month, 00:00 (UTC-3)>'+status:'Succeeded'"
+  - filter: "definition_id:'<workflow id>'"
+  - sort: started_timestamp.desc
+  - limit: 1
+storage_notes: |-
+  Storage will be done in the Raw layer, containing the data extracted directly from the described API endpoint, without any type of transformation, fully preserving the data.
+
+  The data is organized following the standard naming convention. Additionally, temporal segregation must be maintained by collection period, using the YYYY-MM-DD naming convention, according to the frequency defined by the business. The following pattern must be followed:
+
+  CYBER/Client-A/Raw/CROWDSTRIKE/YYYY-MM-DD/WorkflowExecutions.json
+
+  This organization ensures temporal traceability, ingestion standardization, and ease of auditing the protected server inventory data.
+sample_output: |-
+  {
+    "execution_id": "9c0d1e2f3a4b45c6d7e8f9a0b1c2d3e4",
+    "activities": [
+      {
+        "node_id": "WorkflowSpecificEventQuery",
+        "start_timestamp": "2026-09-30T12:23:41.304Z",
+        "end_timestamp": "2026-09-30T12:23:53.852Z",
+        "status": "Completed",
+        "id": "0d1e2f3a4b5c46d7e8f9a0b1c2d3e4f5",
+        "name": "Workflow-specific event query",
+        "type": "logscale",
+        "result": {
+          "results": [
+            {
+              "CommandLine": "sh -c bash -c 'cat /etc/passwd'",
+              "ComputerName": "HOST-EXAMPLE-01",
+              "HumanTime": "2026-09-30 08:37:31",
+              "ProcessLineage": "Unknown > zabbix_agent2 > bash",
+              "UserName": "zabbix"
+            }
+          ]
+        },
+        "references": [
+          {
+            "display": "Download results in CSV format",
+            "url": "/api2/files/entities/file-content/v1?id=11111111-2222-4333-8444-666666666666"
+          }
+        ]
+      }
+    ],
+    "ancestor_executions": [],
+    "definition_name": "Testing Cmdline-history-email-on-detection",
+    "definition_id": "1e2f3a4b5c6d47e8f9a0b1c2d3e4f5a6",
+    "definition_version": 2,
+    "end_timestamp": "2026-09-30T12:24:24.825Z",
+    "loops": [],
+    "retryable": false,
+    "start_timestamp": "2026-09-30T12:23:41.001Z",
+    "status": "Completed",
+    "trigger": {
+      "id": "2f3a4b5c6d7e48f9a0b1c2d3e4f5a6b7",
+      "name": "Detection > EPP Detection",
+      "result": {
+        "CID": "2b3c4d5e6f7a48b9c0d1e2f3a4b5c6d7",
+        "Category": "Investigatable/EPP",
+        "Detection": {
+          "Name": "CurlWgetMalwareDownload",
+          "Product": "EPP",
+          "Severity": 4,
+          "SeverityDisplayName": "High",
+          "Status": "new",
+          "TacticNames": [
+            "Command and Control"
+          ],
+          "TechniqueNames": [
+            "Ingress Tool Transfer"
+          ]
+        },
+        "Name": "Detection",
+        "ObservedTime": "2026-09-30T12:23:40Z",
+        "Source": "detects_writer",
+        "SpecVersion": "v0.664.0"
+      }
+    },
+    "contains_mocks": false
+  }
+owner: "Cyber Security Team"
+source_repo: "CYBER__FalconAudits"
+last_reviewed: '2026-10-16'

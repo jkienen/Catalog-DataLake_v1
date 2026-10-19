@@ -1,0 +1,37 @@
+id: GOLD_HealthIDP-DomainControllers
+layer: gold
+project: IDP Health Check Report
+sources_silver:
+- SILVER_HealthIDP-DomainControllers
+sources_audit: []
+description: |-
+  The Gold layer consolidates the data from the Silver layer into indicators ready for analytical and executive consumption.
+
+  All indicators must be generated per client, department group, and/or department.
+
+  The generated indicators are:
+kpis:
+- title: Percentage of domain controllers with the sensor outside the active state
+  calculation: ratio of distinct Host Name values with the Sensor Status item column equal to Attention over the total number of distinct Host Name values.
+  filters: only domain controllers with an installed sensor (Sensor Installed item column equal to Ok).
+  reason: a sensor in limited functionality or inactive leaves the domain controller without the full protection of Identity Protection, precisely at the point through which all of the domain's authentication passes. It is the silent failure this report exists to expose, because the console does not actively warn and the DC keeps responding normally. A growing percentage indicates a systemic problem, such as an agent update or a dependency of the virtual environment, rather than an isolated case, and should trigger a review of the causes before the next cycle.
+  view: percentage by reference month, detailed in a list with Host Name, Department, Status, Status Causes, and Agent Version. This distinguishes an isolated DC with a specific cause from several DCs with the same cause, which points to a batch fix.
+
+- title: Percentage of domain controllers with some protocol outside the expected mode
+  calculation: ratio of distinct Host Name values where at least one of the protocol item columns (Kerberos, NTLM, LDAP, LDAPS, SMB to DC, and RDP to DC) has the value Attention over the total number of distinct Host Name values.
+  filters: only domain controllers with an installed sensor (Sensor Installed item column equal to Ok).
+  reason: each protocol outside the expected mode is an authentication path on which Identity Protection only observes, or does not even observe, instead of applying the policy rules, such as blocking or requiring MFA. A single DC in this condition is enough for an attacker to route authentication through it, so the indicator measures the domain's real enforcement gap, not a comfortable average. If the percentage rises after a policy change, the change needs to be reviewed.
+  view: percentage by reference month, detailed in a list with Host Name, Department, IDP Policy, and the names of the protocol item columns in Attention. This shows whether the gap comes from a policy applied to a group of DCs or from a protocol disabled on a one-off basis.
+
+- title: Percentage of domain controllers with degraded service health
+  calculation: ratio of distinct Host Name values where at least one of the service health item columns (IdP Service, Traffic Inspection Status, Traffic Inspection Enforcement, and Service Health Alerts) has the value Attention over the total number of distinct Host Name values.
+  filters: only domain controllers with an installed sensor (Sensor Installed item column equal to Ok).
+  reason: the configuration may be correct and the service may still not be protecting, with the DC disconnected from the cloud, traffic inspection turned off by an automatic watchdog remediation, or health alerts triggered during the week. This view previously existed only in the NGSIEM dashboard, and it is what separates a misconfigured DC from a DC that has stopped protecting. A value that stays above zero across cycles indicates automatic remediations turning off protection without anyone reverting them.
+  view: percentage by reference month, detailed in a list with Host Name, Department, IdP Service Status, Traffic Inspection Status, Traffic Inspection Enforcement, CPU Max Usage (%), and Memory Max Usage (%). The resource consumption next to the service state helps identify whether the degradation accompanies server overload.
+
+- title: Percentage of domain controllers with a CPU or memory peak above 85%
+  calculation: ratio of distinct Host Name values with CPU Max Usage (%) greater than 85 or Memory Max Usage (%) greater than 85 over the total number of distinct Host Name values.
+  filters: only domain controllers with an installed sensor (Sensor Installed item column equal to Ok) and with service health data, disregarding those with CPU Max Usage (%) and Memory Max Usage (%) equal to "-".
+  reason: the domain controller handles all of the domain's authentication, and the Identity Protection sensor inspects this traffic on the server itself. A peak above 85% in the week indicates tight capacity, which translates into slow logons, authentication failures and, at the limit, automatic watchdog remediations that turn off traffic inspection to preserve the server. Tracking the percentage anticipates the need to resize the DC or redistribute the load before protection is sacrificed for availability.
+  view: percentage by reference month, detailed in a list with Host Name, Department, CPU Cores, CPU Max Usage (%), CPU Avg Usage (%), Memory Total (GB), Memory Max Usage (%), and Memory Avg Usage (%). The average next to the peak distinguishes an isolated peak from constant overload, and the total cores and memory show whether the DC is undersized.
+last_reviewed: '2026-09-28'

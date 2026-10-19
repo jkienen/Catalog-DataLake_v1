@@ -1,0 +1,57 @@
+id: SILVER_FalconAudits-UninstallTokens
+layer: silver
+project: Tenant Audit (CrowdStrike)
+sources_raw:
+- RAW_Crowdstrike-AuditEvents
+- RAW_Crowdstrike-Assets
+sources_silver: []
+generates_audits: NA
+execution_schedule: 2nd of the month at 01:30 AM
+filters: |-
+  Keeps only the audit events in the UserActivityAuditEvent format with the operation of revealing the uninstall token (reveal_token).
+  Keeps only the events whose date falls in the calendar month prior to the run, from 00:00 (UTC-3) on the 1st of the previous month to 00:00 (UTC-3) on the 1st of the current month.
+pipeline: |-
+  The Data Science team will be responsible for retrieving the raw data from the Raw layer and structuring it as shown in the next step.
+
+  Event Date / Event Time:
+
+  Date and time of the event, converted from the UTC time returned by the platform to America/Sao_Paulo (UTC-3), in the YYYY-MM-DD and HH:MM:SS formats.
+
+  User:
+
+  Who revealed the token: the user's e-mail or the API client identifier; "-" when empty.
+
+  Host Name / Host Platform / Host Type:
+
+  Name, platform, and type of the token's host, cross-referenced with the host inventory by the host identifier; "-" when the host no longer exists in the inventory.
+
+  Message:
+
+  The justification recorded when revealing the token, with spaces and line breaks collapsed into a single space; "-" when empty. Accented characters arrive corrupted from the source itself.
+structure_notes: |-
+  The data sources will be organized into the columns Event Date, Event Time, User, Host Name, Host Id, Host Platform, Host Type, Message, Reference Month, Reference Year, Reference Date, ensuring consistency, asset traceability, and data readiness for the indicators layer.
+storage_notes: |-
+  Storage will be done in the Silver layer; the structured data will be kept ready for queries feeding the indicator calculations.
+
+  The data is organized following the standard naming convention. Additionally, temporal segregation must be maintained by collection period, using the YYYY-MM-DD naming convention, according to the frequency defined by the business. The following pattern must be followed:
+
+  CYBER/Client-A/Silver/FalconAudits/YYYY-MM-DD/UninstallTokens.json
+
+  This organization ensures temporal traceability, ingestion standardization, and ease of auditing the data.
+sample_output: |-
+  {
+    "Event Date": "2026-09-17",
+    "Event Time": "10:39:17",
+    "User": "user.example@example.com.br",
+    "Host Name": "host-example",
+    "Host Id": "5a6b7c8d9e0f41a2b3c4d5e6f7a8b9c0",
+    "Host Platform": "Linux",
+    "Host Type": "Server",
+    "Message": "Reinstall required",
+    "Reference Month": "10",
+    "Reference Year": "2026",
+    "Reference Date": "2026-10-16"
+  }
+owner: "Cyber Security Team"
+source_repo: "CYBER__FalconAudits"
+last_reviewed: '2026-10-16'

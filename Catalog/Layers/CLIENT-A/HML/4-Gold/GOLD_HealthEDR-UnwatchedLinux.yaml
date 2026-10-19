@@ -1,0 +1,25 @@
+id: GOLD_HealthEDR-UnwatchedLinux
+layer: gold
+project: EDR Health Check Report
+sources_silver: []
+sources_audit:
+- AUDIT_HealthEDR-UnwatchedLinux
+description: |-
+  The Gold layer consolidates the data from the Silver layer into indicators ready for analytical and executive consumption.
+
+  All indicators must be generated per client, department group, and/or department.
+
+  The generated indicators are:
+kpis:
+- title: Linux hosts with no match in the inventory
+  calculation: count of distinct Host Id values.
+  filters: null
+  reason: each host in this list has the CrowdStrike sensor installed, but does not match any machine in the VCenter inventory, so it has no responsible department assigned and is left out of the per-area reports. It may be a newly created machine that the inventory has not registered yet, a host running outside VCenter, or an already decommissioned machine that is still listed in the console. The total shows the size of the gap between what the EDR sees and what the inventory recognizes, and should fall as the inventory is corrected or the obsolete records are removed.
+  view: numeric count by reference month, detailed in a list with Host Name, Host Type, OS Version, Last Seen and Mac Address. The date of the last communication separates the active machine that is missing from the inventory from the one that no longer exists.
+
+- title: Unmatched Linux hosts inactive for more than 10 days
+  calculation: count of distinct Host Id values whose difference between Reference Date and Last Seen is greater than 10 days.
+  filters: disregard hosts with Last Seen equal to "-".
+  reason: a host that does not match the inventory and has not communicated for more than 10 days most likely no longer exists, and its record only pollutes the console and distorts the coverage counts. These are exactly the hosts that the removal automation deletes from CrowdStrike, so the indicator measures the size of that queue in each cycle, and the Audit keeps the proof that they existed after the removal. A number that does not fall between cycles indicates that the automation is not acting.
+  view: numeric count by reference month, detailed in a list with Host Name, Host Type, OS Version and Last Seen, sorted from the oldest communication to the most recent.
+last_reviewed: '2026-10-06'

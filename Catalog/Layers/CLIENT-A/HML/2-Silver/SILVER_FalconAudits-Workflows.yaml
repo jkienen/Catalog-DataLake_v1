@@ -1,0 +1,75 @@
+id: SILVER_FalconAudits-Workflows
+layer: silver
+project: Tenant Audit (CrowdStrike)
+sources_raw:
+- RAW_Crowdstrike-Workflows
+- RAW_Crowdstrike-WorkflowExecutions
+sources_silver: []
+generates_audits: NA
+execution_schedule: 1st of the month at 05:00 AM
+filters: NA
+pipeline: |-
+  The Data Science team will be responsible for retrieving the raw data from the Raw layer and structuring it as shown in the next step.
+
+  Workflow Description:
+
+  Workflow description with spaces and line breaks collapsed into a single space; "-" when empty.
+
+  Trigger Type / Trigger Event:
+
+  Type and event of the workflow trigger; "-" when the trigger does not report the event.
+
+  Last Modified:
+
+  Date of the last modification, converted from the UTC time returned by the platform to America/Sao_Paulo (UTC-3) and formatted as YYYY-MM-DD.
+
+  Executions (Previous Month):
+
+  Number of workflow executions started in the calendar month prior to the run, from 00:00 (UTC-3) on the 1st of the previous month to 00:00 (UTC-3) on the 1st of the current month.
+
+  Failed Executions (Previous Month):
+
+  Executions in the same period that did not finish successfully: the total minus the executions with a success status. Receives "-" when either of the two counts could not be obtained.
+
+  Last Execution:
+
+  Start date of the workflow's most recent execution, in any period, converted from the UTC time returned by the platform to America/Sao_Paulo (UTC-3); "-" when the workflow has never been executed.
+
+  Item: Validation:
+
+  "Attention" when the workflow has validation errors (such a workflow does not run); "Ok" otherwise.
+
+  Item: Failures:
+
+  "Attention" when there was at least one unsuccessful execution in the previous month; "Ok" when there was none; "-" when the number of failures could not be obtained.
+structure_notes: |-
+  The data sources will be organized into the columns Workflow Name, Workflow Description, Enabled, Trigger Type, Trigger Event, Version, Last Modified, Executions (Previous Month), Failed Executions (Previous Month), Last Execution, Item: Validation, Item: Failures, Reference Month, Reference Year, Reference Date, ensuring consistency, asset traceability, and data readiness for the indicators layer.
+storage_notes: |-
+  Storage will be done in the Silver layer; the structured data will be kept ready for queries feeding the indicator calculations.
+
+  The data is organized following the standard naming convention. Additionally, temporal segregation must be maintained by collection period, using the YYYY-MM-DD naming convention, according to the frequency defined by the business. The following pattern must be followed:
+
+  CYBER/Client-A/Silver/FalconAudits/YYYY-MM-DD/Workflows.json
+
+  This organization ensures temporal traceability, ingestion standardization, and ease of auditing the data.
+sample_output: |-
+  {
+    "Workflow Name": "EDR: Detections (Overwatch)",
+    "Workflow Description": "Send Email > Isolated Desktops",
+    "Enabled": true,
+    "Trigger Type": "Signal",
+    "Trigger Event": "Investigatable/EPP",
+    "Version": 10,
+    "Last Modified": "2025-05-26",
+    "Executions (Previous Month)": 75,
+    "Failed Executions (Previous Month)": 0,
+    "Last Execution": "2026-10-16",
+    "Item: Validation": "Ok",
+    "Item: Failures": "Ok",
+    "Reference Month": "10",
+    "Reference Year": "2026",
+    "Reference Date": "2026-10-16"
+  }
+owner: "Cyber Security Team"
+source_repo: "CYBER__FalconAudits"
+last_reviewed: '2026-10-16'

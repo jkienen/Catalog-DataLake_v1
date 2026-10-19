@@ -1,0 +1,55 @@
+id: GOLD_FlightTenants-Tenants
+layer: gold
+project: Tenant Management (CrowdStrike)
+sources_silver:
+- SILVER_FlightTenants-Tenants
+sources_audit: []
+description: |-
+  The Gold layer consolidates the data from the Silver layer into indicators ready for analytical and executive consumption.
+
+  All indicators must be generated per client, department group, and/or department.
+
+  The generated indicators are:
+kpis:
+- title: Total number of managed tenants
+  calculation: count of distinct Tenant CID, broken down by Tenant Type into Parent and Child.
+  filters: only rows with Tenant Type other than Global.
+  reason: it is the size of the portfolio managed through Flight Control and the comparison baseline for all the other indicators. The split between parents and final tenants shows how many grouping structures exist for how many actual clients, and a variation between months points to a new client, a terminated contract or a reorganization of the hierarchy that needs to be reflected in billing and monitoring.
+  view: numeric count by reference month, split into Parent and Child, detailed in a list with Tenant Type, Parent Name, Tenant Name, and Status. This shows under which parent each client sits and whether the growth came from new clients or from new grouping structures.
+
+- title: Total number of protected hosts
+  calculation: sum of Hosts Total, counting each Tenant CID only once.
+  filters: only rows with Tenant Type equal to Child and Hosts Total other than -.
+  reason: measures the actual volume of the operation, the hosts with a sensor that the MSSP protects and monitors, and is the reference for sizing licenses, staff and cost per client. Counting each CID once avoids summing twice the tenants linked to two parents, and sticking to the final tenants avoids summing the parents' totals, which already include the hosts of their children. A sharp drop between months is a sign of removed sensors or of a client leaving.
+  view: numeric sum by reference month, detailed in a list with Tenant Name, Parent Name, and Hosts Total sorted from highest to lowest. This identifies which clients concentrate the volume and where the variation comes from.
+
+- title: Protected hosts by parent
+  calculation: sum of the tenants' Hosts Total grouped by Parent Name.
+  filters: only rows with Tenant Type equal to Child and Hosts Total other than -.
+  reason: shows the weight of each business line represented by the parents (managed service, self-managed, proofs of concept), which guides where the revenue is, where the monitoring load is and which structure is growing or shrinking. Since a tenant can be under two parents, the sum by parent counts that tenant in each one and the parents' total ends up above the overall total, which should be read together with the previous indicator.
+  view: numeric sum by reference month and by Parent Name, detailed in a list with Tenant Name, Hosts Total, and Shared Tenant. The Shared Tenant column indicates which tenants appear in more than one parent.
+
+- title: Tenants without any host
+  calculation: count of distinct Tenant CID with Hosts Total equal to 0.
+  filters: only rows with Tenant Type equal to Child and Hosts Total other than -.
+  reason: a tenant that was created and has no sensor at all is cost and structure without protection. It may be a client that has not deployed yet, an abandoned proof of concept or a tenant that should have been closed, and in every case it calls for a commercial or operational action. The expected value tends to zero outside deployment periods.
+  view: numeric count by reference month, detailed in a list with Tenant Name, Parent Name, Status, and Users Total. The number of users alongside helps distinguish a tenant being deployed from a forgotten tenant.
+
+- title: Tenants with a status other than active
+  calculation: count of distinct Tenant CID with Status other than Active.
+  filters: only rows with Tenant Type equal to Child.
+  reason: a suspended or deactivated tenant should not keep being billed, monitored or counted as an active client, and an active tenant that should have been closed keeps the access and data of a client that has left. The indicator supports the reconciliation between what is contracted and what exists on the platform.
+  view: numeric count by reference month, detailed in a list with Tenant Name, Parent Name, Status, and Hosts Total.
+
+- title: Parents outside the naming standard
+  calculation: count of distinct Tenant CID whose Tenant Name does not start with a number.
+  filters: only rows with Tenant Type equal to Parent.
+  reason: the parents' naming standard, starting with a number, is what orders and identifies the grouping structures in the console and in the reports. A parent outside the standard is usually created without following the process and breaks groupings and filters that depend on the name. The expected value is zero.
+  view: numeric count by reference month, detailed in a list with Tenant Name and Tenant CID, so that each parent can be renamed.
+
+- title: Tenants outside the naming standard
+  calculation: count of distinct Tenant CID whose Tenant Name does not start with MDR, POC, SVG, SVP, or SMG.
+  filters: only rows with Tenant Type equal to Child.
+  reason: the tenant name prefix identifies the type of contracted service (managed service, proof of concept and the other modalities), and it is by this prefix that the portfolio is split in reports and billing. A tenant without a valid prefix falls outside these views or into the wrong modality, and usually indicates a tenant created without following the process. The expected value is zero.
+  view: numeric count by reference month, detailed in a list with Tenant Name, Parent Name, and Tenant CID, so that each tenant can be renamed.
+last_reviewed: '2026-10-16'

@@ -1,0 +1,49 @@
+id: RAW_Crowdstrike-UsersParent
+layer: raw
+platform: Crowdstrike
+endpoint: |-
+  (Users Parent)
+  - GET /user-management/queries/users/v1
+  - POST /user-management/entities/users/GET/v1
+description: |-
+  Obtains the console users of the global CID (parent), including identification (UUID, email, name), status, MFA factors, creation date and last login date.
+load_type: Full
+frequency: Monthly
+volume_per_frequency: 5Kb
+execution_schedule: 1st of the month at 03:30 AM
+extraction_notes: |-
+  The Data Science team will be responsible for running the routine that queries the described endpoint, applying the necessary filters, and storing the data in the Raw layer of the Data Lake.
+
+  Note: the extraction has two steps: the first call returns the user UUIDs and the second returns the record of each one. Only the users of the global CID itself are read; the users of the child CIDs are not included.
+filters: |-
+  Run the query with the following conditions:
+
+  - limit: 500
+  - offset: pagination offset (0, 500, 1000...)
+  - ids: UUIDs returned by the first call, in batches of 100
+storage_notes: |-
+  Storage will be done in the Raw layer, containing the data extracted directly from the described API endpoint, without any type of transformation, fully preserving the data.
+
+  The data is organized following the standard naming convention. Additionally, temporal segregation must be maintained by collection period, using the YYYY-MM-DD naming convention, according to the frequency defined by the business. The following pattern must be followed:
+
+  CYBER/Client-A/Raw/CROWDSTRIKE/YYYY-MM-DD/UsersParent.json
+
+  This organization ensures temporal traceability, ingestion standardization, and ease of auditing the protected server inventory data.
+sample_output: |-
+  {
+    "uuid": "aaaa1111-bb22-4cc3-8dd4-eeeeee555555",
+    "cid": "9f8e7d6c5b4a49382716051a2b3c4d5e",
+    "uid": "user.example@example.com.br",
+    "status": "active",
+    "first_name": "CYBER - ",
+    "last_name": "Example User",
+    "last_login_at": "2026-10-16T18:40:50.834786Z",
+    "factors": [
+      "TOTP"
+    ],
+    "created_at": "2026-10-09T20:23:40.955468Z",
+    "updated_at": "2026-10-09T23:24:20.961655Z"
+  }
+owner: "Cyber Security Team"
+source_repo: "CYBER__FlightTenants"
+last_reviewed: '2026-10-16'

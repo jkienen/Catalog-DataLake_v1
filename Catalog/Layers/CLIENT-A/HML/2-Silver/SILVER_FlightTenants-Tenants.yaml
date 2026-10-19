@@ -1,0 +1,84 @@
+id: SILVER_FlightTenants-Tenants
+layer: silver
+project: Tenant Management (CrowdStrike)
+sources_raw:
+- RAW_Crowdstrike-TenantsParent
+- RAW_Crowdstrike-AssetsTotalParent
+- RAW_Crowdstrike-UsersTotalParent
+- RAW_Crowdstrike-RolesParent
+sources_silver: []
+generates_audits: NA
+execution_schedule: Sundays at 03:30 AM and on the 1st of the month at 03:30 AM
+filters: NA
+pipeline: |-
+  The Data Science team will be responsible for retrieving the raw data from the Raw layer and structuring it as shown in the next step.
+
+  Rows:
+
+  One row per link between a tenant and the level above it: the global CID, each parent (the direct child CIDs of the global) and each child CID of each parent. A CID linked to two parents appears once under each one.
+
+  Tenant Type:
+
+  "Global" for the global CID, "Parent" for the direct child CIDs of the global and "Child" for the child CIDs of each parent.
+
+  Parent Name / Parent CID:
+
+  Name and CID of the level above. In the Global row, both receive "-". In the parents, the CID is the global's and the name receives "-", because the platform does not return the name of the global CID itself. In the child CIDs, they are the name and CID of the parent under which the CID was listed.
+
+  Tenant Name / Tenant CID / Status / Domains:
+
+  Copied from the tenant's record; the status is capitalized and the distinct domains are joined by "; ". The global CID has no record of its own: its CID comes from the source CID of the parents and the remaining columns receive "-".
+
+  Shared Tenant:
+
+  True when the same CID is linked to more than one parent; false otherwise, including in the Global row.
+
+  Hosts Total / Users Total:
+
+  The total reported by the pagination of the hosts and users queries made within the CID itself. In the parents, the platform sums the hosts and users of the CIDs below them. They receive "-" when the login to the CID or the query fails.
+
+  Module: <module>:
+
+  One column per monitored module. Receives true when at least one of the roles that indicate the module is available in the CID, because the platform does not expose the subscriptions: Falcon Cloud Security by the CSPM roles (horizon_*, cspg_*, cspm_*) or container roles (kubernetes_*, image_*); Falcon Data Protection by the data_protection_* roles; Falcon Device Control by the device_control_manager role; Falcon Discover by the discover_* roles; Falcon Firewall Management by the firewall_manager role; Falcon for IT by the falcon_for_it_* roles; Falcon for Mobile by the mobile_admin role; Falcon Forensics by the forensic_* roles; Falcon Identity Threat Protection by the identity_protection_* or idp_* roles; Falcon Insight XDR by the falconhost_investigator or event_viewer roles; Falcon Next-Gen SIEM by the xdr_* roles; Falcon Prevent by the prevention_policy_manager role; Falcon Spotlight by the vulnerability_manager role. The indicator was checked against the console module list of three tenants. Known limitations: Next-Gen SIEM also appears as enabled where only Falcon Log Management exists, Discover also appears where Falcon for IT exists, and Prevent, being the base of the platform, appears in all of them. Receives "-" when the CID's roles could not be read. Roles that neither indicate a module nor are in the list of known roles are reported by the routine so that the table can be maintained.
+structure_notes: |-
+  The data sources will be organized into the columns Tenant Type, Parent Name, Parent CID, Tenant Name, Tenant CID, Status, Domains, Shared Tenant, Hosts Total, Users Total, Module: Falcon Cloud Security, Module: Falcon Data Protection, Module: Falcon Device Control, Module: Falcon Discover, Module: Falcon Firewall Management, Module: Falcon for IT, Module: Falcon for Mobile, Module: Falcon Forensics, Module: Falcon Identity Threat Protection, Module: Falcon Insight XDR, Module: Falcon Next-Gen SIEM, Module: Falcon Prevent, Module: Falcon Spotlight, Reference Month, Reference Year, Reference Date, ensuring consistency, asset traceability, and data readiness for the indicators layer.
+storage_notes: |-
+  Storage will be done in the Silver layer; the structured data will be kept ready for queries feeding the indicator calculations.
+
+  The data is organized following the standard naming convention. Additionally, temporal segregation must be maintained by collection period, using the YYYY-MM-DD naming convention, according to the frequency defined by the business. The following pattern must be followed:
+
+  CYBER/Client-A/Silver/FlightTenants/YYYY-MM-DD/Tenants.json
+
+  This organization ensures temporal traceability, ingestion standardization, and ease of auditing the data.
+sample_output: |-
+  {
+    "Tenant Type": "Child",
+    "Parent Name": "02 - Example Client Inc. | Self-Managed",
+    "Parent CID": "3a4b5c6d7e8f49a0b1c2d3e4f5a6b7c8",
+    "Tenant Name": "SMG | Example Client Corp",
+    "Tenant CID": "4b5c6d7e8f9a40b1c2d3e4f5a6b7c8d9",
+    "Status": "Active",
+    "Domains": "exampleclient.com.br; examplevc.com.br",
+    "Shared Tenant": false,
+    "Hosts Total": 1574,
+    "Users Total": 8,
+    "Module: Falcon Cloud Security": false,
+    "Module: Falcon Data Protection": false,
+    "Module: Falcon Device Control": true,
+    "Module: Falcon Discover": false,
+    "Module: Falcon Firewall Management": false,
+    "Module: Falcon for IT": false,
+    "Module: Falcon for Mobile": false,
+    "Module: Falcon Forensics": false,
+    "Module: Falcon Identity Threat Protection": false,
+    "Module: Falcon Insight XDR": true,
+    "Module: Falcon Next-Gen SIEM": true,
+    "Module: Falcon Prevent": true,
+    "Module: Falcon Spotlight": false,
+    "Reference Month": "10",
+    "Reference Year": "2026",
+    "Reference Date": "2026-10-16"
+  }
+owner: "Cyber Security Team"
+source_repo: "CYBER__FlightTenants"
+last_reviewed: '2026-10-16'

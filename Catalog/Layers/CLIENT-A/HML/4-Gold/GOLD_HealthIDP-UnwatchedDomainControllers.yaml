@@ -1,0 +1,25 @@
+id: GOLD_HealthIDP-UnwatchedDomainControllers
+layer: gold
+project: IDP Health Check Report
+sources_silver: []
+sources_audit:
+- AUDIT_HealthIDP-UnwatchedDomainControllers
+description: |-
+  The Gold layer consolidates the data from the Silver layer into indicators ready for analytical and executive consumption.
+
+  All indicators must be generated per client, department group, and/or department.
+
+  The generated indicators are:
+kpis:
+- title: Domain controllers without a match in the inventory
+  calculation: count of distinct Host Name values.
+  filters: null
+  reason: each domain controller in this list does not match any machine in the VCenter inventory, either because the inventory does not record it, or because Identity Protection knows it without an installed sensor and therefore without a MAC address for the cross-reference. Without a responsible department, it is left out of the reports by area, and a DC is precisely the server through which all of the domain's authentication passes. The total should tend toward zero.
+  view: numeric count by reference month, detailed in a list with Host Name, Domain, OS Version, Last Seen, and the Sensor Installed item column. The sensor column separates the DC that has no sensor from the DC with a sensor that is merely missing from the inventory.
+
+- title: Unmatched domain controllers inactive for more than 10 days
+  calculation: count of distinct Host Name values where the difference between Reference Date and Last Seen is greater than 10 days.
+  filters: disregard domain controllers with Last Seen equal to "-".
+  reason: an unmatched domain controller with no activity for more than 10 days has probably been decommissioned, but remains registered in Identity Protection, where it distorts the sensor coverage and the domain's risk factors. Unlike the EDR hosts, there is currently no removal automation for them, so each item in the list calls for manual verification, to confirm the decommissioning and clean up the record, or to fix the inventory if the DC still exists.
+  view: numeric count by reference month, detailed in a list with Host Name, Domain, Last Seen, and the Sensor Installed item column, sorted from the oldest activity to the most recent.
+last_reviewed: '2026-10-06'

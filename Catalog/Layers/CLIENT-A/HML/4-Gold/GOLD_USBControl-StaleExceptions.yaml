@@ -1,0 +1,19 @@
+id: GOLD_USBControl-StaleExceptions
+layer: gold
+project: USB Device Control
+sources_silver: []
+sources_audit:
+- AUDIT_USBControl-StaleExceptions
+description: |-
+  The Gold layer consolidates the data from the Silver layer into indicators ready for analytical and executive consumption.
+
+  All indicators must be generated per client, department group, and/or department.
+
+  The generated indicators are:
+kpis:
+- title: Number of USB exceptions inactive for 90 days or more
+  calculation: count of distinct Exception Id where Is Active is false and Usage History (Days) is greater than or equal to 90.
+  filters: Usage History (Days) greater than or equal to 90 days
+  reason: an exception with no recorded usage for 90 days or more granted access that no one made use of, keeping an open risk with no corresponding operational benefit. The indicator measures the size of the queue of stalled exceptions, candidates for automatic revocation, and its growth points to exceptions being granted without periodic review.
+  view: numeric count by reference month, detailed in a list with Device Name, Policy Name, Created At, and Last Seen. This distinguishes an old exception that was never used from a newly created one that hasn't had time to accumulate usage yet.
+last_reviewed: '2026-10-06'

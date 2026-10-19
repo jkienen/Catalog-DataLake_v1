@@ -1,0 +1,43 @@
+id: RAW_Crowdstrike-RolesParent
+layer: raw
+platform: Crowdstrike
+endpoint: |-
+  (Roles Parent)
+  - GET /user-management/queries/roles/v1
+description: |-
+  Obtains the roles available in each CID of the Flight Control hierarchy, which reflect the modules enabled in the tenant, including the custom roles created by the client.
+load_type: Full
+frequency: Weekly
+volume_per_frequency: 45Kb
+execution_schedule: Sundays at 03:00 AM and on the 1st of the month at 03:00 AM
+extraction_notes: |-
+  The Data Science team will be responsible for running the routine that queries the described endpoint, applying the necessary filters, and storing the data in the Raw layer of the Data Lake.
+
+  Note: the query is made with the credential of the global CID (parent) and repeated within each CID of the hierarchy, authenticating with the member_cid parameter (one login per CID: in the global itself, in each parent and in each child CID). The sample list was reduced to a few representative roles; a CID returns between 35 and 100 roles.
+filters: NA
+storage_notes: |-
+  Storage will be done in the Raw layer, containing the data extracted directly from the described API endpoint, without any type of transformation, fully preserving the data.
+
+  The data is organized following the standard naming convention. Additionally, temporal segregation must be maintained by collection period, using the YYYY-MM-DD naming convention, according to the frequency defined by the business. The following pattern must be followed:
+
+  CYBER/Client-A/Raw/CROWDSTRIKE/YYYY-MM-DD/RolesParent.json
+
+  This organization ensures temporal traceability, ingestion standardization, and ease of auditing the protected server inventory data.
+sample_output: |-
+  {
+    "resources": [
+      "falconhost_admin",
+      "falconhost_investigator",
+      "device_control_manager",
+      "firewall_manager",
+      "vulnerability_manager",
+      "identity_protection_admin",
+      "xdr_admin",
+      "forensic_investigator",
+      "mobile_admin",
+      "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6"
+    ]
+  }
+owner: "Cyber Security Team"
+source_repo: "CYBER__FlightTenants"
+last_reviewed: '2026-10-16'

@@ -1,0 +1,197 @@
+id: RAW_Crowdstrike-AuditEvents
+layer: raw
+platform: Crowdstrike
+endpoint: |-
+  (Audit Events)
+  - GET /sensors/entities/datafeed/v2
+  - GET <dataFeedURL> (stream URL returned by the first call)
+description: |-
+  Obtains the tenant's Event Stream events, including the console and API audit log (logins, two-factor verification, SSO, tenant switch, API client changes, role grants and revocations, policy changes, and revealed uninstall tokens), in addition to the other events published in the stream.
+load_type: Incremental
+frequency: Monthly
+volume_per_frequency: 321Mb
+execution_schedule: 2nd of the month at 01:00 AM
+extraction_notes: |-
+  The Data Science team will be responsible for running the routine that queries the described endpoint, applying the necessary filters, and storing the data in the Raw layer of the Data Lake.
+
+  Note: the extraction happens in two steps: the first call returns the stream URL and a session token, and the second reads the stream from the oldest event it keeps (offset 0). Reading stops when it reaches events created one day after the end of the previous calendar month. The stream keeps about 34 days, so the extraction needs to run in the first days of the month to cover the entire previous month. Accented characters in the texts arrive corrupted from the source itself (for example, an accented letter arrives as �). The stream also publishes events that are not audit events (detections, Identity Protection, RTR sessions); the sample contains one record of each audit format used (AuditLogV3Event for login, API client, roles, and policy, and UserActivityAuditEvent for uninstall token).
+filters: |-
+  Run the query with the following conditions:
+
+  - app_id: FalconAudits
+  - format: json
+  - offset: 0
+storage_notes: |-
+  Storage will be done in the Raw layer, containing the data extracted directly from the described API endpoint, without any type of transformation, fully preserving the data.
+
+  The data is organized following the standard naming convention. Additionally, temporal segregation must be maintained by collection period, using the YYYY-MM-DD naming convention, according to the frequency defined by the business. The following pattern must be followed:
+
+  CYBER/Client-A/Raw/CROWDSTRIKE/YYYY-MM-DD/AuditEvents.json
+
+  This organization ensures temporal traceability, ingestion standardization, and ease of auditing the protected server inventory data.
+sample_output: |-
+  [
+    {
+      "metadata": {
+        "customerIDString": "2b3c4d5e6f7a48b9c0d1e2f3a4b5c6d7",
+        "offset": 601830134,
+        "eventType": "AuditLogV3Event",
+        "eventCreationTime": 1789242440964,
+        "version": "1.0"
+      },
+      "event": {
+        "Category": "CrowdStrike Authentication",
+        "Action": "userAuthenticate",
+        "ActorID": "user.example@example.com.br",
+        "ActorType": 1,
+        "ActorIP": "203.0.113.163",
+        "TargetType": 0,
+        "GeoCity": "Example City",
+        "GeoCountry": "Brazil",
+        "EventVersion": "1.0.0",
+        "ActionTimestamp": 1789242440964,
+        "Extensions": {
+          "action_target_name": "user.example@example.com.br",
+          "actor_cid": "2b3c4d5e6f7a48b9c0d1e2f3a4b5c6d7",
+          "success": "SUCCESS",
+          "success_1": "true",
+          "target_cid": "2b3c4d5e6f7a48b9c0d1e2f3a4b5c6d7",
+          "target_name": "user.example@example.com.br",
+          "target_uuid": "8f9a0b1c-2d3e-44f5-a6b7-c8d9e0f1a2b3",
+          "trace_id": "9a0b1c2d3e4f45a6b7c8d9e0f1a2b3c4"
+        }
+      }
+    },
+    {
+      "metadata": {
+        "customerIDString": "2b3c4d5e6f7a48b9c0d1e2f3a4b5c6d7",
+        "offset": 601888491,
+        "eventType": "AuditLogV3Event",
+        "eventCreationTime": 1789593043696,
+        "version": "1.0"
+      },
+      "event": {
+        "Category": "Crowdstrike API Client",
+        "Action": "UpdateAPIClient",
+        "ActorID": "user.example@example.com.br",
+        "ActorType": 1,
+        "ActorIP": "203.0.113.20",
+        "TargetType": 0,
+        "GeoCity": "Example City",
+        "GeoCountry": "Brazil",
+        "TraceID": "0b1c2d3e4f5a46b7c8d9e0f1a2b3c4d5",
+        "EventVersion": "1.0.0",
+        "ActionTimestamp": 1789593043696,
+        "Extensions": {
+          "actor_cid": "2b3c4d5e6f7a48b9c0d1e2f3a4b5c6d7",
+          "actor_user": "user.example@example.com.br",
+          "actor_user_uuid": "",
+          "id": "1c2d3e4f5a6b47c8d9e0f1a2b3c4d5e6",
+          "message": "Successfully updated API Client origin=cs-ui-proxy request-method=PATCH",
+          "name": "Queries - Example User",
+          "new_name": "Queries - Example User",
+          "scope": "1",
+          "source": "Crowdstrike API Client",
+          "sub_component_1": "UpdateAPIClient",
+          "success": "true",
+          "trace_id": "0b1c2d3e4f5a46b7c8d9e0f1a2b3c4d5",
+          "type": "API"
+        }
+      }
+    },
+    {
+      "metadata": {
+        "customerIDString": "2b3c4d5e6f7a48b9c0d1e2f3a4b5c6d7",
+        "offset": 601964036,
+        "eventType": "AuditLogV3Event",
+        "eventCreationTime": 1790523015692,
+        "version": "1.0"
+      },
+      "event": {
+        "Category": "Crowdstrike Authentication",
+        "Action": "revokeUserRoles",
+        "ActorID": "support@example.com",
+        "ActorType": 1,
+        "ActorIP": "",
+        "TargetType": 0,
+        "TraceID": "2d3e4f5a6b7c48d9e0f1a2b3c4d5e6f7",
+        "EventVersion": "1.0.0",
+        "ActionTimestamp": 1790523015692,
+        "Extensions": {
+          "actor_cid": "2b3c4d5e6f7a48b9c0d1e2f3a4b5c6d7",
+          "message": "Successfully revoke user role assignments",
+          "previous_roles": "cs_support_admin",
+          "roles": "cs_support_admin",
+          "scope": "1",
+          "source": "Crowdstrike Authentication",
+          "sub_component_1": "revokeUserRoles",
+          "success": "true",
+          "target_cid": "2b3c4d5e6f7a48b9c0d1e2f3a4b5c6d7",
+          "target_user_uuid": "3e4f5a6b-7c8d-49e0-f1a2-b3c4d5e6f7a8"
+        }
+      }
+    },
+    {
+      "metadata": {
+        "customerIDString": "2b3c4d5e6f7a48b9c0d1e2f3a4b5c6d7",
+        "offset": 601944219,
+        "eventType": "AuditLogV3Event",
+        "eventCreationTime": 1790254542000,
+        "version": "1.0"
+      },
+      "event": {
+        "Category": "sensor_update_policy",
+        "Action": "update_policy",
+        "ActorID": "user.example@example.com.br",
+        "ActorType": 1,
+        "ActorIP": "203.0.113.68",
+        "TargetType": 0,
+        "GeoCity": "Example City",
+        "GeoCountry": "Brazil",
+        "EventVersion": "1.0.0",
+        "ActionTimestamp": 1790254542000,
+        "Extensions": {
+          "old_policy_settings_ReleaseID": "{\"release_id\":\"tagged|2\"}",
+          "old_policy_settings_UninstallProtection": "{\"uninstall_protection\":\"ENABLED\"}",
+          "policy_description": "",
+          "policy_id": "4f5a6b7c8d9e40f1a2b3c4d5e6f7a8b9",
+          "policy_name": "Custom: Default (Windows)",
+          "policy_platform": "Windows",
+          "policy_settings_ReleaseID": "{\"release_id\":\"\"}",
+          "policy_settings_UninstallProtection": "{\"uninstall_protection\":\"MAINTENANCE_MODE\"}",
+          "policy_type": "Automatic",
+          "success": "false"
+        }
+      }
+    },
+    {
+      "metadata": {
+        "customerIDString": "2b3c4d5e6f7a48b9c0d1e2f3a4b5c6d7",
+        "offset": 601893571,
+        "eventType": "UserActivityAuditEvent",
+        "eventCreationTime": 1789652357000,
+        "version": "1.0"
+      },
+      "event": {
+        "UserId": "user.example@example.com.br",
+        "UserIp": "203.0.113.83",
+        "OperationName": "reveal_token",
+        "ServiceName": "sensor_update_policy",
+        "AuditKeyValues": [
+          {
+            "Key": "device_id",
+            "ValueString": "5a6b7c8d9e0f41a2b3c4d5e6f7a8b9c0"
+          }
+        ],
+        "UTCTimestamp": 1789652357,
+        "Attributes": {
+          "device_id": "5a6b7c8d9e0f41a2b3c4d5e6f7a8b9c0",
+          "message": "Reinstall required",
+          "seedID": "101"
+        }
+      }
+    }
+  ]
+owner: "Cyber Security Team"
+source_repo: "CYBER__FalconAudits"
+last_reviewed: '2026-10-16'

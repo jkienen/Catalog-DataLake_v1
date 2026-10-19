@@ -1,0 +1,25 @@
+id: GOLD_GVulnerabilities-UnwatchedAssets
+layer: gold
+project: Vulnerability Management
+sources_silver: []
+sources_audit:
+- AUDIT_GVulnerabilities-UnwatchedAssets
+description: |-
+  The Gold layer consolidates the data from the Silver layer into indicators ready for analytical and executive consumption.
+
+  All indicators must be generated per client, department group, and/or department.
+
+  The generated indicators are:
+kpis:
+- title: Assets without a match in the inventory
+  calculation: count of distinct Server Id values.
+  filters: null
+  reason: assets monitored by Tenable that do not match any machine in the VCenter inventory are left without an assigned department, and their vulnerabilities do not reach anyone responsible. The total measures how much of the known risk has no owner and should drop as the inventory is corrected or obsolete assets are removed.
+  view: numeric count by reference month, detailed in a list with Server Name, Server Type, Last Seen and Score AES. The exposure next to each asset prioritizes those that carry the most risk without anyone responsible.
+
+- title: Assets without a match inactive for more than 10 days
+  calculation: count of distinct Server Id values whose difference between Reference Date and Last Seen is greater than 10 days.
+  filters: disregard assets with Last Seen equal to "-".
+  reason: these are the assets that the removal automation deletes from Tenable, without a match in the inventory and not seen for more than 10 days. The indicator measures the size of this queue at each cycle, and the Audit keeps the proof that they existed after the removal. A number that does not drop between cycles indicates that the automation is not acting and that Tenable keeps counting assets that no longer exist.
+  view: numeric count by reference month, detailed in a list with Server Name, Server Type, Last Seen and Score ACR, ordered from the oldest sighting to the most recent.
+last_reviewed: '2026-10-06'

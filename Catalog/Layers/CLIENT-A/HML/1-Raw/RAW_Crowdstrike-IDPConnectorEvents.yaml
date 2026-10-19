@@ -1,0 +1,69 @@
+id: RAW_Crowdstrike-IDPConnectorEvents
+layer: raw
+platform: Crowdstrike
+endpoint: |-
+  (Identity Protection Connector Events - GraphQL Timeline)
+  - POST /identity-protection/combined/graphql/v1
+description: |-
+  Obtains the history of Identity Protection connector events (IDaaS and MFA) recorded in the timeline, including configuration additions, changes and removals with the responsible user, and connector failures with status, error message and resolution state.
+load_type: Full
+frequency: Weekly
+volume_per_frequency: "?"
+execution_schedule: Sundays at 01:00 AM and on the 1st of the month at 01:00 AM
+extraction_notes: |-
+  The Data Science team will be responsible for running the routine that queries the described endpoint, applying the necessary filters, and storing the data in the Raw layer of the Data Lake.
+
+  Note: the API does not list the connectors directly, only the configuration and failure events - that is why the query reads the entire timeline since 2020-01-01, via GraphQL, paginated by cursor in batches of 1000 events, from oldest to newest. The same dataset carries two record formats: configuration events (addition, change and removal) and failure events.
+filters: |-
+  Run the query with the following conditions:
+
+  - query:
+  "query ($start: DateTimeInput, $after: Cursor) {
+    timeline(types: [CONNECTOR_CONFIGURATION_ADDED, CONNECTOR_CONFIGURATION_MODIFIED, CONNECTOR_CONFIGURATION_DELETED, CONNECTOR_FAILURE],
+             startTime: $start, first: 1000, after: $after, sortOrder: ASCENDING) {
+      nodes {
+        eventType timestamp
+        ... on TimelineConnectorConfigurationEvent { type category systemUser { displayName } }
+        ... on TimelineConnectorFailureEvent { connectorType connectorStatus errorDetails { message } state { resolved dismissed lastUpdateTime } }
+      }
+      pageInfo { hasNextPage endCursor }
+    }
+  }"
+  - variables: {"start": "2020-01-01T00:00:00Z", "after": endCursor of the previous page, null on the first call}
+storage_notes: |-
+  Storage will be done in the Raw layer, containing the data extracted directly from the described API endpoint, without any type of transformation, fully preserving the data.
+
+  The data is organized following the standard naming convention. Additionally, temporal segregation must be maintained by collection period, using the YYYY-MM-DD naming convention, according to the frequency defined by the business. The following pattern must be followed:
+
+  CYBER/Client-A/Raw/CROWDSTRIKE/YYYY-MM-DD/IDPConnectorEvents.json
+
+  This organization ensures temporal traceability, ingestion standardization, and ease of auditing the protected server inventory data.
+sample_output: |-
+  [
+      {
+          "eventType": "CONNECTOR_CONFIGURATION_ADDED",
+          "timestamp": "2024-09-08T20:43:26.494Z",
+          "type": "Microsoft MFA (OIDC)",
+          "category": "Cloud MFA (protocol based)",
+          "systemUser": {
+              "displayName": "user2.example@corp-companyx.com.br"
+          }
+      },
+      {
+          "eventType": "CONNECTOR_FAILURE",
+          "timestamp": "2024-09-09T17:44:33.912Z",
+          "connectorType": "AZURE",
+          "connectorStatus": "AUTHENTICATION_ERROR",
+          "errorDetails": {
+              "message": "java.util.concurrent.ExecutionException: AzureApiException(super=com.preempt.data_sources_integration.services.data_sources_connectors.azure.AzureApiException: com.microsoft.aad.msal4j.MsalServiceException: AADSTS7000222: The provided client secret keys for app '5e6f7a8b-9c0d-4e1f-8a2b-3c4d5e6f7a8b' are expired. Visit the Azure portal to create new keys for your app: https://aka.ms/NewClientSecret, or consider using certificate credentials for added security: https://aka.ms/certCreds. Trace ID: 6f7a8b9c-0d1e-4f2a-9b3c-4d5e6f7a8b9c Correlation ID: 7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d Timestamp: 2026-09-28 15:42:48Z, status=AUTHENTICATION_ERROR)"
+          },
+          "state": {
+              "resolved": false,
+              "dismissed": false,
+              "lastUpdateTime": "2026-09-28T15:43:29.765Z"
+          }
+      }
+  ]
+owner: "Cyber Security Team"
+source_repo: "CYBER__HealthIDP"
+last_reviewed: '2026-09-28'

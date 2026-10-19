@@ -1,0 +1,46 @@
+id: RAW_Crowdstrike-IDPPolicyRuleMatches
+layer: raw
+platform: Crowdstrike
+endpoint: |-
+  (Identity Protection Policy Rule Matches - GraphQL Timeline)
+  - POST /identity-protection/combined/graphql/v1
+description: |-
+  Obtains the history of Identity Protection policy rule (conditional access) matches recorded in the timeline, including the matched rule, the date of each match, whether the rule was in simulation mode and whether the action was completed successfully.
+load_type: Full
+frequency: Weekly
+volume_per_frequency: 1Kb
+execution_schedule: Sundays at 01:00 AM and on the 1st of the month at 01:00 AM
+extraction_notes: |-
+  The Data Science team will be responsible for running the routine that queries the described endpoint, applying the necessary filters, and storing the data in the Raw layer of the Data Lake.
+
+  Note: the API does not expose the match count per rule, only the match events - that is why the query reads the entire timeline since 2020-01-01, via GraphQL, paginated by cursor in batches of 1000 events, from oldest to newest.
+filters: |-
+  Run the query with the following conditions:
+
+  - query:
+  "query ($start: DateTimeInput, $after: Cursor) {
+    timeline(types: [POLICY_RULE_MATCH], startTime: $start, first: 1000, after: $after, sortOrder: ASCENDING) {
+      nodes { timestamp ... on TimelinePolicyRuleMatchEvent { ruleId ruleName simulationMode successful } }
+      pageInfo { hasNextPage endCursor }
+    }
+  }"
+  - variables: {"start": "2020-01-01T00:00:00Z", "after": endCursor of the previous page, null on the first call}
+storage_notes: |-
+  Storage will be done in the Raw layer, containing the data extracted directly from the described API endpoint, without any type of transformation, fully preserving the data.
+
+  The data is organized following the standard naming convention. Additionally, temporal segregation must be maintained by collection period, using the YYYY-MM-DD naming convention, according to the frequency defined by the business. The following pattern must be followed:
+
+  CYBER/Client-A/Raw/CROWDSTRIKE/YYYY-MM-DD/IDPPolicyRuleMatches.json
+
+  This organization ensures temporal traceability, ingestion standardization, and ease of auditing the protected server inventory data.
+sample_output: |-
+  {
+      "timestamp": "2026-10-06T14:05:05.382Z",
+      "ruleId": "3d4e5f6a-7b8c-4d9e-8f0a-1b2c3d4e5f6a",
+      "ruleName": "RDP ACCESS FOR PROGRAMMATIC ACCOUNTS/SERVICE ACCOUNTS",
+      "simulationMode": true,
+      "successful": true
+  }
+owner: "Cyber Security Team"
+source_repo: "CYBER__HealthIDP"
+last_reviewed: '2026-10-06'

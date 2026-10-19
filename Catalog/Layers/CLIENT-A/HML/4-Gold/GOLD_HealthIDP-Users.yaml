@@ -1,0 +1,73 @@
+id: GOLD_HealthIDP-Users
+layer: gold
+project: IDP Health Check Report
+sources_silver:
+- SILVER_HealthIDP-Users
+sources_audit: []
+description: |-
+  The Gold layer consolidates the data from the Silver layer into indicators ready for analytical and executive consumption.
+
+  All indicators must be generated per client, department group, and/or department.
+
+  The generated indicators are:
+kpis:
+- title: Percentage of privileged accounts
+  calculation: ratio of users with Privileged true over the total number of users, broken down by Account Type.
+  filters: null
+  reason: each privileged account is a higher-value target, because its compromise grants control over the domain or the cloud tenant. The percentage measures the size of the surface that needs reinforced protection, and it tends to grow silently, with roles granted for a task and never removed. The breakdown by account type separates people from programmatic accounts, which usually have long-lived credentials and rarely go through access review.
+  view: percentage by reference month, detailed in a list with Display Name, Account, Department, Account Type, and Privileged Roles. This distinguishes who administers the domain from who only has cloud roles, and shows where the growth comes from.
+
+- title: Percentage of privileged accounts with at least one risk factor
+  calculation: ratio of users where at least one of the risk factor item columns has the value Attention over the total number of users.
+  filters: only users with Privileged true.
+  reason: a risk factor on a regular account is a hygiene problem, but on a privileged account it is a direct path to domain compromise, whether through a weak password, a duplicate password, missing MFA or a known attack path. Crossing privilege with risk narrows the list of fixes down to the few accounts where each adjustment reduces exposure the most, and the expected value is zero.
+  view: percentage by reference month, detailed in a list with Display Name, Account, Privileged Roles, Risk Severity, and Top Risk Factor. The main factor next to the account indicates the concrete fix to request from the person responsible.
+
+- title: Percentage of users with local administrator privilege
+  calculation: ratio of users with Local Admin true over the total number of users, accompanied by the sum of Local Admin Machines (Total).
+  filters: null
+  reason: local administrator is the step that allows extracting credentials from memory and moving laterally between machines. The more users have this right, and on the more machines, the greater the reach of a single compromised workstation. The sum of machines reveals the broad group grants that the percentage alone hides, because a single group can give local administrator on dozens of machines to all of its members.
+  view: percentage by reference month, detailed in a list with Display Name, Department, Local Admin Machines (Total), Local Admin Groups, and Local Admin On Owned Machines. This distinguishes who is an administrator only of their own machine from who received the right en masse through a group.
+
+- title: Percentage of accounts without MFA configured
+  calculation: ratio of users with the Account Without MFA Configured item column equal to Attention over the total number of users, broken down by Privileged.
+  filters: null
+  reason: without MFA, a leaked or guessed password is enough to take over the account, and the Identity Protection policy rules that require MFA have no way to challenge this user. The breakdown by privilege shows where the absence is critical, because on an administrative account it hands the domain to anyone who has only the password. The percentage tracks the progress of MFA adoption and should fall with each cycle.
+  view: percentage by reference month, detailed in a list with Display Name, Account, Department, Account Source, and Privileged. The account source indicates whether the fix is made in AD or in Entra ID.
+
+- title: Percentage of accounts with a weak or duplicate password
+  calculation: ratio of users where the Weak Password item column or the Duplicate Password item column has the value Attention over the total number of users.
+  filters: null
+  reason: a weak password is the direct target of mass guessing attacks, such as password spraying, and a duplicate password means that the compromise of one account opens all the others that share the same credential. No detection fixes these flaws after the fact, only changing the password, so the indicator directly measures how many accounts are one attempt away from compromise.
+  view: percentage by reference month, detailed in a list with Display Name, Account, Department, Privileged, and the names of the password item columns in Attention. This separates the weak password, which calls for an individual change, from the duplicate password, which calls for investigating the group of accounts that share the credential.
+
+- title: Percentage of enabled accounts with a password that never expires
+  calculation: ratio of users with Password Never Expires true over the total number of users.
+  filters: only users with AD Enabled true.
+  reason: a credential that never expires remains valid indefinitely for whoever stole it, and this attribute tends to be concentrated in service accounts, precisely those that have broad permissions and that no one monitors day to day. The indicator measures how many active accounts are outside the rotation policy and supports the review of these exceptions, which tend to grow uncontrolled.
+  view: percentage by reference month, detailed in a list with Display Name, Account, Account Type, Privileged, and Password Last Change. The date of the last change next to it shows how long the credential has been in use.
+
+- title: Accounts exposed to Kerberoasting and AS-REP roasting
+  calculation: count of users where the Has SPNs item column or the Kerberos Preauth Not Required item column has the value Attention, broken down by Privileged.
+  filters: null
+  reason: any authenticated domain user can request encrypted material for these accounts and crack the password offline, without generating a logon failure or a lockout. Accounts with an SPN are usually service accounts with old passwords and elevated privileges, which makes this combination one of the most common escalation routes in AD environments. The breakdown by privilege indicates which accounts first need a long password or migration to a managed account.
+  view: numeric count by reference month, detailed in a list with Display Name, Account, Privileged, Password Last Change, and the names of the item columns in Attention. The password age next to it shows which accounts are most likely to be cracked.
+
+- title: Accounts with an attack path or hidden privileges
+  calculation: count of users where the Has Attack Path item column or the Stealthy Privileges item column has the value Attention.
+  filters: null
+  reason: these are accounts that do not appear as administrators, but that reach privilege in the domain through delegated permissions, group nesting or rights over sensitive objects. It is the escalation that the review of administrative groups does not see, and the preferred path for someone already inside the network. Each listed account is a permission to remove, not a password to change.
+  view: numeric count by reference month, detailed in a list with Display Name, Account, Department, Privileged Roles, and Top Risk Factor. This distinguishes the account with an attack path, which calls for cutting the permission chain, from the account that already has a direct hidden privilege.
+
+- title: Percentage of users with no activity for more than 45 days
+  calculation: ratio of users where the difference between Reference Date and Last Activity is greater than 45 days over the total number of users.
+  filters: only users with an enabled account (AD Enabled or Entra ID Enabled true), disregarding those with Last Activity equal to "-".
+  reason: an account unused for more than 45 days is a valid credential that no one will notice being used, because there is no active owner to find a logon strange. It is the preferred target for persistence after a compromise, and it usually comes from terminations, role changes and closed projects that were not communicated. The percentage measures the accumulation of this liability and supports the deactivation routine.
+  view: percentage by reference month, detailed in a list with Display Name, Account, Department, Last Activity, Account Source, and Privileged. The account source indicates where the deactivation should be done, in AD, in Entra ID or in both, and the privilege next to it points to which accounts to deactivate first.
+
+- title: Percentage of users with a password not changed for more than 45 days
+  calculation: ratio of users where the difference between Reference Date and Password Last Change is greater than 45 days over the total number of users.
+  filters: only users with AD Enabled true, disregarding those with Password Last Change equal to "-" - which already excludes the accounts that exist only in Entra ID.
+  reason: the longer the same password remains in use, the larger the window in which a leaked, captured or cracked credential remains valid. The indicator measures how well rotation keeps up with the cycle defined by the business and reveals the accounts that escape it, usually service accounts and old exceptions. Read together with the password-that-never-expires indicator, it separates those outside the policy from those who merely delayed the change.
+  view: percentage by reference month, detailed in a list with Display Name, Account, Department, Password Last Change, Password Never Expires, and Privileged. The password-never-expires flag next to it explains a good share of the cases.
+last_reviewed: '2026-09-28'

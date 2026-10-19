@@ -1,0 +1,84 @@
+id: RAW_Crowdstrike-IDPDomainControllers
+layer: raw
+platform: Crowdstrike
+endpoint: |-
+  (Identity Protection Domain Controllers - GraphQL)
+  - POST /identity-protection/combined/graphql/v1
+description: |-
+  Obtains the domain controllers known to Identity Protection, with or without an installed sensor, including entity and host identification, domain, last IP and last activity, operating system, risk score and severity, identified risk factors and the monitoring flag (watchlist).
+load_type: Full
+frequency: Weekly
+volume_per_frequency: "?"
+execution_schedule: Sundays at 01:00 AM and on the 1st of the month at 01:00 AM
+extraction_notes: |-
+  The Data Science team will be responsible for running the routine that queries the described endpoint, applying the necessary filters, and storing the data in the Raw layer of the Data Lake.
+
+  Note: the query is made via GraphQL and paginated by cursor - each page returns up to 200 entities, and the cursor of the last entity (endCursor) is sent in the next call while there is a next page (hasNextPage).
+filters: |-
+  Run the query with the following conditions:
+
+  - query:
+  "query ($after: Cursor) {
+    entities(types: [ENDPOINT], roles: [DomainControllerRole], archived: false, first: 200, after: $after) {
+      nodes {
+        entityId primaryDisplayName riskScore riskScoreSeverity watched riskFactors { type score }
+        accounts { ... on ActiveDirectoryAccountDescriptor { domain } }
+        ... on EndpointEntity { agentId hostName lastIpAddress mostRecentActivity operatingSystemInfo { displayName } }
+      }
+      pageInfo { hasNextPage endCursor }
+    }
+  }"
+  - variables: {"after": endCursor of the previous page, null on the first call}
+storage_notes: |-
+  Storage will be done in the Raw layer, containing the data extracted directly from the described API endpoint, without any type of transformation, fully preserving the data.
+
+  The data is organized following the standard naming convention. Additionally, temporal segregation must be maintained by collection period, using the YYYY-MM-DD naming convention, according to the frequency defined by the business. The following pattern must be followed:
+
+  CYBER/Client-A/Raw/CROWDSTRIKE/YYYY-MM-DD/IDPDomainControllers.json
+
+  This organization ensures temporal traceability, ingestion standardization, and ease of auditing the protected server inventory data.
+sample_output: |-
+  {
+      "entityId": "1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d",
+      "primaryDisplayName": "AD-ST2-XYZ-DC01",
+      "riskScore": 0.4,
+      "riskScoreSeverity": "NORMAL",
+      "watched": false,
+      "riskFactors": [
+          {
+              "type": "LDAPS_CHANNEL_BINDING",
+              "score": 0.3
+          },
+          {
+              "type": "SUSPICIOUS_SPN",
+              "score": 0.3
+          },
+          {
+              "type": "SPOOLER_SERVICE_RUNNING",
+              "score": 0.3
+          },
+          {
+              "type": "LDAP_SIGNING_DISABLED",
+              "score": 0.3
+          },
+          {
+              "type": "AUTHENTICATE_AS_ANY_DOMAIN_USER_WITH_CERTIFICATE_REQUEST_AGENT_WITHOUT_ANY_RESTRICTIONS",
+              "score": 0.1
+          }
+      ],
+      "accounts": [
+          {
+              "domain": "COMPANYX.CLOUD"
+          }
+      ],
+      "agentId": "b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7",
+      "hostName": "ad-st2-xyz-dc01.companyx.cloud",
+      "lastIpAddress": "10.20.30.5",
+      "mostRecentActivity": "2026-09-27T08:09:40.156Z",
+      "operatingSystemInfo": {
+          "displayName": "Windows Server 2025 Standard 10.0 (26100)"
+      }
+  }
+owner: "Cyber Security Team"
+source_repo: "CYBER__HealthIDP"
+last_reviewed: '2026-09-28'

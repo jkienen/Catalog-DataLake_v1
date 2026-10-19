@@ -1,0 +1,43 @@
+id: RAW_Crowdstrike-UserRolesParent
+layer: raw
+platform: Crowdstrike
+endpoint: |-
+  (User Roles Parent)
+  - GET /user-management/combined/user-roles/v2
+description: |-
+  Obtains the roles granted to each user of the global CID (parent), in every CID they have access to, including the role, the grant type (direct or through the Flight Control CID group) and the source CID group.
+load_type: Full
+frequency: Monthly
+volume_per_frequency: 234Kb
+execution_schedule: 1st of the month at 03:30 AM
+extraction_notes: |-
+  The Data Science team will be responsible for running the routine that queries the described endpoint, applying the necessary filters, and storing the data in the Raw layer of the Data Lake.
+
+  Note: one call per user, with the UUID obtained in the user extraction of the global CID.
+filters: |-
+  Run the query with the following conditions:
+
+  - user_uuid: UUID of each user returned in RAW_Crowdstrike-UsersParent
+  - limit: 500
+storage_notes: |-
+  Storage will be done in the Raw layer, containing the data extracted directly from the described API endpoint, without any type of transformation, fully preserving the data.
+
+  The data is organized following the standard naming convention. Additionally, temporal segregation must be maintained by collection period, using the YYYY-MM-DD naming convention, according to the frequency defined by the business. The following pattern must be followed:
+
+  CYBER/Client-A/Raw/CROWDSTRIKE/YYYY-MM-DD/UserRolesParent.json
+
+  This organization ensures temporal traceability, ingestion standardization, and ease of auditing the protected server inventory data.
+sample_output: |-
+  {
+    "uuid": "aaaa1111-bb22-4cc3-8dd4-eeeeee555555",
+    "cid": "3c4d5e6f7a8b49c0d1e2f3a4b5c6d7e8",
+    "role_id": "billing_dashboard_admin",
+    "role_name": "Billing Dashboard Admin",
+    "grant_type": "default_cid_group",
+    "cid_group_id": "4d5e6f7a8b9c40d1e2f3a4b5c6d7e8f9",
+    "cid_group_name": "Default",
+    "parent_cid": "9f8e7d6c5b4a49382716051a2b3c4d5e"
+  }
+owner: "Cyber Security Team"
+source_repo: "CYBER__FlightTenants"
+last_reviewed: '2026-10-16'

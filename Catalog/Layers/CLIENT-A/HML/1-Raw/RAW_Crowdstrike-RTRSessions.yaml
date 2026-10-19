@@ -1,0 +1,65 @@
+id: RAW_Crowdstrike-RTRSessions
+layer: raw
+platform: Crowdstrike
+endpoint: |-
+  (RTR Sessions)
+  - GET /real-time-response-audit/combined/sessions/v1
+description: |-
+  Obtains the Real Time Response sessions opened in the tenant, including user (or API client), host, session origin, times, duration, and the commands executed in each one.
+load_type: Full
+frequency: Monthly
+volume_per_frequency: 29Mb
+execution_schedule: 1st of the month at 05:00 AM
+extraction_notes: |-
+  The Data Science team will be responsible for running the routine that queries the described endpoint, applying the necessary filters, and storing the data in the Raw layer of the Data Lake.
+
+  Note: the query is run one day at a time, because over the whole-month window the API cursor fails to return about 1% of the sessions; per day, the number read matches the total reported by the API. Pagination follows the cursor returned in pagination.next. In sessions opened by automation, user_id carries the API client identifier (api-client-<id>) instead of an e-mail.
+filters: |-
+  Run the query with the following conditions, for each day of the previous calendar month:
+
+  - filter: "created_at:>='<day, 00:00 (UTC-3)>'+created_at:<'<next day, 00:00 (UTC-3)>'"
+  - limit: 1000
+  - with_command_info: true
+  - offset: cursor returned in pagination.next
+storage_notes: |-
+  Storage will be done in the Raw layer, containing the data extracted directly from the described API endpoint, without any type of transformation, fully preserving the data.
+
+  The data is organized following the standard naming convention. Additionally, temporal segregation must be maintained by collection period, using the YYYY-MM-DD naming convention, according to the frequency defined by the business. The following pattern must be followed:
+
+  CYBER/Client-A/Raw/CROWDSTRIKE/YYYY-MM-DD/RTRSessions.json
+
+  This organization ensures temporal traceability, ingestion standardization, and ease of auditing the protected server inventory data.
+sample_output: |-
+  {
+    "id": "3a4b5c6d-7e8f-49a0-b1c2-d3e4f5a6b7c8",
+    "created_at": "2026-09-21T08:56:24.981Z",
+    "updated_at": "2026-09-21T10:16:49.318Z",
+    "deleted_at": "2026-09-21T10:27:18.929Z",
+    "cloud_request_ids": [
+      "4b5c6d7e-8f9a-40b1-c2d3-e4f5a6b7c8d9"
+    ],
+    "cid": "2b3c4d5e6f7a48b9c0d1e2f3a4b5c6d7",
+    "device_id": "5c6d7e8f9a0b41c2d3e4f5a6b7c8d9e0",
+    "hostname": "host01.example.com.br",
+    "user_id": "user.example@example.com.br",
+    "user_uuid": "6d7e8f9a-0b1c-42d3-e4f5-a6b7c8d9e0f1",
+    "duration": 4232.59,
+    "origin": "source:hosts,deviceId:5c6d7e8f9a0b41c2d3e4f5a6b7c8d9e0",
+    "logs": [
+      {
+        "id": 15,
+        "created_at": "2026-09-21T09:14:05.162Z",
+        "updated_at": "0001-01-01T00:00:00Z",
+        "session_id": "3a4b5c6d-7e8f-49a0-b1c2-d3e4f5a6b7c8",
+        "command_string": "runscript -Raw=```cd /root/ir/example```",
+        "current_directory": "/",
+        "base_command": "runscript",
+        "cloud_request_id": "7e8f9a0b-1c2d-43e4-f5a6-b7c8d9e0f1a2"
+      }
+    ],
+    "offline_queued": false,
+    "commands_queued": false
+  }
+owner: "Cyber Security Team"
+source_repo: "CYBER__FalconAudits"
+last_reviewed: '2026-10-16'

@@ -1,0 +1,144 @@
+id: SILVER_HealthIDP-DomainControllers
+layer: silver
+project: IDP Health Check Report
+sources_raw:
+- RAW_Crowdstrike-IDPSensors
+- RAW_Crowdstrike-IDPDomainControllers
+- RAW_Crowdstrike-IDPServiceHealth
+- RAW_Crowdstrike-Assets
+- RAW_VCenter-Assets
+sources_silver: []
+generates_audits:
+- AUDIT_HealthIDP-UnwatchedDomainControllers
+execution_schedule: Sundays at 02:30 AM and on the 1st of the month at 02:30 AM
+filters: |-
+  Keeps only the domain controllers whose Mac Address matches some record in the VCenter inventory. Those that do not match are separated into the Audit for this layer instead of being discarded - including the DCs that Identity Protection knows without an installed sensor, which are left without a Mac Address when the host is not found in the Falcon device inventory and therefore never match.
+pipeline: |-
+  The Data Science team will be responsible for retrieving the raw data from the Raw layer and structuring it as shown in the next step.
+
+  Department / Server VM:
+
+  Cross-referenced by Mac Address against the VCenter inventory, case-insensitively: Department receives the Department and Server VM receives the VM name of the first matched record. The Department of each VM follows this precedence: the department declared in the VM's metadata, when it is in the registered list of departments; otherwise, CYBER, when the tenant contains "CYBER"; otherwise, TI-INFRA. VM templates are not included in the inventory.
+
+  Mac Address:
+
+  Union of the host's physical and connection addresses, obtained from the Falcon device inventory by the sensor id, deduplicated, sorted, and with the "-" separator replaced by ":". Falls back to ["-"] when the host is not found in the inventory.
+
+  Last Seen:
+
+  For DCs with a sensor, the sensor's last heartbeat, converted from epoch in milliseconds to America/Sao_Paulo (UTC-3) and formatted as YYYY-MM-DD. For DCs without a sensor, the date (YYYY-MM-DD) of the entity's last recorded activity in Identity Protection, without time zone conversion.
+
+  Host Name / Domain / Local Ip / OS Version:
+
+  For DCs with a sensor, copied from the sensor, with the machine's domain converted to lowercase. For DCs without a sensor, they come from the entity in Identity Protection: the host name (or, when absent, the display name), the domains of the entity's AD accounts in lowercase, deduplicated, sorted and joined by commas, the last recorded IP and the operating system name.
+
+  Status / Status Causes / New Enforcement Mode / Group Policy Object:
+
+  Status receives the sensor's raw status without the "status." prefix, capitalized. Status Causes joins the status causes by commas, and falls back to "-" when there is no cause. New Enforcement Mode and Group Policy Object are the capitalization of the sensor's raw value.
+
+  IdP Service Status / IdP Last Checked / Traffic Inspection Status / Traffic Inspection Configuration / Traffic Inspection Enforcement / Inspected Requests (7d) / CPU Cores / CPU Avg Usage (%) / CPU Max Usage (%) / Memory Total (GB) / Memory Avg Usage (%) / Memory Max Usage (%) / Storage Total (GB) / Storage Used (GB) / Storage Available (GB):
+
+  Cross-referenced from the service health in NGSIEM, matching by the sensor id. IdP Last Checked is converted from epoch in milliseconds to America/Sao_Paulo (UTC-3) and formatted as YYYY-MM-DD HH:MM:SS. Inspected Requests (7d) and CPU Cores are rounded to an integer; the other CPU, memory and disk metrics, to one decimal place. Missing or non-numeric values, and DCs without a health record, fall back to "-".
+
+  Watched / Risk Score / Risk Severity:
+
+  Cross-referenced from the DC's entity in Identity Protection, matching the sensor id against the entity's agent id. Risk Severity is capitalized. They fall back to "-" when the sensor has no corresponding entity.
+
+  Top Risk Factor:
+
+  The DC's highest-scoring risk factor, ignoring the watchlist marker (WATCHED), converted into a readable label - capitalized words, with acronyms such as LDAP, LDAPS, NTLM, SMB, SPN, RPC and KRBTGT kept in uppercase. Falls back to "-" when the DC has no risk factors.
+
+  Item: Sensor Installed:
+
+  "Ok" for the DCs coming from the sensor list. "Attention" for the DCs that Identity Protection knows but that do not match any sensor by the agent id - these rows enter the dataset with the sensor columns set to "-", representing the coverage gap.
+
+  Item: Sensor Status / Item: Kerberos / Item: NTLM / Item: LDAP / Item: LDAPS / Item: SMB to DC / Item: RDP to DC / Item: Directory Auditing / Item: Traffic Inspection:
+
+  "Ok" when the sensor configuration has the expected value and "Attention" otherwise; "-" when the value does not exist, which includes all DCs without a sensor. Expected values: Sensor Status = active; Kerberos, NTLM, LDAP and SMB to DC = enforcement; LDAPS and RDP to DC = on; Directory Auditing and Traffic Inspection = true.
+
+  Item: IdP Service / Item: Traffic Inspection Status / Item: Traffic Inspection Enforcement / Item: Service Health Alerts:
+
+  Same rule, applied to the service health in NGSIEM. Expected values: IdP Service Status = Healthy; Traffic Inspection Status and Traffic Inspection Enforcement = Enabled; total service health alerts = 0.
+
+  Item: <risk factor>:
+
+  A column is created for each risk factor found in any DC of the run, except the watchlist marker (WATCHED), with the same readable label as Top Risk Factor. It receives "Attention" when the factor is present on the DC, "Ok" when it is not, and "-" when the DC has no corresponding entity. The set of these columns varies between runs, according to the factors found.
+
+  Reference Month / Reference Year / Reference Date:
+
+  Month (MM), year (YYYY) and date (YYYY-MM-DD) of the run, added as the last columns.
+structure_notes: |-
+  The data sources will be organized into the columns Department, Server VM, Last Seen, Sensor Id, Host Name, Mac Address, Domain, Local Ip, OS Version, Agent Version, IDP Policy, Status, Status Causes, New Enforcement Mode, Group Policy Object, IdP Service Status, IdP Last Checked, Traffic Inspection Status, Traffic Inspection Configuration, Traffic Inspection Enforcement, Inspected Requests (7d), CPU Cores, CPU Avg Usage (%), CPU Max Usage (%), Memory Total (GB), Memory Avg Usage (%), Memory Max Usage (%), Storage Total (GB), Storage Used (GB), Storage Available (GB), Watched, Risk Score, Risk Severity, Top Risk Factor, Item: Sensor Installed, Item: Sensor Status, Item: Kerberos, Item: NTLM, Item: LDAP, Item: LDAPS, Item: SMB to DC, Item: RDP to DC, Item: Directory Auditing, Item: Traffic Inspection, Item: IdP Service, Item: Traffic Inspection Status, Item: Traffic Inspection Enforcement, Item: Service Health Alerts, Item: Authenticate As Any Domain User With Certificate Request Agent Without Any Restrictions, Item: LDAPS Channel Binding, Item: LDAP Signing Disabled, Item: Spooler Service Running, Item: Stale Account, Item: Suspicious SPN, Reference Month, Reference Year, Reference Date, ensuring consistency, asset traceability, and data readiness for the indicators layer.
+storage_notes: |-
+  Storage will be done in the Silver layer; the structured data will be kept ready for queries feeding the indicator calculations.
+
+  The data is organized following the standard naming convention. Additionally, temporal segregation must be maintained by collection period, using the YYYY-MM-DD naming convention, according to the frequency defined by the business. The following pattern must be followed:
+
+  CYBER/Client-A/Silver/HealthIDP/YYYY-MM-DD/DomainControllers.json
+
+  This organization ensures temporal traceability, ingestion standardization, and ease of auditing the data.
+sample_output: |-
+  {
+    "Department": "DATACENTER",
+    "Server VM": "AD-01-XYZ-DC01",
+    "Last Seen": "2026-09-28",
+    "Sensor Id": "d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9",
+    "Host Name": "AD-01-XYZ-DC01",
+    "Mac Address": [
+      "00:50:56:aa:bb:01"
+    ],
+    "Domain": "companyx.cloud",
+    "Local Ip": "10.20.30.6",
+    "OS Version": "Windows Server 2025",
+    "Agent Version": "7.39.21113.0",
+    "IDP Policy": "Custom: Detection and Enforcement",
+    "Status": "Limited-func",
+    "Status Causes": "vmware-tools-nsx",
+    "New Enforcement Mode": "False",
+    "Group Policy Object": "False",
+    "IdP Service Status": "Healthy",
+    "IdP Last Checked": "2026-09-28 12:57:20",
+    "Traffic Inspection Status": "Enabled",
+    "Traffic Inspection Configuration": "Enabled",
+    "Traffic Inspection Enforcement": "Enabled",
+    "Inspected Requests (7d)": 7974,
+    "CPU Cores": 4,
+    "CPU Avg Usage (%)": 2.5,
+    "CPU Max Usage (%)": 76.0,
+    "Memory Total (GB)": 18.0,
+    "Memory Avg Usage (%)": 27.3,
+    "Memory Max Usage (%)": 35.5,
+    "Storage Total (GB)": 250.0,
+    "Storage Used (GB)": 62.0,
+    "Storage Available (GB)": 188.0,
+    "Watched": false,
+    "Risk Score": 0.39,
+    "Risk Severity": "Normal",
+    "Top Risk Factor": "LDAP Signing Disabled",
+    "Item: Sensor Installed": "Ok",
+    "Item: Sensor Status": "Attention",
+    "Item: Kerberos": "Ok",
+    "Item: NTLM": "Ok",
+    "Item: LDAP": "Ok",
+    "Item: LDAPS": "Ok",
+    "Item: SMB to DC": "Ok",
+    "Item: RDP to DC": "Ok",
+    "Item: Directory Auditing": "Ok",
+    "Item: Traffic Inspection": "Ok",
+    "Item: IdP Service": "Ok",
+    "Item: Traffic Inspection Status": "Ok",
+    "Item: Traffic Inspection Enforcement": "Ok",
+    "Item: Service Health Alerts": "Ok",
+    "Item: Authenticate As Any Domain User With Certificate Request Agent Without Any Restrictions": "Attention",
+    "Item: LDAPS Channel Binding": "Attention",
+    "Item: LDAP Signing Disabled": "Attention",
+    "Item: Spooler Service Running": "Attention",
+    "Item: Stale Account": "Ok",
+    "Item: Suspicious SPN": "Ok",
+    "Reference Month": "09",
+    "Reference Year": "2026",
+    "Reference Date": "2026-09-28"
+  }
+owner: "Cyber Security Team"
+source_repo: "CYBER__HealthIDP"
+last_reviewed: '2026-09-28'

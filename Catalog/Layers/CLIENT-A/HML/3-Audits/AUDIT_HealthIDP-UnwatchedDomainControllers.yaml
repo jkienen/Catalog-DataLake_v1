@@ -1,0 +1,22 @@
+id: AUDIT_HealthIDP-UnwatchedDomainControllers
+layer: audit
+project: IDP Health Check Report
+sources_silver:
+- SILVER_HealthIDP-DomainControllers
+description: |-
+  Health Check (IDP) - Unmatched Domain Controllers:
+
+  Domain controllers whose Mac Address does not match any record in the VCenter inventory - including the DCs that Identity Protection knows without an installed sensor (Item: Sensor Installed = Attention) and whose Mac Address is left as "-" because they are not found in the Falcon device inventory; they are left with Department and Server VM empty ("-") and are separated from this Silver.
+
+  Note: they will be stored separately for later tracking and possible automatic removal.
+storage_notes: |-
+  Storage will be done in the Silver layer; the structured data will be kept ready for queries feeding the indicator calculations.
+
+  The data is organized following the standard naming convention. Additionally, temporal segregation must be maintained by collection period, using the YYYY-MM-DD naming convention, according to the frequency defined by the business. The following pattern must be followed:
+
+  CYBER/Client-A/Silver/HealthIDP/YYYY-MM-DD/UnwatchedDomainControllers.json
+
+  This organization ensures temporal traceability, ingestion standardization, and ease of auditing the data.
+owner: "Cyber Security Team"
+source_repo: "CYBER__HealthIDP"
+last_reviewed: '2026-09-28'

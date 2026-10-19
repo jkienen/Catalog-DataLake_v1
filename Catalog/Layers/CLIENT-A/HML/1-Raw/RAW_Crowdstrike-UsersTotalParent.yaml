@@ -1,0 +1,42 @@
+id: RAW_Crowdstrike-UsersTotalParent
+layer: raw
+platform: Crowdstrike
+endpoint: |-
+  (Users Total Parent)
+  - GET /user-management/queries/users/v1
+description: |-
+  Obtains the total number of console users of each CID in the Flight Control hierarchy, read from the pagination counter of the users query.
+load_type: Full
+frequency: Weekly
+volume_per_frequency: 4Kb
+execution_schedule: Sundays at 03:00 AM and on the 1st of the month at 03:00 AM
+extraction_notes: |-
+  The Data Science team will be responsible for running the routine that queries the described endpoint, applying the necessary filters, and storing the data in the Raw layer of the Data Lake.
+
+  Note: the query is made with the credential of the global CID (parent) and repeated within each CID of the hierarchy, authenticating with the member_cid parameter (one login per CID: in the global itself, in each parent and in each child CID). Only the pagination total (pagination.total) matters from the response.
+filters: |-
+  Run the query with the following conditions:
+
+  - limit: 1
+storage_notes: |-
+  Storage will be done in the Raw layer, containing the data extracted directly from the described API endpoint, without any type of transformation, fully preserving the data.
+
+  The data is organized following the standard naming convention. Additionally, temporal segregation must be maintained by collection period, using the YYYY-MM-DD naming convention, according to the frequency defined by the business. The following pattern must be followed:
+
+  CYBER/Client-A/Raw/CROWDSTRIKE/YYYY-MM-DD/UsersTotalParent.json
+
+  This organization ensures temporal traceability, ingestion standardization, and ease of auditing the protected server inventory data.
+sample_output: |-
+  {
+    "resources": [
+      "11111111-2222-4333-8444-555555555555"
+    ],
+    "pagination": {
+      "offset": 0,
+      "limit": 1,
+      "total": 15
+    }
+  }
+owner: "Cyber Security Team"
+source_repo: "CYBER__FlightTenants"
+last_reviewed: '2026-10-16'

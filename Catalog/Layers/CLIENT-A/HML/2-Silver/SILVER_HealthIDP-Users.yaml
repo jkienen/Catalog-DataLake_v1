@@ -1,0 +1,152 @@
+id: SILVER_HealthIDP-Users
+layer: silver
+project: IDP Health Check Report
+sources_raw:
+- RAW_Crowdstrike-IDPUsers
+- RAW_Crowdstrike-IDPLocalAdmins
+sources_silver: []
+generates_audits: NA
+execution_schedule: Sundays at 02:00 AM and on the 1st of the month at 02:00 AM
+filters: NA
+pipeline: |-
+  The Data Science team will be responsible for retrieving the raw data from the Raw layer and structuring it as shown in the next step.
+
+  Department / Title:
+
+  Department and job title of the AD account; when absent, those of the Entra ID account; "-" when neither reports them.
+
+  UPN:
+
+  UPN of the AD account; when absent, the login identifier of the Entra ID account; "-" when neither reports it.
+
+  Email:
+
+  The first email registered on the entity; "-" when there is none.
+
+  Domain:
+
+  Domain of the AD account converted to lowercase. For users who only have an Entra ID account, the suffix after the "@" of the login identifier, in lowercase.
+
+  Account Source:
+
+  "AD", "Entra ID" or "AD + Entra ID", according to the accounts present on the entity.
+
+  Account Type:
+
+  Derived from the entity's classification roles: "Human" for the human user account role and "Programmatic" for the programmatic account role; "-" when neither is present.
+
+  Privileged:
+
+  True when the entity has the administrative account role; false otherwise.
+
+  Privileged Roles:
+
+  All of the entity's roles except the classification ones (human and programmatic), converted into a readable label, without the " Role" suffix and joined by commas; "-" when there are none.
+
+  AD Enabled / Entra ID Enabled:
+
+  Enabled state of each account; "-" when the entity does not have that account.
+
+  Locked:
+
+  True when the AD account has a recorded lockout time, false when it does not; "-" for users without an AD account.
+
+  Account Expires / Password Last Change / Last Activity:
+
+  Converted from the UTC time returned by the platform to America/Sao_Paulo (UTC-3) and formatted as YYYY-MM-DD; "-" when empty. The first two come from the AD account.
+
+  Password Never Expires:
+
+  The inverse of the AD account's password expiration attribute; "-" when the attribute does not exist.
+
+  Owned Machines:
+
+  Machines associated with the user by ownership, identified by host name (or, when absent, by display name), deduplicated, sorted and joined by commas; "-" when there are none.
+
+  Local Admin / Local Admin Machines / Local Admin Groups / Local Admin Machines (Total) / Local Admin On Owned Machines:
+
+  Cross-referenced from the local administrators per endpoint. The privilege is granted to the user directly or to a domain group of which the user's AD account is a member, directly or indirectly. Local Admin is true when there is at least one machine through either of the two paths. Local Admin Machines lists only the machines with a direct grant. Local Admin Groups lists the groups holding the privilege of which the user is a member, each with the number of machines in parentheses - the machines granted through a group are only counted, never listed. Local Admin Machines (Total) is the number of distinct machines across both paths. Local Admin On Owned Machines lists the user's own machines (Owned Machines) on which they are a local administrator through either path. The list columns fall back to "-" when empty.
+
+  Risk Severity:
+
+  Capitalization of the entity's risk severity; "-" when not reported.
+
+  Top Risk Factor:
+
+  The user's highest-scoring risk factor, ignoring the watchlist marker (WATCHED), converted into a readable label - capitalized words, with acronyms such as MFA, RPC, SPN, KRBTGT and AD kept in uppercase. Falls back to "-" when the user has no risk factors.
+
+  Item: <risk factor>:
+
+  A column is created for each risk factor found in any user of the run, except the watchlist marker (WATCHED), with the same readable label as Top Risk Factor. It receives "Attention" when the factor is present on the user and "Ok" when it is not. The set of these columns varies between runs, according to the factors found.
+
+  Reference Month / Reference Year / Reference Date:
+
+  Month (MM), year (YYYY) and date (YYYY-MM-DD) of the run, added as the last columns.
+structure_notes: |-
+  The data sources will be organized into the columns Department, Title, Display Name, Account, UPN, Email, Domain, OU, Account Source, Account Type, Privileged, Privileged Roles, AD Enabled, Entra ID Enabled, Locked, Account Expires, Password Last Change, Password Never Expires, Last Activity, Owned Machines, Local Admin, Local Admin Machines, Local Admin Groups, Local Admin Machines (Total), Local Admin On Owned Machines, Watched, Risk Score, Risk Severity, Top Risk Factor, Item: Account Without MFA Configured, Item: Aged Password, Item: Anomalous RPC, Item: Credential Theft, Item: Duplicate Password, Item: Has Attack Path, Item: Has SPNs, Item: Inactive Account, Item: Insufficient Password Rotation, Item: Kerberos Preauth Not Required, Item: KRBTGT Aged Password, Item: Privileged User Using Unmanaged Endpoint, Item: Risky Linked Account, Item: Shared User, Item: Stale Account, Item: Stealthy Privileges, Item: Synced Privileged AD User, Item: Uses Locally Administrated Machines, Item: Weak Password, Item: Weak Password Policy, Reference Month, Reference Year, Reference Date, ensuring consistency, asset traceability, and data readiness for the indicators layer.
+storage_notes: |-
+  Storage will be done in the Silver layer; the structured data will be kept ready for queries feeding the indicator calculations.
+
+  The data is organized following the standard naming convention. Additionally, temporal segregation must be maintained by collection period, using the YYYY-MM-DD naming convention, according to the frequency defined by the business. The following pattern must be followed:
+
+  CYBER/Client-A/Silver/HealthIDP/YYYY-MM-DD/Users.json
+
+  This organization ensures temporal traceability, ingestion standardization, and ease of auditing the data.
+sample_output: |-
+  {
+    "Department": "IT INFRASTRUCTURE",
+    "Title": "INFORMATION TECHNOLOGY LEAD",
+    "Display Name": "JANE SMITH",
+    "Account": "jane.smith",
+    "UPN": "jane.smith@companyx.com.br",
+    "Email": "jane.smith@companyx.com.br",
+    "Domain": "corp-companyx.com.br",
+    "OU": "corp-companyx.com.br/COMPANYX/UNITS/PENDING TRANSFER/USER",
+    "Account Source": "AD + Entra ID",
+    "Account Type": "Human",
+    "Privileged": false,
+    "Privileged Roles": "-",
+    "AD Enabled": true,
+    "Entra ID Enabled": true,
+    "Locked": false,
+    "Account Expires": "-",
+    "Password Last Change": "2026-09-04",
+    "Password Never Expires": false,
+    "Last Activity": "2026-09-28",
+    "Owned Machines": "abc-2xy34z5.corp-companyx.com.br",
+    "Local Admin": true,
+    "Local Admin Machines": "abc-2xy34z5.corp-companyx.com.br",
+    "Local Admin Groups": "GRP-TI-ABCD-PRD-LOCAL-ADMIN (1), GRP-TI-WXYZ-PRD01-LOCAL-ADMIN (6)",
+    "Local Admin Machines (Total)": 8,
+    "Local Admin On Owned Machines": "abc-2xy34z5.corp-companyx.com.br",
+    "Watched": false,
+    "Risk Score": 0.55,
+    "Risk Severity": "Medium",
+    "Top Risk Factor": "Has Attack Path",
+    "Item: Account Without MFA Configured": "Ok",
+    "Item: Aged Password": "Ok",
+    "Item: Anomalous RPC": "Ok",
+    "Item: Credential Theft": "Ok",
+    "Item: Duplicate Password": "Ok",
+    "Item: Has Attack Path": "Attention",
+    "Item: Has SPNs": "Ok",
+    "Item: Inactive Account": "Ok",
+    "Item: Insufficient Password Rotation": "Ok",
+    "Item: Kerberos Preauth Not Required": "Ok",
+    "Item: KRBTGT Aged Password": "Ok",
+    "Item: Privileged User Using Unmanaged Endpoint": "Ok",
+    "Item: Risky Linked Account": "Ok",
+    "Item: Shared User": "Ok",
+    "Item: Stale Account": "Ok",
+    "Item: Stealthy Privileges": "Ok",
+    "Item: Synced Privileged AD User": "Ok",
+    "Item: Uses Locally Administrated Machines": "Ok",
+    "Item: Weak Password": "Ok",
+    "Item: Weak Password Policy": "Ok",
+    "Reference Month": "09",
+    "Reference Year": "2026",
+    "Reference Date": "2026-09-28"
+  }
+owner: "Cyber Security Team"
+source_repo: "CYBER__HealthIDP"
+last_reviewed: '2026-09-28'
